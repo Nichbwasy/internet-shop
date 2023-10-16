@@ -41,6 +41,19 @@
             <version>${spring-boot-version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- JAKARTA VALIDATION -->
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+            <version>${jakarta-validation-api-version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.shop.common-utils</groupId>
+            <artifactId>common-utils</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+
     </dependencies>
 
 </project>

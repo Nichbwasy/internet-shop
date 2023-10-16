@@ -112,12 +112,12 @@ databaseChangeLog:
                     nullable: 'false'
 
   - changeSet:
-      id: create-refresh-token-table
+      id: create-user_refresh-token-table
       author: Nichbwasy
       changes:
         - createTable:
             schemaName: authorization
-            tableName: refresh_token
+            tableName: user_refresh_token
             columns:
               - column:
                   name: id
@@ -149,6 +149,6 @@ databaseChangeLog:
               ALTER TABLE "authorization".role_authority ADD FOREIGN KEY (role_id) REFERENCES "authorization".role (id) ON DELETE CASCADE;
               ALTER TABLE "authorization".user_role ADD FOREIGN KEY (user_id) REFERENCES "authorization".user_data (id) ON DELETE CASCADE;
               ALTER TABLE "authorization".user_role ADD FOREIGN KEY (role_id) REFERENCES "authorization".role (id) ON DELETE CASCADE;
-              ALTER TABLE "authorization".refresh_token ADD FOREIGN KEY (user_id) REFERENCES "authorization".user_data (id) ON DELETE CASCADE;
+              ALTER TABLE "authorization".user_refresh_token ADD FOREIGN KEY (user_id) REFERENCES "authorization".user_data (id) ON DELETE CASCADE;
 
 
