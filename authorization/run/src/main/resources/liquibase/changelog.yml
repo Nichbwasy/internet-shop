@@ -151,4 +151,23 @@ databaseChangeLog:
               ALTER TABLE "authorization".user_role ADD FOREIGN KEY (role_id) REFERENCES "authorization".role (id) ON DELETE CASCADE;
               ALTER TABLE "authorization".user_refresh_token ADD FOREIGN KEY (user_id) REFERENCES "authorization".user_data (id) ON DELETE CASCADE;
 
-
+  - changeSet:
+      id: add-base-roles
+      author: Nichbwasy
+      changes:
+        - insert:
+            schemaName: authorization
+            tableName: role
+            dbms: 'postgresql'
+            columns:
+              - column:
+                  name: name
+                  value: USER_ROLE
+        - insert:
+            schemaName: authorization
+            tableName: role
+            dbms: 'postgresql'
+            columns:
+              - column:
+                  name: name
+                  value: ADMIN_ROLE

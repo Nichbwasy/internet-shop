@@ -13,6 +13,7 @@
 #Folders
 postgres/**
 .idea/**
+**/target/**
 
 # Package Files #
 *.jar
