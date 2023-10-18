@@ -26,6 +26,8 @@
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
+
+        <jjwt-api-version>0.12.3</jjwt-api-version>
     </properties>
 
     <dependencies>
