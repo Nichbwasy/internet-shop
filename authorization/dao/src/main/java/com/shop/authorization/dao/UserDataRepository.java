@@ -10,5 +10,6 @@ public interface UserDataRepository extends JpaRepository<UserData, Long> {
     Boolean existsByLogin(String login);
     Boolean existsByEmail(String email);
     Boolean existsByLoginOrEmail(String login, String email);
+    UserData getByLoginOrEmail(String login, String email);
 
 }

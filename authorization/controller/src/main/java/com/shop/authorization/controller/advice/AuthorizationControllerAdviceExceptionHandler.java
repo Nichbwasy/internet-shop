@@ -137,4 +137,6 @@ public class AuthorizationControllerAdviceExceptionHandler extends ResponseEntit
         AdviceResponseObject response = new AdviceResponseObject("Password encoder exception!", e, request);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
+
+    // TODO: Add handling for jwt tokens filter
 }

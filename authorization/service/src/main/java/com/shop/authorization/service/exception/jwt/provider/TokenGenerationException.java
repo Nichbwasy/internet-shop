@@ -1,8 +1,8 @@
-package com.shop.authorization.service.exception.provider.jwt;
+package com.shop.authorization.service.exception.jwt.provider;
 
-import com.shop.common.utils.exception.service.ServiceException;
+import com.shop.authorization.service.exception.jwt.JwtServiceException;
 
-public class TokenGenerationException extends ServiceException {
+public class TokenGenerationException extends JwtServiceException {
 
     public TokenGenerationException() {
     }

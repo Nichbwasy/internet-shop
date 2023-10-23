@@ -1,11 +1,11 @@
 package com.shop.authorization.service;
 
-import com.shop.authorization.dto.model.UserDataDto;
 import com.shop.authorization.dto.registration.RegistrationForm;
+import com.shop.authorization.dto.token.AccessRefreshTokens;
 import jakarta.validation.Valid;
 
 public interface RegistrationService {
 
-    UserDataDto registerUser(@Valid RegistrationForm form);
+    AccessRefreshTokens registerUser(@Valid RegistrationForm form);
 
 }

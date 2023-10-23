@@ -11,6 +11,11 @@ import lombok.*;
 @Entity(name = "user_refresh_token")
 public class UserRefreshToken {
 
+    public UserRefreshToken(UserData user, String token) {
+        this.user = user;
+        this.token = token;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

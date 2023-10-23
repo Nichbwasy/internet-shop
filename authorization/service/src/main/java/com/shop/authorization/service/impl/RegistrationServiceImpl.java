@@ -3,16 +3,16 @@ package com.shop.authorization.service.impl;
 import com.shop.authorization.common.constant.UsersRoles;
 import com.shop.authorization.dao.RoleRepository;
 import com.shop.authorization.dao.UserDataRepository;
-import com.shop.authorization.dto.model.UserDataDto;
+import com.shop.authorization.dao.UserRefreshTokenRepository;
 import com.shop.authorization.dto.registration.RegistrationForm;
+import com.shop.authorization.dto.token.AccessRefreshTokens;
 import com.shop.authorization.model.Role;
 import com.shop.authorization.model.UserData;
+import com.shop.authorization.model.UserRefreshToken;
 import com.shop.authorization.service.RegistrationService;
 import com.shop.authorization.service.encoder.PasswordEncoder;
-import com.shop.authorization.service.exception.registration.EmailAlreadyExistsRegistrationException;
-import com.shop.authorization.service.exception.registration.LoginAlreadyExistsRegistrationException;
-import com.shop.authorization.service.exception.registration.PasswordsNotMatchRegistrationException;
-import com.shop.authorization.service.exception.registration.UserSavingRegistrationException;
+import com.shop.authorization.service.exception.registration.*;
+import com.shop.authorization.service.jwt.provider.JwtTokenProvider;
 import com.shop.authorization.service.mapper.UserDataMapper;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -27,23 +27,50 @@ import java.util.List;
 public class RegistrationServiceImpl implements RegistrationService {
     private final UserDataRepository userDataRepository;
     private final RoleRepository roleRepository;
-    private final UserDataMapper userDataMapper;
+    private final UserRefreshTokenRepository userRefreshTokenRepository;
+    private final JwtTokenProvider jwtTokenProvider;
 
     public RegistrationServiceImpl(UserDataRepository userDataRepository,
-                                   RoleRepository roleRepository, UserDataMapper userDataMapper) {
+                                   RoleRepository roleRepository,
+                                   UserRefreshTokenRepository userRefreshTokenRepository,
+                                   JwtTokenProvider jwtTokenProvider) {
         this.userDataRepository = userDataRepository;
         this.roleRepository = roleRepository;
-        this.userDataMapper = userDataMapper;
+        this.userRefreshTokenRepository = userRefreshTokenRepository;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     @Override
     @Transactional
-    public UserDataDto registerUser(@Valid RegistrationForm form) {
+    public AccessRefreshTokens registerUser(@Valid RegistrationForm form) {
         checkIfLoginExists(form);
+
         checkIfEmailExists(form);
+
         checkIfPasswordMatch(form);
-        UserData userData = saveUserIntoDatabase(form);
-        return userDataMapper.mapToDto(userData);
+
+        UserData user = saveUserIntoDatabase(form);
+
+        String accessToken = jwtTokenProvider.generateAccessToken(user);
+        String refreshToken = jwtTokenProvider.generateRefreshToken(user);
+
+        saveRefreshTokenInDatabase(user, refreshToken);
+
+        return new AccessRefreshTokens(accessToken, refreshToken);
+    }
+
+    private void saveRefreshTokenInDatabase(UserData user, String refreshToken) {
+        try {
+            log.info("Trying to save refresh token for the user '{}'...", user.getLogin());
+            UserRefreshToken userRefreshToken = new UserRefreshToken(user, refreshToken);
+            userRefreshTokenRepository.save(userRefreshToken);
+            log.info("Refresh token has been saved for the user '{}'.", user.getLogin());
+        } catch (Exception e) {
+            log.error("Exception while saving refresh token in database! {}", e.getMessage());
+            throw new RefreshTokenSavingRegistrationException(
+                    String.format("Exception while saving refresh token in database! %s", e.getMessage())
+            );
+        }
     }
 
     private UserData saveUserIntoDatabase(RegistrationForm form) {

@@ -1,7 +1,7 @@
-package com.shop.authorization.service.provider.jwt;
+package com.shop.authorization.service.jwt.provider;
 
 import com.shop.authorization.model.UserData;
-import com.shop.authorization.service.exception.provider.jwt.AccessTokenGenerationException;
+import com.shop.authorization.service.exception.jwt.provider.AccessTokenGenerationException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -77,7 +77,7 @@ public class JwtTokenProvider {
                     .toInstant();
 
             return Jwts.builder()
-                    .subject(user.getLogin())
+                    .id(user.getId().toString())
                     .expiration(Date.from(expirationTime))
                     .signWith(REFRESH_TOKEN_SECRET, Jwts.SIG.HS512)
                     .compact();
