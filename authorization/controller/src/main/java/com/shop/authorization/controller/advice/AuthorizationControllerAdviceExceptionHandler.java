@@ -1,13 +1,28 @@
 package com.shop.authorization.controller.advice;
 
+import com.shop.authorization.controller.exception.security.filter.JwtFilterSecurityException;
+import com.shop.authorization.controller.exception.security.filter.JwtTokenNotFoundException;
+import com.shop.authorization.controller.exception.security.filter.JwtTokenValidationException;
+import com.shop.authorization.controller.exception.security.filter.token.JwtTokenExpiredException;
+import com.shop.authorization.controller.exception.security.filter.token.JwtTokenMalformedException;
+import com.shop.authorization.controller.exception.security.filter.token.JwtTokenUnsupportedException;
+import com.shop.authorization.controller.exception.security.filter.token.JwtTokenWrongSignatureException;
 import com.shop.authorization.service.exception.authorization.LoginEmailValidationAuthorizationException;
 import com.shop.authorization.service.exception.authorization.PasswordNotMatchAuthorizationException;
 import com.shop.authorization.service.exception.authorization.UserNotFoundAuthorizationException;
 import com.shop.authorization.service.exception.encoder.PasswordEncoderException;
+import com.shop.authorization.service.exception.jwt.provider.AccessTokenGenerationException;
+import com.shop.authorization.service.exception.jwt.provider.JwtTokenGenerationException;
+import com.shop.authorization.service.exception.jwt.provider.RefreshTokenGenerationException;
+import com.shop.authorization.service.exception.jwt.util.JwtParceClaimsException;
+import com.shop.authorization.service.exception.jwt.util.JwtTokenUtilsException;
 import com.shop.authorization.service.exception.registration.EmailAlreadyExistsRegistrationException;
 import com.shop.authorization.service.exception.registration.LoginAlreadyExistsRegistrationException;
 import com.shop.authorization.service.exception.registration.PasswordsNotMatchRegistrationException;
 import com.shop.authorization.service.exception.registration.UserSavingRegistrationException;
+import com.shop.authorization.service.exception.token.TokenServiceException;
+import com.shop.authorization.service.exception.token.TokensNotMatchException;
+import com.shop.authorization.service.exception.token.UserNotFoundTokensServiceException;
 import com.shop.common.utils.exception.dao.*;
 import com.shop.common.utils.exception.service.ServiceException;
 import lombok.extern.slf4j.Slf4j;
@@ -138,5 +153,89 @@ public class AuthorizationControllerAdviceExceptionHandler extends ResponseEntit
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
-    // TODO: Add handling for jwt tokens filter
+    /** Security exceptions **/
+
+    @ExceptionHandler({SecurityException.class})
+    protected ResponseEntity<AdviceResponseObject> securityException(Exception e, WebRequest request) {
+        log.error("Security exception! {}", e.getMessage());
+        AdviceResponseObject response = new AdviceResponseObject("Security exception!", e, request);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    @ExceptionHandler({JwtFilterSecurityException.class})
+    protected ResponseEntity<AdviceResponseObject> jwtFilterException(Exception e, WebRequest request) {
+        log.error("Exception while filtering jwt token in request! {}", e.getMessage());
+        AdviceResponseObject response = new AdviceResponseObject(
+                "Exception while filtering jwt token in request! {}",
+                e,
+                request);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    @ExceptionHandler({JwtTokenNotFoundException.class})
+    protected ResponseEntity<AdviceResponseObject> jwtTokenNotFoundException(Exception e, WebRequest request) {
+        log.error("Token not found! {}", e.getMessage());
+        AdviceResponseObject response = new AdviceResponseObject("Token not found!", e, request);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    @ExceptionHandler({
+            JwtTokenValidationException.class,
+            JwtTokenExpiredException.class,
+            JwtTokenMalformedException.class,
+            JwtTokenUnsupportedException.class,
+            JwtTokenWrongSignatureException.class
+    })
+    protected ResponseEntity<AdviceResponseObject> jwtValidationException(Exception e, WebRequest request) {
+        log.error("Jwt token validation exception! {}", e.getMessage());
+        AdviceResponseObject response = new AdviceResponseObject("Jwt token validation exception", e, request);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    @ExceptionHandler({TokenServiceException.class})
+    protected ResponseEntity<AdviceResponseObject> jwtTokenServiceException(Exception e, WebRequest request) {
+        log.error("Token service exception! {}", e.getMessage());
+        AdviceResponseObject response = new AdviceResponseObject("Token service exception!", e, request);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    @ExceptionHandler({TokensNotMatchException.class})
+    protected ResponseEntity<AdviceResponseObject> tokensNotMatchException(Exception e, WebRequest request) {
+        log.error("Tokens not match exception! {}", e.getMessage());
+        AdviceResponseObject response = new AdviceResponseObject("Tokens not match exception!", e, request);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    @ExceptionHandler({UserNotFoundTokensServiceException.class})
+    protected ResponseEntity<AdviceResponseObject> userNotFoundTokenServiceException(Exception e, WebRequest request) {
+        log.error("User for token not found! {}", e.getMessage());
+        AdviceResponseObject response = new AdviceResponseObject("User for token not found!", e, request);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    @ExceptionHandler({JwtTokenUtilsException.class})
+    protected ResponseEntity<AdviceResponseObject> jwtTokenUtilsException(Exception e, WebRequest request) {
+        log.error("Jwt token utils exception! {}", e.getMessage());
+        AdviceResponseObject response = new AdviceResponseObject("Jwt token utils exception!", e, request);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    @ExceptionHandler({JwtParceClaimsException.class})
+    protected ResponseEntity<AdviceResponseObject> jwtParceClaimsException(Exception e, WebRequest request) {
+        log.error("Jwt parce claims exception! {}", e.getMessage());
+        AdviceResponseObject response = new AdviceResponseObject("Jwt parce claims exception!", e, request);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    @ExceptionHandler({
+            JwtTokenGenerationException.class,
+            AccessTokenGenerationException.class,
+            RefreshTokenGenerationException.class
+    })
+    protected ResponseEntity<AdviceResponseObject> jwtTokenGenerationException(Exception e, WebRequest request) {
+        log.error("Exception while generation jwt token! {}", e.getMessage());
+        AdviceResponseObject response = new AdviceResponseObject("Exception while generation jwt token!", e, request);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
 }

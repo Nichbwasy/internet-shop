@@ -50,9 +50,10 @@ public class AuthorizationServiceImpl implements AuthorizationService {
     }
 
     private void saveRefreshTokenInDatabase(UserData user, String refreshToken) {
-        if (user.getRefreshToken() != null) {
+        if (userRefreshTokenRepository.existsByUserId(user.getId()) != null) {
+            UserRefreshToken userRefreshToken = userRefreshTokenRepository.getByUserId(user.getId());
             log.info("Updating refresh token for a user '{}'...", user.getLogin());
-            user.getRefreshToken().setToken(refreshToken);
+            userRefreshToken.setToken(refreshToken);
             log.info("Refresh token for the user '{}' has been updated.", user.getLogin());
         } else {
             log.info("Saving a refresh token for the user '{}'...", user.getLogin());

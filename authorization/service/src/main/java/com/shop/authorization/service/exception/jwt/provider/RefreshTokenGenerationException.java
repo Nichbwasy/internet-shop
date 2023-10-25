@@ -1,6 +1,6 @@
 package com.shop.authorization.service.exception.jwt.provider;
 
-public class RefreshTokenGenerationException extends TokenGenerationException {
+public class RefreshTokenGenerationException extends JwtTokenGenerationException {
     public RefreshTokenGenerationException() {
     }
 

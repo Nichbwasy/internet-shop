@@ -53,7 +53,7 @@ public class JwtTokenFilter extends GenericFilterBean {
         HttpServletResponse httpServletResponse = ((HttpServletResponse) servletResponse);
 
         String path = httpServletRequest.getServletPath();
-        if (!checkFilteredPaths(path)) {
+        if (checkFilteredPaths(path)) {
             log.info("Filter ignore request's path '{}'.", path);
             filterChain.doFilter(servletRequest, servletResponse);
             return;
@@ -78,8 +78,7 @@ public class JwtTokenFilter extends GenericFilterBean {
             }
             case EXPIRED -> {
                 log.info("Access token is expired. Trying to refresh token...");
-                Long userId = jwtTokenUtils.getUserIdFromRefreshToken(refreshToken);
-                AccessRefreshTokens tokens = tokensService.refreshTokens(userId, refreshToken);
+                AccessRefreshTokens tokens = tokensService.refreshTokens(refreshToken);
                 UsernamePasswordAuthenticationToken authentication = getAuthenticationFromAccessToken(tokens.getAccessToken());
 
                 httpServletResponse.addHeader(AUTHORIZATION_HEADER, tokens.getAccessToken());

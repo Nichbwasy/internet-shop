@@ -4,12 +4,10 @@ import com.shop.authorization.dto.model.UserDataDto;
 import com.shop.authorization.dto.registration.RegistrationForm;
 import com.shop.authorization.dto.token.AccessRefreshTokens;
 import com.shop.authorization.service.RegistrationService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
@@ -23,7 +21,7 @@ public class RegistrationController {
     }
 
     @PostMapping
-    public ResponseEntity<AccessRefreshTokens> registerUser(@ModelAttribute RegistrationForm form) {
+    public ResponseEntity<AccessRefreshTokens> registerUser(@Valid @RequestBody RegistrationForm form) {
         log.info("Trying to register a new user...");
         return ResponseEntity.ok().body(registrationService.registerUser(form));
     }

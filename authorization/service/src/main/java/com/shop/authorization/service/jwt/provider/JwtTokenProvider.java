@@ -28,10 +28,10 @@ public class JwtTokenProvider {
     private final SecretKey REFRESH_TOKEN_SECRET;
 
     public JwtTokenProvider(
-            @Value("security.jwt.access-token.lifetime") Integer accessTokenLifetime,
-            @Value("security.jwt.refresh-token.lifetime") Integer refreshTokenLifetime,
-            @Value("security.jwt.access-token.secret") String accessSecret,
-            @Value("security.jwt.refresh-token.secret") String refreshSecret) {
+            @Value("${security.jwt.access-token.lifetime}") Integer accessTokenLifetime,
+            @Value("${security.jwt.refresh-token.lifetime}") Integer refreshTokenLifetime,
+            @Value("${security.jwt.access-token.secret}") String accessSecret,
+            @Value("${security.jwt.refresh-token.secret}") String refreshSecret) {
         this.ACCESS_TOKEN_LIFETIME = accessTokenLifetime;
         this.REFRESH_TOKEN_LIFETIME = refreshTokenLifetime;
         this.ACCESS_TOKEN_SECRET = Keys.hmacShaKeyFor(Decoders.BASE64.decode(accessSecret));

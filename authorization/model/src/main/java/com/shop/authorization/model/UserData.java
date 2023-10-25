@@ -35,9 +35,6 @@ public class UserData {
     @Column(name = "email", length = 128, nullable = false, unique = true)
     private String email;
 
-    @OneToOne(targetEntity = UserRefreshToken.class)
-    private UserRefreshToken refreshToken;
-
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
     @JoinTable(name = "user_role",
                 joinColumns = @JoinColumn(name = "user_id"),

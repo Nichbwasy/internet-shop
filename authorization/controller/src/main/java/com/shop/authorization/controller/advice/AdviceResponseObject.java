@@ -14,13 +14,11 @@ public class AdviceResponseObject {
 
     private LocalDateTime time;
     private String message;
-    private String causes;
     private String contextPath;
 
     public AdviceResponseObject(String message, Exception e, WebRequest request) {
         this.time = LocalDateTime.now();
-        this.message = message + e.getMessage();
-        this.causes = e.getCause().toString();
+        this.message = message + " " + e.getMessage();
         this.contextPath = request.getContextPath();
     }
 }

@@ -7,6 +7,7 @@ import com.shop.authorization.service.TokensService;
 import com.shop.authorization.service.exception.token.TokensNotMatchException;
 import com.shop.authorization.service.exception.token.UserNotFoundTokensServiceException;
 import com.shop.authorization.service.jwt.provider.JwtTokenProvider;
+import com.shop.authorization.service.jwt.utils.JwtTokenUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,15 +21,20 @@ public class TokensServiceImpl implements TokensService {
 
     private final JwtTokenProvider jwtTokenProvider;
 
+    private final JwtTokenUtils jwtTokenUtils;
+
     public TokensServiceImpl(
             UserRefreshTokenRepository userRefreshTokenRepository,
-            JwtTokenProvider jwtTokenProvider) {
+            JwtTokenProvider jwtTokenProvider, JwtTokenUtils jwtTokenUtils) {
         this.userRefreshTokenRepository = userRefreshTokenRepository;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.jwtTokenUtils = jwtTokenUtils;
     }
 
     @Override
-    public AccessRefreshTokens refreshTokens(Long userId, String refreshToken) {
+    public AccessRefreshTokens refreshTokens(String refreshToken) {
+
+        Long userId = jwtTokenUtils.getUserIdFromRefreshToken(refreshToken);
 
         checkIfUserTokenExists(userId);
 

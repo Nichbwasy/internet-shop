@@ -18,8 +18,8 @@ public class JwtTokenValidator {
     private final SecretKey REFRESH_TOKEN_SECRET;
 
     public JwtTokenValidator(
-            @Value("security.jwt.access-token.secret") String accessTokenSecret,
-            @Value("security.jwt.refresh-token.secret") String refreshTokenSecret) {
+            @Value("${security.jwt.access-token.secret}") String accessTokenSecret,
+            @Value("${security.jwt.refresh-token.secret}") String refreshTokenSecret) {
         this.ACCESS_TOKEN_SECRET = Keys.hmacShaKeyFor(Decoders.BASE64.decode(accessTokenSecret));
         this.REFRESH_TOKEN_SECRET = Keys.hmacShaKeyFor(Decoders.BASE64.decode(refreshTokenSecret));
     }

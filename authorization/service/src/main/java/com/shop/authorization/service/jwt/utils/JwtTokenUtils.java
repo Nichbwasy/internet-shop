@@ -19,10 +19,10 @@ public class JwtTokenUtils {
     private final SecretKey REFRESH_TOKEN_SECRET;
 
     public JwtTokenUtils(
-            @Value("security.jwt.access-token.secret") String accessTokenSecret,
-            @Value("security.jwt.refresh-token.secret") String refreshTokenSectet) {
+            @Value("${security.jwt.access-token.secret}") String accessTokenSecret,
+            @Value("${security.jwt.refresh-token.secret}") String refreshTokenSecret) {
         this.ACCESS_TOKEN_SECRET = Keys.hmacShaKeyFor(Decoders.BASE64.decode(accessTokenSecret));
-        this.REFRESH_TOKEN_SECRET = Keys.hmacShaKeyFor(Decoders.BASE64.decode(refreshTokenSectet));
+        this.REFRESH_TOKEN_SECRET = Keys.hmacShaKeyFor(Decoders.BASE64.decode(refreshTokenSecret));
     }
 
     public Claims getAccessTokenClaims(String accessToken) {
