@@ -2,16 +2,28 @@ version: '3'
 
 services:
 
-    shop-database-postgres:
+    postgres:
       image: postgres:14
-      container_name: shop-database-postgres
+      container_name: postgres
       volumes:
         - ./postgres:/data/postgres
       environment:
         - POSTGRES_USER=postgres
         - POSTGRES_PASSWORD=root
-        - POSTGRES_MULTIPLE_DATABASES=car-rental
+        - POSTGRES_MULTIPLE_DATABASES=internet-shop
         - PGDATA=/data/postgres
       ports:
         - 5432:5432
       restart: always
+
+    pgadmin4:
+      container_name: pgadmin4
+      image: dpage/pgadmin4
+      restart: always
+      environment:
+        PGADMIN_DEFAULT_EMAIL: admin@admin.com
+        PGADMIN_DEFAULT_PASSWORD: root
+      ports:
+        - "5050:80"
+      links:
+        - postgres

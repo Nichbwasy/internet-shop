@@ -1,4 +1,4 @@
-package com.shop.common.utils.exception.dao;
+package com.shop.common.utils.all.exception.dao;
 
 public class EntitySaveRepositoryException extends RepositoryException {
 

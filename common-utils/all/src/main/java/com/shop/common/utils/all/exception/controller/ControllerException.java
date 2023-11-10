@@ -1,4 +1,4 @@
-package com.shop.common.utils.exception.controller;
+package com.shop.common.utils.all.exception.controller;
 
 public class ControllerException extends RuntimeException {
 

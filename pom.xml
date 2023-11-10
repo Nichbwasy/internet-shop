@@ -11,6 +11,7 @@
     <modules>
         <module>authorization</module>
         <module>common-utils</module>
+        <module>common-utils</module>
     </modules>
 
     <properties>

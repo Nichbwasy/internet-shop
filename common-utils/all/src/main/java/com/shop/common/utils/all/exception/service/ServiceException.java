@@ -1,4 +1,4 @@
-package com.shop.common.utils.exception.service;
+package com.shop.common.utils.all.exception.service;
 
 public class ServiceException extends RuntimeException {
     public ServiceException() {
