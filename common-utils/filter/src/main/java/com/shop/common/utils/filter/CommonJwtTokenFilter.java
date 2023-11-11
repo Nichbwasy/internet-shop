@@ -11,10 +11,7 @@ import com.shop.common.utils.exception.jwt.token.JwtTokenInvalidException;
 import com.shop.common.utils.exception.jwt.token.JwtTokenMalformedException;
 import com.shop.common.utils.exception.jwt.token.JwtTokenUnsupportedException;
 import com.shop.common.utils.exception.jwt.token.JwtTokenWrongSignatureException;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
+import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +26,7 @@ import java.util.List;
 
 @Slf4j
 @Component
-public class CommonJwtTokenFilter extends GenericFilterBean {
+public class CommonJwtTokenFilter extends GenericFilterBean implements Filter {
     private final static String AUTHORIZATION_HEADER = "Authorization";
     private final static String REFRESH_HEADER = "Refresh";
     private final static String BEARER = "Bearer ";
