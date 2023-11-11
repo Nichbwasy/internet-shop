@@ -3,6 +3,7 @@ package com.shop.common.utils.filter;
 import com.shop.authorization.client.TokensApiClient;
 import com.shop.authorization.common.constant.jwt.TokenStatus;
 import com.shop.authorization.dto.token.AccessRefreshTokens;
+import com.shop.authorization.dto.token.JwtAuthenticationTokenDataDto;
 import com.shop.common.utils.exception.jwt.AccessTokenInvalidSecurityException;
 import com.shop.common.utils.exception.jwt.AccessTokenNotFoundSecurityException;
 import com.shop.common.utils.exception.jwt.JwtTokenValidationException;
@@ -14,30 +15,32 @@ import com.shop.common.utils.exception.jwt.token.JwtTokenWrongSignatureException
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.GenericFilterBean;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class CommonJwtTokenFilter extends GenericFilterBean implements Filter {
     private final static String AUTHORIZATION_HEADER = "Authorization";
     private final static String REFRESH_HEADER = "Refresh";
     private final static String BEARER = "Bearer ";
 
     private final TokensApiClient tokensApiClient;
-
     private List<String> filteredPaths;
 
-    public CommonJwtTokenFilter(TokensApiClient client) {
-        this.tokensApiClient = client;
-    }
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
@@ -57,7 +60,8 @@ public class CommonJwtTokenFilter extends GenericFilterBean implements Filter {
         validateAccessToken(accessToken);
 
         accessToken = accessToken.substring(BEARER.length());
-        TokenStatus status = tokensApiClient.validateAccessToken(accessToken);
+        ResponseEntity<TokenStatus> tokenStatusResponseEntity = tokensApiClient.validateAccessToken(accessToken);
+        TokenStatus status = tokenStatusResponseEntity.getBody();
 
         switch (status) {
             case OK -> log.info("Token is valid! ");
@@ -68,19 +72,31 @@ public class CommonJwtTokenFilter extends GenericFilterBean implements Filter {
                             "Refresh token not found in request! Unable refresh access/refresh tokens!"
                     );
                 }
-                AccessRefreshTokens tokens = tokensApiClient.updateTokens(refreshToken);
+                AccessRefreshTokens tokens = tokensApiClient.updateTokens(refreshToken).getBody();
                 accessToken = tokens.getAccessToken();
                 refreshToken = tokens.getRefreshToken();
             } default -> resolveTokenStatus(status);
         }
 
-        // TODO: Need to be fixed
-        UsernamePasswordAuthenticationToken authentication = tokensApiClient.getAuthenticationFromToken(accessToken);
+        UsernamePasswordAuthenticationToken authenticationToken = getAuthenticationToken(accessToken);
+
         httpServletResponse.addHeader(AUTHORIZATION_HEADER, accessToken);
         httpServletResponse.addHeader(REFRESH_HEADER, refreshToken);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 
         filterChain.doFilter(servletRequest, servletResponse);
+    }
+
+    private UsernamePasswordAuthenticationToken getAuthenticationToken(String accessToken) {
+        JwtAuthenticationTokenDataDto tokenDataDto = tokensApiClient.getAuthenticationFromToken(accessToken).getBody();
+        Collection<SimpleGrantedAuthority> grantedAuthorities = new ArrayList<>();
+        tokenDataDto.getAuthorities().forEach(a -> grantedAuthorities.add(new SimpleGrantedAuthority(a)));
+
+        return new UsernamePasswordAuthenticationToken(
+                tokenDataDto.getUsername(),
+                null,
+                grantedAuthorities
+        );
     }
 
     private static void validateAccessToken(String accessToken) {

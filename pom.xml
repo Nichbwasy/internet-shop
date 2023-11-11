@@ -11,15 +11,17 @@
     <modules>
         <module>authorization</module>
         <module>common-utils</module>
-        <module>common-utils</module>
     </modules>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
 
+        <spring-cloud.version>2022.0.1</spring-cloud.version>
+
         <postgres-version>42.5.4</postgres-version>
         <spring-boot-version>3.1.4</spring-boot-version>
+        <spring-cloud-openfeign-version>4.0.2</spring-cloud-openfeign-version>
         <jakarta-validation-api-version>3.0.2</jakarta-validation-api-version>
         <mapstruct-version>1.5.5.Final</mapstruct-version>
         <swagger-version>2.2.0</swagger-version>
