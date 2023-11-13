@@ -26,7 +26,7 @@
 
         <dependency>
             <groupId>com.shop.authorization</groupId>
-            <artifactId>client</artifactId>
+            <artifactId>client-authorization</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>

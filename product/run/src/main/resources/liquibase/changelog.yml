@@ -1,0 +1,224 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-sub-category-table
+      author: jvsSEN
+      changes:
+        - createTable:
+            schemaName: product
+            tableName: sub_category
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  constraints:
+                    unique: 'true'
+                    nullable: 'false'
+              - column:
+                  name: name
+                  type: varchar(128)
+                  constraints:
+                    unique: 'true'
+                    nullable: 'false'
+  - changeSet:
+      id: create-category-table
+      author: jvsSEN
+      changes:
+        createTable:
+          schemaName: product
+          tableName: category
+          columns:
+            - column:
+              name: id
+              type: bigserial
+              constraints:
+                unique: 'true'
+                nullable: 'false'
+            - column:
+                name: name
+                type: varchar(128)
+                constraints:
+                  unique: 'true'
+                  nullable: 'false'
+
+  - changeSet:
+      id: create-product-table
+      author: jvsSEN
+      changes:
+        createTable:
+          schemaName: product
+          tableName: product
+          columns:
+            - column:
+                name: id
+                type: bigserial
+                constraints:
+                  unique: 'true'
+                  nullable: 'false'
+            - column:
+                name: code
+                type: varchar(64)
+                constraints:
+                  unique: 'true'
+                  nullable: 'false'
+            - column:
+                name: name
+                type: varchar(255)
+                constraints:
+                  nullable: 'false'
+            - column:
+                name: description
+                type: varchar(2048)
+            - column:
+                name: created_time
+                type: timestamp
+                constraints:
+                  nullable: 'false'
+            - column:
+                name: count
+                type: integer
+                constraints:
+                    nullable: 'false'
+            - column:
+                name: price
+                type: numeric(32,9)
+                constraints:
+                  nullable: 'false'
+
+  - changeSet:
+      id: create-product-discount-table
+      author: jvsSEN
+      changes:
+        - createTable:
+            schemaName: product
+            tableName: discount
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  constraints:
+                    unique: 'true'
+                    nullable: 'false'
+              - column:
+                  name: name
+                  type: varchar(128)
+                  constraints:
+                    unique: 'true'
+                    nullable: 'false'
+              - column:
+                  name: description
+                  type: varchar(512)
+              - column:
+                  name: created_time
+                  type: timestamp
+                  constraints:
+                    nullable: 'false'
+              - column:
+                  name: activation_time
+                  type: timestamp
+                  constraints:
+                    nullable: 'false'
+              - column:
+                  name: ending_time
+                  type: timestamp
+                  constraints:
+                    nullable: 'false'
+              - column:
+                  name: discount_value
+                  type: real
+                  constraints:
+                    nullable: 'false'
+
+  - changeSet:
+      id: create-category-sub-category-table
+      author: jvsSEN
+      changes:
+        - createTable:
+            schemaName: product
+            tableName: category_sub_category
+            columns:
+              - column:
+                  name: category_id
+                  type: bigint
+                  constraints:
+                    nullable: 'false'
+              - column:
+                  name: sub_category_id
+                  type: bigint
+                  constraints:
+                    nullable: 'false'
+
+  - changeSet:
+      id: create-product-category-table
+      author: jvsSEN
+      changes:
+        - createTable:
+            schemaName: product
+            tableName: product_category
+            columns:
+              - column:
+                name: product_id
+                type: bigint
+                constraints:
+                  nullable: 'false'
+              - column:
+                name: category_id
+                type: bigint
+                constraints:
+                  nullable: 'false'
+
+  - changeSet:
+      id: create-product-discount-table
+      author: jvsSEN
+      changes:
+        - createTable:
+            schemaName: product
+            tableName: product_discount
+            columns:
+              - column:
+                name: product_id
+                type: bigint
+                constraints:
+                  - nullable: 'false'
+              - column:
+                  name: discount_id
+                  type: bigint
+                  constraints:
+                    - nullable: 'false'
+
+  - changeSet:
+      id: add-default-values
+      author: jvsSEN
+      changes:
+        - addDefaultValue:
+            schemaName: product
+            tableName: product
+            columnName: count
+            columnDatatype: integer
+            defaultValue: 0
+        - addDefaultValue:
+            schemaName: product
+            tableName: product
+            columnName: price
+            columnDatatype: numeric(32,9)
+            defaultValue: 0.0
+        - addDefaultValue:
+            schemaName: product
+            tableName: discount
+            columnName: discount_value
+            columnDatatype: real
+            defaultValue: 0.0
+
+  - changeSet:
+      id: add-tables-references
+      author: jvsSEN
+      changes:
+        - sql:
+            dbms: 'postgresql'
+            splitStatement: 'true'
+            sql:
+              ALERT TABLE "product".product_category ADD FOREIGN KEY (product_id) REFERENCES "product".product (id) ON DELETE CASCADE;
+              ALERT TABLE "product".product_category ADD FOREIGN KEY (category_id) REFERENCES "product".category (id) ON DELETE CASCADE;
+              ALERT TABLE "product".category_sub_category ADD FOREIGN KEY (category_id) REFERENCES "product".category (id) ON DELETE CASCADE;
+              ALERT TABLE "product".category_sub_category ADD FOREIGN KEY (sub_category_id) REFERENCES "product".sub_category (id) ON DELETE CASCADE;
+              ALERT TABLE "product".product_discount ADD FOREIGN KEY (product_id) REFERENCES "product".product (id) ON DELETE CASCADE;
+              ALERT TABLE "product".product_discount ADD FOREIGN KEY (discount_id) REFERENCES "product".discount (id) ON DELETE CASCADE;
