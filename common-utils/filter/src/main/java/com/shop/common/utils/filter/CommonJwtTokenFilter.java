@@ -75,12 +75,15 @@ public class CommonJwtTokenFilter extends GenericFilterBean implements Filter {
                 AccessRefreshTokens tokens = tokensApiClient.updateTokens(refreshToken).getBody();
                 accessToken = tokens.getAccessToken();
                 refreshToken = tokens.getRefreshToken();
+
+                log.info(" >>> New access token: {}", accessToken);
+                log.info(" >>> New refresh token: {}", refreshToken);
             } default -> resolveTokenStatus(status);
         }
 
         UsernamePasswordAuthenticationToken authenticationToken = getAuthenticationToken(accessToken);
 
-        httpServletResponse.addHeader(AUTHORIZATION_HEADER, accessToken);
+        httpServletResponse.addHeader(AUTHORIZATION_HEADER, BEARER + accessToken);
         httpServletResponse.addHeader(REFRESH_HEADER, refreshToken);
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 
@@ -88,6 +91,8 @@ public class CommonJwtTokenFilter extends GenericFilterBean implements Filter {
     }
 
     private UsernamePasswordAuthenticationToken getAuthenticationToken(String accessToken) {
+        // TODO: Token refreshing is broken.
+        //  For some unknown to me reasons after updating access token via refresh token, the new one is expired...
         JwtAuthenticationTokenDataDto tokenDataDto = tokensApiClient.getAuthenticationFromToken(accessToken).getBody();
         Collection<SimpleGrantedAuthority> grantedAuthorities = new ArrayList<>();
         tokenDataDto.getAuthorities().forEach(a -> grantedAuthorities.add(new SimpleGrantedAuthority(a)));
