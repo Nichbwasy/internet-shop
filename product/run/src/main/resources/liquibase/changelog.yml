@@ -28,11 +28,11 @@ databaseChangeLog:
           tableName: category
           columns:
             - column:
-              name: id
-              type: bigserial
-              constraints:
-                unique: 'true'
-                nullable: 'false'
+                name: id
+                type: bigserial
+                constraints:
+                  unique: 'true'
+                  nullable: 'false'
             - column:
                 name: name
                 type: varchar(128)
@@ -85,7 +85,7 @@ databaseChangeLog:
                   nullable: 'false'
 
   - changeSet:
-      id: create-product-discount-table
+      id: create-discount-table
       author: jvsSEN
       changes:
         - createTable:
@@ -156,15 +156,15 @@ databaseChangeLog:
             tableName: product_category
             columns:
               - column:
-                name: product_id
-                type: bigint
-                constraints:
-                  nullable: 'false'
+                  name: product_id
+                  type: bigint
+                  constraints:
+                    nullable: 'false'
               - column:
-                name: category_id
-                type: bigint
-                constraints:
-                  nullable: 'false'
+                  name: category_id
+                  type: bigint
+                  constraints:
+                    nullable: 'false'
 
   - changeSet:
       id: create-product-discount-table
@@ -175,10 +175,10 @@ databaseChangeLog:
             tableName: product_discount
             columns:
               - column:
-                name: product_id
-                type: bigint
-                constraints:
-                  - nullable: 'false'
+                  name: product_id
+                  type: bigint
+                  constraints:
+                    - nullable: 'false'
               - column:
                   name: discount_id
                   type: bigint
@@ -216,9 +216,9 @@ databaseChangeLog:
             dbms: 'postgresql'
             splitStatement: 'true'
             sql:
-              ALERT TABLE "product".product_category ADD FOREIGN KEY (product_id) REFERENCES "product".product (id) ON DELETE CASCADE;
-              ALERT TABLE "product".product_category ADD FOREIGN KEY (category_id) REFERENCES "product".category (id) ON DELETE CASCADE;
-              ALERT TABLE "product".category_sub_category ADD FOREIGN KEY (category_id) REFERENCES "product".category (id) ON DELETE CASCADE;
-              ALERT TABLE "product".category_sub_category ADD FOREIGN KEY (sub_category_id) REFERENCES "product".sub_category (id) ON DELETE CASCADE;
-              ALERT TABLE "product".product_discount ADD FOREIGN KEY (product_id) REFERENCES "product".product (id) ON DELETE CASCADE;
-              ALERT TABLE "product".product_discount ADD FOREIGN KEY (discount_id) REFERENCES "product".discount (id) ON DELETE CASCADE;
+              ALTER TABLE "product".product_category ADD FOREIGN KEY (product_id) REFERENCES "product".product (id) ON DELETE CASCADE;
+              ALTER TABLE "product".product_category ADD FOREIGN KEY (category_id) REFERENCES "product".category (id) ON DELETE CASCADE;
+              ALTER TABLE "product".category_sub_category ADD FOREIGN KEY (category_id) REFERENCES "product".category (id) ON DELETE CASCADE;
+              ALTER TABLE "product".category_sub_category ADD FOREIGN KEY (sub_category_id) REFERENCES "product".sub_category (id) ON DELETE CASCADE;
+              ALTER TABLE "product".product_discount ADD FOREIGN KEY (product_id) REFERENCES "product".product (id) ON DELETE CASCADE;
+              ALTER TABLE "product".product_discount ADD FOREIGN KEY (discount_id) REFERENCES "product".discount (id) ON DELETE CASCADE;

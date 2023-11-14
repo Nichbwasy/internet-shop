@@ -13,6 +13,18 @@
     <packaging>jar</packaging>
 
     <dependencies>
+        <!-- MAPSTRUCT -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <version>${mapstruct-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct-processor</artifactId>
+            <version>${mapstruct-version}</version>
+        </dependency>
+
         <dependency>
             <groupId>com.shop.product</groupId>
             <artifactId>dto-product</artifactId>
