@@ -45,7 +45,7 @@ public class SubCategoryServiceImpl implements SubCategoryService {
 
     @Override
     public SubCategoryDto getSubCategory(Long id) {
-        checkIfSubCategoryExists(id);
+        checkIfSubCategoryNotExists(id);
 
         try {
             log.info("Sub category with id '{}' has been found", id);
@@ -77,7 +77,7 @@ public class SubCategoryServiceImpl implements SubCategoryService {
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public Long removeSubCategory(Long id) {
-        checkIfSubCategoryExists(id);
+        checkIfSubCategoryNotExists(id);
 
         try {
             subCategoryRepository.deleteById(id);
@@ -94,7 +94,7 @@ public class SubCategoryServiceImpl implements SubCategoryService {
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public SubCategoryDto updateSubCategory(SubCategoryDto subCategoryDto) {
-        checkIfSubCategoryExists(subCategoryDto.getId());
+        checkIfSubCategoryNotExists(subCategoryDto.getId());
 
         try {
             SubCategory subCategory = subCategoryRepository.getReferenceById(subCategoryDto.getId());
@@ -110,8 +110,8 @@ public class SubCategoryServiceImpl implements SubCategoryService {
         }
     }
 
-    private void checkIfSubCategoryExists(Long id) {
-        if (subCategoryRepository.existsById(id)) {
+    private void checkIfSubCategoryNotExists(Long id) {
+        if (!subCategoryRepository.existsById(id)) {
             log.warn("Unable to find sub category with id '{}'!", id);
             throw new EntityNotFoundRepositoryException(
                     "Unable to find sub category with id '%s'!".formatted(id)

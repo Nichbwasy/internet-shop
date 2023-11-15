@@ -5,9 +5,14 @@ import com.shop.common.utils.all.exception.dao.EntityNotFoundRepositoryException
 import com.shop.common.utils.all.exception.dao.EntitySaveRepositoryException;
 import com.shop.common.utils.all.exception.dao.EntityUpdateRepositoryException;
 import com.shop.product.dao.CategoryRepository;
+import com.shop.product.dao.SubCategoryRepository;
 import com.shop.product.dto.CategoryDto;
+import com.shop.product.dto.form.AddOrRemoveForm;
 import com.shop.product.model.Category;
+import com.shop.product.model.SubCategory;
 import com.shop.product.service.CategoryService;
+import com.shop.product.service.exception.category.AddingSubCategoryException;
+import com.shop.product.service.exception.category.RemovingSubCategoryException;
 import com.shop.product.service.mappers.CategoryMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +21,7 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -25,6 +31,7 @@ import java.util.stream.Collectors;
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final SubCategoryRepository subCategoryRepository;
     private final CategoryMapper categoryMapper;
 
     @Override
@@ -45,7 +52,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryDto getCategory(Long id) {
-        checkIfCategoryExists(id);
+        checkIfCategoryNotExists(id);
 
         try {
             log.info("Category with id '{}' has been found", id);
@@ -77,7 +84,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public Long removeCategory(Long id) {
-        checkIfCategoryExists(id);
+        checkIfCategoryNotExists(id);
 
         try {
             categoryRepository.deleteById(id);
@@ -94,7 +101,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public CategoryDto updateCategory(CategoryDto categoryDto) {
-        checkIfCategoryExists(categoryDto.getId());
+        checkIfCategoryNotExists(categoryDto.getId());
 
         try {
             Category category = categoryRepository.getReferenceById(categoryDto.getId());
@@ -110,8 +117,61 @@ public class CategoryServiceImpl implements CategoryService {
         }
     }
 
-    private void checkIfCategoryExists(Long id) {
-        if (categoryRepository.existsById(id)) {
+    @Override
+    @Transactional(isolation = Isolation.SERIALIZABLE)
+    public CategoryDto addSubCategory(AddOrRemoveForm form) {
+        checkIfCategoryNotExists(form.getTargetId());
+
+        try {
+            Category category = categoryRepository.getReferenceById(form.getTargetId());
+            List<SubCategory> subCategories = subCategoryRepository.findByIdIn(form.getAddedOrRemovedIds());
+            AtomicInteger counter = new AtomicInteger(0);
+            subCategories.forEach(sc -> {
+                if (category.getSubCategories().stream().noneMatch(csc -> csc.getId().equals(sc.getId()))) {
+                    log.info("Sub category '{}' has been added to the '{}' category.", sc.getName(), category.getName());
+                    counter.incrementAndGet();
+                    category.getSubCategories().add(sc);
+                }
+            });
+            log.info("Added '{}' sub categories to the category '{}'.", counter.get(), category.getName());
+            return categoryMapper.mapToDto(category);
+        } catch (Exception e) {
+            log.error("Unable to add sub categories to category! {}", e.getMessage());
+            throw new AddingSubCategoryException(
+                    "Unable to add sub categories to category! %s".formatted(e.getMessage())
+            );
+        }
+    }
+
+    @Override
+    @Transactional(isolation = Isolation.SERIALIZABLE)
+    public CategoryDto removeSubCategory(AddOrRemoveForm form) {
+        checkIfCategoryNotExists(form.getTargetId());
+
+        try {
+            Category category = categoryRepository.getReferenceById(form.getTargetId());
+            List<SubCategory> subCategories = subCategoryRepository.findByIdIn(form.getAddedOrRemovedIds());
+            AtomicInteger counter = new AtomicInteger(0);
+            category.getSubCategories().removeIf(csc -> {
+                if (subCategories.stream().anyMatch(sc -> sc.getId().equals(csc.getId()))) {
+                    log.info("Sub category '{}' has been removed from category '{}'.", csc.getName(), category.getName());
+                    counter.incrementAndGet();
+                    return true;
+                }
+                return false;
+            });
+            log.info("Removed '{}' sub categories from '{}' category", counter.get(), category.getName());
+            return categoryMapper.mapToDto(category);
+        } catch (Exception e) {
+            log.error("Unable remove sub category from category! {}", e.getMessage());
+            throw new RemovingSubCategoryException(
+                    "Unable remove sub category from category! %s".formatted(e.getMessage())
+            );
+        }
+    }
+
+    private void checkIfCategoryNotExists(Long id) {
+        if (!categoryRepository.existsById(id)) {
             log.warn("Unable to find category with id '{}'!", id);
             throw new EntityNotFoundRepositoryException(
                     "Unable to find category with id '%s'!".formatted(id)

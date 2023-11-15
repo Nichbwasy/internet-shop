@@ -1,6 +1,8 @@
 package com.shop.product.controller;
 
 import com.shop.product.dto.ProductDto;
+import com.shop.product.dto.form.AddOrRemoveForm;
+import com.shop.product.dto.form.product.NewProductForm;
 import com.shop.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,9 +24,9 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<ProductDto> addProduct(@RequestBody ProductDto productDto) {
+    public ResponseEntity<ProductDto> addProduct(@RequestBody NewProductForm productForm) {
         log.info("Trying to add a new product...");
-        return ResponseEntity.ok().body(productService.addProduct(productDto));
+        return ResponseEntity.ok().body(productService.addProduct(productForm));
     }
 
     @DeleteMapping("/{id}")
@@ -37,6 +39,20 @@ public class ProductController {
     public ResponseEntity<ProductDto> updateProduct(@RequestBody ProductDto productDto) {
         log.info("Trying to update a product...");
         return ResponseEntity.ok().body(productService.updateProduct(productDto));
+    }
+
+    @PostMapping("/new/category")
+    public ResponseEntity<ProductDto> addCategories(@RequestBody AddOrRemoveForm form) {
+        log.info("Trying to add a new categories '{}' to the product with id '{}'...",
+                form.getTargetId(), form.getAddedOrRemovedIds());
+        return ResponseEntity.ok().body(productService.addCategories(form));
+    }
+
+    @PostMapping("/removing/category")
+    public ResponseEntity<ProductDto> removeCategory(@RequestBody AddOrRemoveForm form) {
+        log.info("Trying to remove categories '{}' from the product with id '{}'.",
+                form.getTargetId(), form.getAddedOrRemovedIds());
+        return ResponseEntity.ok().body(productService.removeCategories(form));
     }
 
 

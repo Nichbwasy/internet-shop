@@ -1,6 +1,7 @@
 package com.shop.product.controller;
 
 import com.shop.product.dto.CategoryDto;
+import com.shop.product.dto.form.AddOrRemoveForm;
 import com.shop.product.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +46,20 @@ public class CategoryController {
     public ResponseEntity<CategoryDto> updateCategory(@RequestBody CategoryDto categoryDto) {
         log.info("Trying to update category...");
         return ResponseEntity.ok().body(categoryService.updateCategory(categoryDto));
+    }
+
+    @PostMapping("/new/sub")
+    public ResponseEntity<CategoryDto> addNewSubCategory(@RequestBody AddOrRemoveForm form) {
+        log.info("Trying to add a new sub categories '{}' to the category with id '{}'...",
+                form.getTargetId(), form.getAddedOrRemovedIds());
+        return ResponseEntity.ok().body(categoryService.addSubCategory(form));
+    }
+
+    @PostMapping("/removing/sub")
+    public ResponseEntity<CategoryDto> removeSubCategories(@RequestBody AddOrRemoveForm form) {
+        log.info("Trying to add a remove sub categories '{}' to the category with id '{}'...",
+                form.getTargetId(), form.getAddedOrRemovedIds());
+        return ResponseEntity.ok().body(categoryService.removeSubCategory(form));
     }
 
 }

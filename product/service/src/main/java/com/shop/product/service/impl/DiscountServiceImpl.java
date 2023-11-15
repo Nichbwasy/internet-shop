@@ -44,7 +44,7 @@ public class DiscountServiceImpl implements DiscountService {
 
     @Override
     public DiscountDto getDiscount(Long id) {
-        checkIfDiscountExists(id);
+        checkIfDiscountNotExists(id);
 
         try {
             log.info("Discount with id '{}' has been found", id);
@@ -74,7 +74,7 @@ public class DiscountServiceImpl implements DiscountService {
 
     @Override
     public Long removeDiscount(Long id) {
-        checkIfDiscountExists(id);
+        checkIfDiscountNotExists(id);
 
         try {
             discountRepository.deleteById(id);
@@ -90,7 +90,7 @@ public class DiscountServiceImpl implements DiscountService {
 
     @Override
     public DiscountDto updateDiscount(DiscountDto discountDto) {
-        checkIfDiscountExists(discountDto.getId());
+        checkIfDiscountNotExists(discountDto.getId());
 
         try {
             Discount discount = discountRepository.getReferenceById(discountDto.getId());
@@ -106,8 +106,8 @@ public class DiscountServiceImpl implements DiscountService {
         }
     }
 
-    private void checkIfDiscountExists(Long id) {
-        if (discountRepository.existsById(id)) {
+    private void checkIfDiscountNotExists(Long id) {
+        if (!discountRepository.existsById(id)) {
             log.warn("Unable to find discount with id '{}'!", id);
             throw new EntityNotFoundRepositoryException(
                     "Unable to find discount with id '%s'!".formatted(id)

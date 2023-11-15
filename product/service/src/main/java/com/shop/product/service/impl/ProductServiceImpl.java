@@ -4,15 +4,28 @@ import com.shop.common.utils.all.exception.dao.EntityDeleteRepositoryException;
 import com.shop.common.utils.all.exception.dao.EntityNotFoundRepositoryException;
 import com.shop.common.utils.all.exception.dao.EntitySaveRepositoryException;
 import com.shop.common.utils.all.exception.dao.EntityUpdateRepositoryException;
+import com.shop.common.utils.all.generator.StringGenerator;
+import com.shop.product.dao.CategoryRepository;
+import com.shop.product.dao.DiscountRepository;
 import com.shop.product.dao.ProductRepository;
 import com.shop.product.dto.ProductDto;
+import com.shop.product.dto.form.AddOrRemoveForm;
+import com.shop.product.dto.form.product.NewProductForm;
+import com.shop.product.model.Category;
+import com.shop.product.model.Discount;
 import com.shop.product.model.Product;
 import com.shop.product.service.ProductService;
+import com.shop.product.service.exception.product.AddingCategoryException;
 import com.shop.product.service.mappers.ProductMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Service
@@ -21,11 +34,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
+    private final DiscountRepository discountRepository;
     private final ProductMapper productMapper;
 
     @Override
     public ProductDto getProduct(Long id) {
-        checkIfProductExists(id);
+        checkIfProductNotExists(id);
 
         try {
             log.info("Product with id '{}' has been found", id);
@@ -39,9 +54,17 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductDto addProduct(ProductDto productDto) {
+    @Transactional(isolation = Isolation.SERIALIZABLE)
+    public ProductDto addProduct(NewProductForm productForm) {
         try {
-            Product product = productMapper.mapToModel(productDto);
+            Product product = productMapper.mapProductFormToModel(productForm);
+            List<Category> categories = categoryRepository.findByIdIn(productForm.getCategoryIds());
+            List<Discount> discounts = discountRepository.findByIdIn(productForm.getDiscountIds());
+            product.setCategories(categories);
+            product.setDiscounts(discounts);
+            product.setCreatedTime(LocalDateTime.now());
+            product.setCode(StringGenerator.generate(64));
+
             product = productRepository.save(product);
             log.info("New product with id '{}' has been saved successfully.", product.getId());
             return productMapper.mapToDto(product);
@@ -54,8 +77,9 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public Long removeProduct(Long id) {
-        checkIfProductExists(id);
+        checkIfProductNotExists(id);
 
         try {
             productRepository.deleteById(id);
@@ -70,8 +94,9 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public ProductDto updateProduct(ProductDto productDto) {
-        checkIfProductExists(productDto.getId());
+        checkIfProductNotExists(productDto.getId());
 
         try {
             Product product = productRepository.getReferenceById(productDto.getId());
@@ -87,8 +112,61 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
-    private void checkIfProductExists(Long id) {
-        if (productRepository.existsById(id)) {
+    @Override
+    @Transactional(isolation = Isolation.SERIALIZABLE)
+    public ProductDto addCategories(AddOrRemoveForm form) {
+        checkIfProductNotExists(form.getTargetId());
+
+        try {
+            Product product = productRepository.getReferenceById(form.getTargetId());
+            List<Category> categories = categoryRepository.findByIdIn(form.getAddedOrRemovedIds());
+            AtomicInteger counter = new AtomicInteger(0);
+            categories.stream()
+                    .filter(c -> product.getCategories().stream().noneMatch(pc -> pc.getId().equals(c.getId())))
+                    .forEach(c -> {
+                        log.info("Category '{}' has been added to the product '{}'.", c.getName(), product.getName());
+                        product.getCategories().add(c);
+                        counter.incrementAndGet();
+                    });
+            log.info("Added '{}' categories to the product '{}'.", counter.get(), product.getName());
+            return productMapper.mapToDto(product);
+        } catch (Exception e) {
+            log.info("Unable to add new categories to product! {}", e.getMessage());
+            throw new AddingCategoryException(
+                    "Unable to add new categories to product! %s".formatted(e.getMessage())
+            );
+        }
+    }
+
+    @Override
+    @Transactional(isolation = Isolation.SERIALIZABLE)
+    public ProductDto removeCategories(AddOrRemoveForm form) {
+        checkIfProductNotExists(form.getTargetId());
+
+        try {
+            Product product = productRepository.getReferenceById(form.getTargetId());
+            List<Category> categories = categoryRepository.findByIdIn(form.getAddedOrRemovedIds());
+            AtomicInteger counter = new AtomicInteger(0);
+            product.getCategories().removeIf(pc -> {
+                if (categories.stream().anyMatch(c -> c.getId().equals(pc.getId()))) {
+                    log.info("Category '{}' has been removed from product '{}'.", pc.getName(), product.getName());
+                    counter.incrementAndGet();
+                    return true;
+                }
+                return false;
+            });
+            log.info("Removed '{}' categories from the product '{}'.", counter.get(), product.getName());
+            return productMapper.mapToDto(product);
+        } catch (Exception e) {
+            log.info("Unable to remove categories from product! {}", e.getMessage());
+            throw new AddingCategoryException(
+                    "Unable to remove categories from product! %s".formatted(e.getMessage())
+            );
+        }
+    }
+
+    private void checkIfProductNotExists(Long id) {
+        if (!productRepository.existsById(id)) {
             log.warn("Unable to find product with id '{}'!", id);
             throw new EntityNotFoundRepositoryException(
                     "Unable to find product with id '%s'!".formatted(id)

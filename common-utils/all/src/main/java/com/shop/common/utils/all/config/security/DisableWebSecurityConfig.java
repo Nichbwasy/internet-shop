@@ -13,7 +13,7 @@ public class DisableWebSecurityConfig {
 
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
-        log.info("DEBUG PROFILE IS ACTIVE! WEB SECURITY DISABLE!");
+        log.info(" *** *** *** DEBUG PROFILE IS ACTIVE! WEB SECURITY DISABLE! *** *** ***");
         return (web) -> {
             web.ignoring()
                     .requestMatchers("/**")
