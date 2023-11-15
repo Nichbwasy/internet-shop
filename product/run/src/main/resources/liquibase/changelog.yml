@@ -222,3 +222,5 @@ databaseChangeLog:
               ALTER TABLE "product".category_sub_category ADD FOREIGN KEY (sub_category_id) REFERENCES "product".sub_category (id) ON DELETE CASCADE;
               ALTER TABLE "product".product_discount ADD FOREIGN KEY (product_id) REFERENCES "product".product (id) ON DELETE CASCADE;
               ALTER TABLE "product".product_discount ADD FOREIGN KEY (discount_id) REFERENCES "product".discount (id) ON DELETE CASCADE;
+  - include:
+      file: liquibase/scripts/dml.yml

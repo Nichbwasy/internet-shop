@@ -12,4 +12,12 @@
     <artifactId>client-product</artifactId>
     <packaging>jar</packaging>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+            <version>${spring-cloud-openfeign-version}</version>
+        </dependency>
+    </dependencies>
+
 </project>

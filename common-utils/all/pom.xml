@@ -18,6 +18,7 @@
     </properties>
 
     <dependencies>
+
         <!-- MAPSTRUCT -->
         <dependency>
             <groupId>org.mapstruct</groupId>

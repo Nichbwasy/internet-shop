@@ -1,0 +1,133 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-dml-to-categories
+      author: jvsSEN
+      changes:
+        - insert:
+            schemaName: product
+            tableName: category
+            dbms: '!h2, postgresql'
+            columns:
+              - column:
+                  name: name
+                  value: furniture
+        - insert:
+            schemaName: product
+            tableName: category
+            dbms: '!h2, postgresql'
+            columns:
+              - column:
+                  name: name
+                  value: electronics
+        - insert:
+            schemaName: product
+            tableName: category
+            dbms: '!h2, postgresql'
+            columns:
+              - column:
+                  name: name
+                  value: clothes
+
+  - changeSet:
+      id: add-dml-to-sub-categories
+      author: jvsSEN
+      changes:
+        - insert:
+            schemaName: product
+            tableName: sub_category
+            dbms: '!h2, postgresql'
+            columns:
+              - column:
+                  name: name
+                  value: table
+        - insert:
+            schemaName: product
+            tableName: sub_category
+            dbms: '!h2, postgresql'
+            columns:
+              - column:
+                  name: name
+                  value: chair
+        - insert:
+            schemaName: product
+            tableName: sub_category
+            dbms: '!h2, postgresql'
+            columns:
+              - column:
+                  name: name
+                  value: monitors
+        - insert:
+            schemaName: product
+            tableName: sub_category
+            dbms: '!h2, postgresql'
+            columns:
+              - column:
+                  name: name
+                  value: phones
+        - insert:
+            schemaName: product
+            tableName: sub_category
+            dbms: '!h2, postgresql'
+            columns:
+              - column:
+                  name: name
+                  value: computers
+        - insert:
+            schemaName: product
+            tableName: sub_category
+            dbms: '!h2, postgresql'
+            columns:
+              - column:
+                  name: name
+                  value: devices
+
+  - changeSet:
+      id: add-dml-to-discount
+      author: jvsSEN
+      changes:
+        - insert:
+            schemaName: product
+            tableName: discount
+            dbms: '!h2, postgresql'
+            columns:
+              - column:
+                  name: name
+                  value: Regular customers' discount
+              - column:
+                  name: description
+                  value: Discount for the regular customers
+              - column:
+                  name: created_time
+                  value: '2023-11-15 09:00:00'
+              - column:
+                  name: activation_time
+                  value: '2023-11-15 10:00:00'
+              - column:
+                  name: ending_time
+                  value: '2024-11-15 10:00:00'
+              - column:
+                  name: discount_value
+                  value: '0.1'
+        - insert:
+            schemaName: product
+            tableName: discount
+            dbms: '!h2, postgresql'
+            columns:
+              - column:
+                  name: name
+                  value: Old discount
+              - column:
+                  name: description
+                  value: Old discount for customers
+              - column:
+                  name: created_time
+                  value: '2022-11-15 09:00:00'
+              - column:
+                  name: activation_time
+                  value: '2022-11-15 10:00:00'
+              - column:
+                  name: ending_time
+                  value: '2023-11-15 10:00:00'
+              - column:
+                  name: discount_value
+                  value: '0.1'

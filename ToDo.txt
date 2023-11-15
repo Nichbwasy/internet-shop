@@ -1,0 +1,16 @@
+Authorization microservice: [Done]
+    - Add user with admins' rights [Done]
+        - Generate long life access token for admin [Done]
+Product microservice: [In progress]
+    - Add some dml to the product service [Done]
+    - Adding/removing sub roles to a role
+    - Adding/removing roles to a product
+    - Adding/removing discounts to a role
+    - Show page of sorting and ordered products
+    - Add security and custom jwt token filter [Done]
+        - Disable security for debugging [Done]
+    - Write unit tests for the service later
+    - Write integrate tests for the controller layer
+Global:
+    - Fix advice (security advice doesn't catch Jwt tokens exceptions, for some reason)
+    - Write java docks (no chance)
