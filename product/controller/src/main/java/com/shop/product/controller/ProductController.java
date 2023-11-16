@@ -48,11 +48,25 @@ public class ProductController {
         return ResponseEntity.ok().body(productService.addCategories(form));
     }
 
-    @PostMapping("/removing/category")
+    @DeleteMapping("/removing/category")
     public ResponseEntity<ProductDto> removeCategory(@RequestBody AddOrRemoveForm form) {
         log.info("Trying to remove categories '{}' from the product with id '{}'.",
                 form.getTargetId(), form.getAddedOrRemovedIds());
         return ResponseEntity.ok().body(productService.removeCategories(form));
+    }
+
+    @PostMapping("/new/discount")
+    public ResponseEntity<ProductDto> addDiscounts(@RequestBody AddOrRemoveForm form) {
+        log.info("Trying to add a new discounts '{}' to the product with id '{}'...",
+                form.getTargetId(), form.getAddedOrRemovedIds());
+        return ResponseEntity.ok().body(productService.addDiscount(form));
+    }
+
+    @DeleteMapping("/removing/discount")
+    public ResponseEntity<ProductDto> removeDiscounts(@RequestBody AddOrRemoveForm form) {
+        log.info("Trying to remove discounts '{}' from the oriduct with id '{}'...",
+                form.getTargetId(), form.getAddedOrRemovedIds());
+        return ResponseEntity.ok().body(productService.removeDiscount(form));
     }
 
 

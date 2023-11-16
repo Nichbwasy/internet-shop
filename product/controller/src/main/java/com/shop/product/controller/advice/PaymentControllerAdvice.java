@@ -10,6 +10,12 @@ import com.shop.common.utils.exception.jwt.token.JwtTokenExpiredException;
 import com.shop.common.utils.exception.jwt.token.JwtTokenMalformedException;
 import com.shop.common.utils.exception.jwt.token.JwtTokenUnsupportedException;
 import com.shop.common.utils.exception.jwt.token.JwtTokenWrongSignatureException;
+import com.shop.product.service.exception.category.AddingSubCategoryException;
+import com.shop.product.service.exception.category.RemovingSubCategoryException;
+import com.shop.product.service.exception.product.AddingCategoryException;
+import com.shop.product.service.exception.product.AddingDiscountException;
+import com.shop.product.service.exception.product.RemovingCategoryException;
+import com.shop.product.service.exception.product.RemovingDiscountException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -115,5 +121,28 @@ public class PaymentControllerAdvice {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
+    /** Adding/removing list of elements to entity exceptions **/
+
+    @ExceptionHandler({
+            AddingDiscountException.class,
+            AddingCategoryException.class,
+            AddingSubCategoryException.class
+    })
+    protected ResponseEntity<AdviceResponseObject> addingListOdElements(Exception e, WebRequest request) {
+        log.error("Exception while adding new elements! {}", e.getMessage());
+        AdviceResponseObject response = new AdviceResponseObject("Exception while adding new elements!", e, request);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    @ExceptionHandler({
+            RemovingDiscountException.class,
+            RemovingCategoryException.class,
+            RemovingSubCategoryException.class
+    })
+    protected ResponseEntity<AdviceResponseObject> removingListOdElements(Exception e, WebRequest request) {
+        log.error("Exception while removing elements! {}", e.getMessage());
+        AdviceResponseObject response = new AdviceResponseObject("Exception while removing elements!", e, request);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
 
 }

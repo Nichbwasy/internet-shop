@@ -16,6 +16,8 @@ import com.shop.product.model.Discount;
 import com.shop.product.model.Product;
 import com.shop.product.service.ProductService;
 import com.shop.product.service.exception.product.AddingCategoryException;
+import com.shop.product.service.exception.product.AddingDiscountException;
+import com.shop.product.service.exception.product.RemovingDiscountException;
 import com.shop.product.service.mappers.ProductMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -161,6 +163,60 @@ public class ProductServiceImpl implements ProductService {
             log.info("Unable to remove categories from product! {}", e.getMessage());
             throw new AddingCategoryException(
                     "Unable to remove categories from product! %s".formatted(e.getMessage())
+            );
+        }
+    }
+
+    @Override
+    @Transactional(isolation = Isolation.SERIALIZABLE)
+    public ProductDto addDiscount(AddOrRemoveForm form) {
+        checkIfProductNotExists(form.getTargetId());
+
+        try {
+            Product product = productRepository.getReferenceById(form.getTargetId());
+            List<Discount> discounts = discountRepository.findByIdIn(form.getAddedOrRemovedIds());
+            AtomicInteger counter = new AtomicInteger(0);
+            discounts.stream()
+                    .filter(ds -> product.getDiscounts().stream()
+                            .noneMatch(pds -> pds.getId().equals(ds.getId())))
+                    .forEach(ds -> {
+                        log.info("Discount '{}' has been added to the product '{}'.", ds.getName(), product.getName());
+                        product.getDiscounts().add(ds);
+                        counter.incrementAndGet();
+                    });
+            log.info("Added '{}' discounts to the product '{}'.", counter.get(), product.getName());
+            return productMapper.mapToDto(product);
+        } catch (Exception e) {
+            log.error("Unable add discounts to product! {}", e.getMessage());
+            throw new AddingDiscountException(
+                    "Unable add discounts to product! %s".formatted(e.getMessage())
+            );
+        }
+    }
+
+    @Override
+    @Transactional(isolation = Isolation.SERIALIZABLE)
+    public ProductDto removeDiscount(AddOrRemoveForm form) {
+        checkIfProductNotExists(form.getTargetId());
+
+        try {
+            Product product = productRepository.getReferenceById(form.getTargetId());
+            List<Discount> discounts = discountRepository.findByIdIn(form.getAddedOrRemovedIds());
+            AtomicInteger counter = new AtomicInteger(0);
+            product.getDiscounts().removeIf(pds -> {
+               if (discounts.stream().anyMatch(ds -> ds.getId().equals(pds.getId()))) {
+                   log.info("Discount '{}' has been removed from the product '{}'.", pds.getName(), product.getName());
+                   counter.incrementAndGet();
+                   return true;
+               }
+               return false;
+            });
+            log.info("Removed '{}' discounts from the product '{}'.", counter.get(), product.getName());
+            return productMapper.mapToDto(product);
+        } catch (Exception e) {
+            log.error("Unable remove discounts from the product '{}'...", e.getMessage());
+            throw new RemovingDiscountException(
+                    "Unable remove discounts from the product '%s'...".formatted(e.getMessage())
             );
         }
     }

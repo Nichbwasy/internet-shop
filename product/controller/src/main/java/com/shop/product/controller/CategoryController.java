@@ -55,7 +55,7 @@ public class CategoryController {
         return ResponseEntity.ok().body(categoryService.addSubCategory(form));
     }
 
-    @PostMapping("/removing/sub")
+    @DeleteMapping("/removing/sub")
     public ResponseEntity<CategoryDto> removeSubCategories(@RequestBody AddOrRemoveForm form) {
         log.info("Trying to add a remove sub categories '{}' to the category with id '{}'...",
                 form.getTargetId(), form.getAddedOrRemovedIds());

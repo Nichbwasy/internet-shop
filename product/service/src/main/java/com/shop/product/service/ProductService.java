@@ -10,8 +10,9 @@ public interface ProductService {
     ProductDto addProduct(NewProductForm productForm);
     Long removeProduct(Long id);
     ProductDto updateProduct(ProductDto productDto);
-
     ProductDto addCategories(AddOrRemoveForm form);
     ProductDto removeCategories(AddOrRemoveForm form);
+    ProductDto addDiscount(AddOrRemoveForm form);
+    ProductDto removeDiscount(AddOrRemoveForm form);
 
 }

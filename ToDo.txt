@@ -5,8 +5,9 @@ Product microservice: [In progress]
     - Add some dml to the product service [Done]
     - Adding/removing sub category to a role [Done]
     - Adding/removing category to a product [Done]
-    - Adding/removing discounts to a product
-    - Show page of sorting and ordered products
+    - Adding/removing discounts to a product [Done]
+    - Add exception handling for adding/removing methods in advice [Done]
+    - Show page of sorting and ordered products [In progress]
     - Add security and custom jwt token filter [Done]
         - Disable security for debugging [Done]
     - Write unit tests for the service later
