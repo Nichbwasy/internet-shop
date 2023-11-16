@@ -8,19 +8,28 @@ import com.shop.common.utils.all.generator.StringGenerator;
 import com.shop.product.dao.CategoryRepository;
 import com.shop.product.dao.DiscountRepository;
 import com.shop.product.dao.ProductRepository;
+import com.shop.product.dao.sort.ProductSortBuilder;
+import com.shop.product.dao.specification.ProductSpecificationBuilder;
 import com.shop.product.dto.ProductDto;
 import com.shop.product.dto.form.AddOrRemoveForm;
 import com.shop.product.dto.form.product.NewProductForm;
+import com.shop.product.dto.form.product.ProductFilterForm;
 import com.shop.product.model.Category;
 import com.shop.product.model.Discount;
 import com.shop.product.model.Product;
 import com.shop.product.service.ProductService;
 import com.shop.product.service.exception.product.AddingCategoryException;
 import com.shop.product.service.exception.product.AddingDiscountException;
+import com.shop.product.service.exception.product.GetProductsPageException;
 import com.shop.product.service.exception.product.RemovingDiscountException;
 import com.shop.product.service.mappers.ProductMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -39,6 +49,9 @@ public class ProductServiceImpl implements ProductService {
     private final CategoryRepository categoryRepository;
     private final DiscountRepository discountRepository;
     private final ProductMapper productMapper;
+
+    @Value("${products.page.size}")
+    private Integer PAGE_SIZE;
 
     @Override
     public ProductDto getProduct(Long id) {
@@ -219,6 +232,39 @@ public class ProductServiceImpl implements ProductService {
                     "Unable remove discounts from the product '%s'...".formatted(e.getMessage())
             );
         }
+    }
+
+    @Override
+    public List<ProductDto> getPageOfFilteredProducts(Integer page, ProductFilterForm form) {
+        try {
+            PageRequest pageRequest = PageRequest.of(page - 1, PAGE_SIZE, getSort(form));
+            Page<Product> products = productRepository.findAll(getSpecification(form), pageRequest);
+
+            return products.stream()
+                    .map(productMapper::mapToDto)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Unable get '{}' page of products! {}", page, e.getMessage());
+            throw new GetProductsPageException("Unable get '%s' page of products! %s".formatted(page, e.getMessage()));
+        }
+    }
+
+    private static Sort getSort(ProductFilterForm form) {
+        ProductSortBuilder productSortBuilder = new ProductSortBuilder();
+        return productSortBuilder
+                .byName(form.getSortByName())
+                .byPrice(form.getSortByPrice())
+                .byCreationTime(form.getSortByCreatedTime())
+                .build();
+    }
+
+    private static Specification<Product> getSpecification(ProductFilterForm form) {
+        ProductSpecificationBuilder productSpecificationBuilder = new ProductSpecificationBuilder();
+        return productSpecificationBuilder
+                .andLikeName(form.getName())
+                .andBetweenPrice(form.getMinPrice(), form.getMaxPrice())
+                .andBetweenCreationTime(form.getMinCreatedTime(), form.getMaxCreatedTime())
+                .build();
     }
 
     private void checkIfProductNotExists(Long id) {

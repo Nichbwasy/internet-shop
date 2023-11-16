@@ -7,7 +7,7 @@ Product microservice: [In progress]
     - Adding/removing category to a product [Done]
     - Adding/removing discounts to a product [Done]
     - Add exception handling for adding/removing methods in advice [Done]
-    - Show page of sorting and ordered products [In progress]
+    - Show page of sorted and ordered products [Done]
     - Add security and custom jwt token filter [Done]
         - Disable security for debugging [Done]
     - Write unit tests for the service later

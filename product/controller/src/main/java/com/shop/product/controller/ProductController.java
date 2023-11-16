@@ -3,11 +3,14 @@ package com.shop.product.controller;
 import com.shop.product.dto.ProductDto;
 import com.shop.product.dto.form.AddOrRemoveForm;
 import com.shop.product.dto.form.product.NewProductForm;
+import com.shop.product.dto.form.product.ProductFilterForm;
 import com.shop.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -17,7 +20,16 @@ public class ProductController {
 
     private final ProductService productService;
 
-    @GetMapping("/{id}")
+    @PostMapping("/{page}")
+    public ResponseEntity<List<ProductDto>> getProductsPage(
+            @PathVariable Integer page,
+            @RequestBody ProductFilterForm form
+    ) {
+        log.info("Trying to get products page '{}'...", page);
+        return ResponseEntity.ok().body(productService.getPageOfFilteredProducts(page, form));
+    }
+
+    @GetMapping("/product/{id}")
     public ResponseEntity<ProductDto> getProduct(@PathVariable Long id) {
         log.info("Trying to get product with id '{}'...", id);
         return ResponseEntity.ok().body(productService.getProduct(id));

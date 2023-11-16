@@ -3,6 +3,9 @@ package com.shop.product.service;
 import com.shop.product.dto.ProductDto;
 import com.shop.product.dto.form.AddOrRemoveForm;
 import com.shop.product.dto.form.product.NewProductForm;
+import com.shop.product.dto.form.product.ProductFilterForm;
+
+import java.util.List;
 
 public interface ProductService {
 
@@ -14,5 +17,7 @@ public interface ProductService {
     ProductDto removeCategories(AddOrRemoveForm form);
     ProductDto addDiscount(AddOrRemoveForm form);
     ProductDto removeDiscount(AddOrRemoveForm form);
+
+    List<ProductDto> getPageOfFilteredProducts(Integer page, ProductFilterForm form);
 
 }
