@@ -1,9 +1,6 @@
 package com.shop.product.service.impl;
 
-import com.shop.common.utils.all.exception.dao.EntityDeleteRepositoryException;
-import com.shop.common.utils.all.exception.dao.EntityNotFoundRepositoryException;
-import com.shop.common.utils.all.exception.dao.EntitySaveRepositoryException;
-import com.shop.common.utils.all.exception.dao.EntityUpdateRepositoryException;
+import com.shop.common.utils.all.exception.dao.*;
 import com.shop.product.dao.CategoryRepository;
 import com.shop.product.dao.SubCategoryRepository;
 import com.shop.product.dto.CategoryDto;
@@ -14,6 +11,7 @@ import com.shop.product.service.CategoryService;
 import com.shop.product.service.exception.category.AddingSubCategoryException;
 import com.shop.product.service.exception.category.RemovingSubCategoryException;
 import com.shop.product.service.mappers.CategoryMapper;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -44,7 +42,7 @@ public class CategoryServiceImpl implements CategoryService {
                     .collect(Collectors.toList());
         } catch (Exception e) {
             log.warn("Exception while trying to get all categories! {}", e.getMessage());
-            throw new EntityDeleteRepositoryException(
+            throw new EntityGetRepositoryException(
                     "Exception while trying to get all categories! %s".formatted(e.getMessage())
             );
         }
@@ -52,14 +50,14 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryDto getCategory(Long id) {
-        checkIfCategoryNotExists(id);
-
         try {
+            checkIfCategoryNotExists(id);
+
             log.info("Category with id '{}' has been found", id);
             return categoryMapper.mapToDto(categoryRepository.getReferenceById(id));
         } catch (Exception e) {
             log.warn("Exception while trying to get category with id '{}'! {}", id, e.getMessage());
-            throw new EntityDeleteRepositoryException(
+            throw new EntityGetRepositoryException(
                     "Exception while trying to get category with id '%s'! %s".formatted(id, e.getMessage())
             );
         }
@@ -69,7 +67,9 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public CategoryDto addCategory(CategoryDto categoryDto) {
         try {
-            Category category = categoryMapper.mapToModel(categoryDto);
+            checkIfCategoryAlreadyExits(categoryDto.getId(), categoryDto.getName());
+
+            @Valid Category category = categoryMapper.mapToModel(categoryDto);
             category = categoryRepository.save(category);
             log.info("New category with id '{}' has been saved successfully.", category.getId());
             return categoryMapper.mapToDto(category);
@@ -84,9 +84,9 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public Long removeCategory(Long id) {
-        checkIfCategoryNotExists(id);
-
         try {
+            checkIfCategoryNotExists(id);
+
             categoryRepository.deleteById(id);
             log.info("Category with id '{}' has been removed successfully.", id);
             return id;
@@ -101,9 +101,9 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public CategoryDto updateCategory(CategoryDto categoryDto) {
-        checkIfCategoryNotExists(categoryDto.getId());
-
         try {
+            checkIfCategoryNotExists(categoryDto.getId());
+
             Category category = categoryRepository.getReferenceById(categoryDto.getId());
             log.info("Category with id '{}' has been found to update!'", categoryDto.getId());
             categoryMapper.updateModel(categoryDto, category);
@@ -120,9 +120,9 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public CategoryDto addSubCategory(AddOrRemoveForm form) {
-        checkIfCategoryNotExists(form.getTargetId());
-
         try {
+            checkIfCategoryNotExists(form.getTargetId());
+
             Category category = categoryRepository.getReferenceById(form.getTargetId());
             List<SubCategory> subCategories = subCategoryRepository.findByIdIn(form.getAddedOrRemovedIds());
             AtomicInteger counter = new AtomicInteger(0);
@@ -146,9 +146,9 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public CategoryDto removeSubCategory(AddOrRemoveForm form) {
-        checkIfCategoryNotExists(form.getTargetId());
-
         try {
+            checkIfCategoryNotExists(form.getTargetId());
+
             Category category = categoryRepository.getReferenceById(form.getTargetId());
             List<SubCategory> subCategories = subCategoryRepository.findByIdIn(form.getAddedOrRemovedIds());
             AtomicInteger counter = new AtomicInteger(0);
@@ -176,6 +176,13 @@ public class CategoryServiceImpl implements CategoryService {
             throw new EntityNotFoundRepositoryException(
                     "Unable to find category with id '%s'!".formatted(id)
             );
+        }
+    }
+
+    private void checkIfCategoryAlreadyExits(Long id, String name) {
+        if (categoryRepository.existsByIdOrName(id, name)) {
+            log.warn("Category '{}' already exists!", name);
+            throw new EntityAlreadyExistsException("Category '%s' already exists!".formatted(name));
         }
     }
 }

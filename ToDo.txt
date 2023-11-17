@@ -10,7 +10,8 @@ Product microservice: [In progress]
     - Show page of sorted and ordered products [Done]
     - Add security and custom jwt token filter [Done]
         - Disable security for debugging [Done]
-    - Write unit tests for the service later
+    - Write unit tests for the service later [In progress]
+        - Write unit tests for show page method in product service [In progress]
     - Write integrate tests for the controller layer
     - Add random code generation to the code of product [Done]
 Global:

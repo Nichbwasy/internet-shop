@@ -15,8 +15,8 @@ public interface ProductService {
     ProductDto updateProduct(ProductDto productDto);
     ProductDto addCategories(AddOrRemoveForm form);
     ProductDto removeCategories(AddOrRemoveForm form);
-    ProductDto addDiscount(AddOrRemoveForm form);
-    ProductDto removeDiscount(AddOrRemoveForm form);
+    ProductDto addDiscounts(AddOrRemoveForm form);
+    ProductDto removeDiscounts(AddOrRemoveForm form);
 
     List<ProductDto> getPageOfFilteredProducts(Integer page, ProductFilterForm form);
 

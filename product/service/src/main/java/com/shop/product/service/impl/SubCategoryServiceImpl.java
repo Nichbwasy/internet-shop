@@ -1,14 +1,12 @@
 package com.shop.product.service.impl;
 
-import com.shop.common.utils.all.exception.dao.EntityDeleteRepositoryException;
-import com.shop.common.utils.all.exception.dao.EntityNotFoundRepositoryException;
-import com.shop.common.utils.all.exception.dao.EntitySaveRepositoryException;
-import com.shop.common.utils.all.exception.dao.EntityUpdateRepositoryException;
+import com.shop.common.utils.all.exception.dao.*;
 import com.shop.product.dao.SubCategoryRepository;
 import com.shop.product.dto.SubCategoryDto;
 import com.shop.product.model.SubCategory;
 import com.shop.product.service.SubCategoryService;
 import com.shop.product.service.mappers.SubCategoryMapper;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -37,7 +35,7 @@ public class SubCategoryServiceImpl implements SubCategoryService {
                     .collect(Collectors.toList());
         } catch (Exception e) {
             log.warn("Exception while trying to get all sub categories! {}", e.getMessage());
-            throw new EntityDeleteRepositoryException(
+            throw new EntityGetRepositoryException(
                     "Exception while trying to get all sub categories! %s".formatted(e.getMessage())
             );
         }
@@ -45,14 +43,14 @@ public class SubCategoryServiceImpl implements SubCategoryService {
 
     @Override
     public SubCategoryDto getSubCategory(Long id) {
-        checkIfSubCategoryNotExists(id);
-
         try {
+            checkIfSubCategoryNotExists(id);
+
             log.info("Sub category with id '{}' has been found", id);
             return subCategoryMapper.mapToDto(subCategoryRepository.getReferenceById(id));
         } catch (Exception e) {
             log.warn("Exception while trying to get all sub categories! {}", e.getMessage());
-            throw new EntityDeleteRepositoryException(
+            throw new EntityGetRepositoryException(
                     "Exception while trying to get all sub categories! %s".formatted(e.getMessage())
             );
         }
@@ -62,7 +60,9 @@ public class SubCategoryServiceImpl implements SubCategoryService {
     @Transactional
     public SubCategoryDto addSubCategory(SubCategoryDto subCategoryDto) {
         try {
-            SubCategory subCategory = subCategoryMapper.mapToModel(subCategoryDto);
+            checkIfSubCategoryAlreadyExits(subCategoryDto.getId(), subCategoryDto.getName());
+
+            @Valid SubCategory subCategory = subCategoryMapper.mapToModel(subCategoryDto);
             subCategory = subCategoryRepository.save(subCategory);
             log.info("New sub category with id '{}' has been saved successfully.", subCategory.getId());
             return subCategoryMapper.mapToDto(subCategory);
@@ -77,9 +77,9 @@ public class SubCategoryServiceImpl implements SubCategoryService {
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public Long removeSubCategory(Long id) {
-        checkIfSubCategoryNotExists(id);
-
         try {
+            checkIfSubCategoryNotExists(id);
+
             subCategoryRepository.deleteById(id);
             log.info("Sub category with id '{}' has been removed successfully.", id);
             return id;
@@ -94,9 +94,9 @@ public class SubCategoryServiceImpl implements SubCategoryService {
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public SubCategoryDto updateSubCategory(SubCategoryDto subCategoryDto) {
-        checkIfSubCategoryNotExists(subCategoryDto.getId());
-
         try {
+            checkIfSubCategoryNotExists(subCategoryDto.getId());
+
             SubCategory subCategory = subCategoryRepository.getReferenceById(subCategoryDto.getId());
             log.info("Sub category with id '{}' has been found to update!'", subCategoryDto.getId());
             subCategoryMapper.updateModel(subCategoryDto, subCategory);
@@ -116,6 +116,13 @@ public class SubCategoryServiceImpl implements SubCategoryService {
             throw new EntityNotFoundRepositoryException(
                     "Unable to find sub category with id '%s'!".formatted(id)
             );
+        }
+    }
+
+    private void checkIfSubCategoryAlreadyExits(Long id, String name) {
+        if (subCategoryRepository.existsByIdOrName(id, name)) {
+            log.warn("Sub category '{}' already exists!", name);
+            throw new EntityAlreadyExistsException("Sub category '%s' already exists!".formatted(name));
         }
     }
 }

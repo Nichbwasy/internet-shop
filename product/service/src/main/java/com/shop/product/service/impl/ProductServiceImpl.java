@@ -1,9 +1,6 @@
 package com.shop.product.service.impl;
 
-import com.shop.common.utils.all.exception.dao.EntityDeleteRepositoryException;
-import com.shop.common.utils.all.exception.dao.EntityNotFoundRepositoryException;
-import com.shop.common.utils.all.exception.dao.EntitySaveRepositoryException;
-import com.shop.common.utils.all.exception.dao.EntityUpdateRepositoryException;
+import com.shop.common.utils.all.exception.dao.*;
 import com.shop.common.utils.all.generator.StringGenerator;
 import com.shop.product.dao.CategoryRepository;
 import com.shop.product.dao.DiscountRepository;
@@ -18,11 +15,9 @@ import com.shop.product.model.Category;
 import com.shop.product.model.Discount;
 import com.shop.product.model.Product;
 import com.shop.product.service.ProductService;
-import com.shop.product.service.exception.product.AddingCategoryException;
-import com.shop.product.service.exception.product.AddingDiscountException;
-import com.shop.product.service.exception.product.GetProductsPageException;
-import com.shop.product.service.exception.product.RemovingDiscountException;
+import com.shop.product.service.exception.product.*;
 import com.shop.product.service.mappers.ProductMapper;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -55,14 +50,14 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ProductDto getProduct(Long id) {
-        checkIfProductNotExists(id);
-
         try {
+            checkIfProductNotExists(id);
+
             log.info("Product with id '{}' has been found", id);
             return productMapper.mapToDto(productRepository.getReferenceById(id));
         } catch (Exception e) {
             log.warn("Exception while trying to get product with id '{}'! {}", id, e.getMessage());
-            throw new EntityDeleteRepositoryException(
+            throw new EntityGetRepositoryException(
                     "Exception while trying to get product with id '%s'! %s".formatted(id, e.getMessage())
             );
         }
@@ -72,7 +67,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public ProductDto addProduct(NewProductForm productForm) {
         try {
-            Product product = productMapper.mapProductFormToModel(productForm);
+            @Valid Product product = productMapper.mapProductFormToModel(productForm);
             List<Category> categories = categoryRepository.findByIdIn(productForm.getCategoryIds());
             List<Discount> discounts = discountRepository.findByIdIn(productForm.getDiscountIds());
             product.setCategories(categories);
@@ -94,9 +89,9 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public Long removeProduct(Long id) {
-        checkIfProductNotExists(id);
-
         try {
+            checkIfProductNotExists(id);
+
             productRepository.deleteById(id);
             log.info("Product with id '{}' has been removed successfully.", id);
             return id;
@@ -111,9 +106,9 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public ProductDto updateProduct(ProductDto productDto) {
-        checkIfProductNotExists(productDto.getId());
-
         try {
+            checkIfProductNotExists(productDto.getId());
+
             Product product = productRepository.getReferenceById(productDto.getId());
             log.info("Product with id '{}' has been found to update!'", product.getId());
             productMapper.updateModel(productDto, product);
@@ -130,9 +125,9 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public ProductDto addCategories(AddOrRemoveForm form) {
-        checkIfProductNotExists(form.getTargetId());
-
         try {
+            checkIfProductNotExists(form.getTargetId());
+
             Product product = productRepository.getReferenceById(form.getTargetId());
             List<Category> categories = categoryRepository.findByIdIn(form.getAddedOrRemovedIds());
             AtomicInteger counter = new AtomicInteger(0);
@@ -156,9 +151,9 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
     public ProductDto removeCategories(AddOrRemoveForm form) {
-        checkIfProductNotExists(form.getTargetId());
-
         try {
+            checkIfProductNotExists(form.getTargetId());
+
             Product product = productRepository.getReferenceById(form.getTargetId());
             List<Category> categories = categoryRepository.findByIdIn(form.getAddedOrRemovedIds());
             AtomicInteger counter = new AtomicInteger(0);
@@ -174,18 +169,17 @@ public class ProductServiceImpl implements ProductService {
             return productMapper.mapToDto(product);
         } catch (Exception e) {
             log.info("Unable to remove categories from product! {}", e.getMessage());
-            throw new AddingCategoryException(
+            throw new RemovingCategoryException(
                     "Unable to remove categories from product! %s".formatted(e.getMessage())
             );
         }
     }
 
-    @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
-    public ProductDto addDiscount(AddOrRemoveForm form) {
-        checkIfProductNotExists(form.getTargetId());
-
+    public ProductDto addDiscounts(AddOrRemoveForm form) {
         try {
+            checkIfProductNotExists(form.getTargetId());
+
             Product product = productRepository.getReferenceById(form.getTargetId());
             List<Discount> discounts = discountRepository.findByIdIn(form.getAddedOrRemovedIds());
             AtomicInteger counter = new AtomicInteger(0);
@@ -209,10 +203,10 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
-    public ProductDto removeDiscount(AddOrRemoveForm form) {
-        checkIfProductNotExists(form.getTargetId());
-
+    public ProductDto removeDiscounts(AddOrRemoveForm form) {
         try {
+            checkIfProductNotExists(form.getTargetId());
+
             Product product = productRepository.getReferenceById(form.getTargetId());
             List<Discount> discounts = discountRepository.findByIdIn(form.getAddedOrRemovedIds());
             AtomicInteger counter = new AtomicInteger(0);

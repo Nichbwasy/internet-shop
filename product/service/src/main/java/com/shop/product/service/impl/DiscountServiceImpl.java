@@ -1,9 +1,6 @@
 package com.shop.product.service.impl;
 
-import com.shop.common.utils.all.exception.dao.EntityDeleteRepositoryException;
-import com.shop.common.utils.all.exception.dao.EntityNotFoundRepositoryException;
-import com.shop.common.utils.all.exception.dao.EntitySaveRepositoryException;
-import com.shop.common.utils.all.exception.dao.EntityUpdateRepositoryException;
+import com.shop.common.utils.all.exception.dao.*;
 import com.shop.product.dao.DiscountRepository;
 import com.shop.product.dto.DiscountDto;
 import com.shop.product.model.Discount;
@@ -14,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,7 +34,7 @@ public class DiscountServiceImpl implements DiscountService {
                     .collect(Collectors.toList());
         } catch (Exception e) {
             log.warn("Exception while trying to get all discounts! {}", e.getMessage());
-            throw new EntityDeleteRepositoryException(
+            throw new EntityGetRepositoryException(
                     "Exception while trying to get all discounts! %s".formatted(e.getMessage())
             );
         }
@@ -44,14 +42,14 @@ public class DiscountServiceImpl implements DiscountService {
 
     @Override
     public DiscountDto getDiscount(Long id) {
-        checkIfDiscountNotExists(id);
-
         try {
+            checkIfDiscountNotExists(id);
+
             log.info("Discount with id '{}' has been found", id);
             return discountMapper.mapToDto(discountRepository.getReferenceById(id));
         } catch (Exception e) {
             log.warn("Exception while trying to get discount with id '{}'! {}", id, e.getMessage());
-            throw new EntityDeleteRepositoryException(
+            throw new EntityGetRepositoryException(
                     "Exception while trying to get discount with id '%s'! %s".formatted(id, e.getMessage())
             );
         }
@@ -61,6 +59,7 @@ public class DiscountServiceImpl implements DiscountService {
     public DiscountDto addDiscount(DiscountDto discountDto) {
         try {
             Discount discount = discountMapper.mapToModel(discountDto);
+            discount.setCreatedTime(LocalDateTime.now());
             discount = discountRepository.save(discount);
             log.info("New discount with id '{}' has been saved successfully.", discount.getId());
             return discountMapper.mapToDto(discount);
@@ -74,9 +73,9 @@ public class DiscountServiceImpl implements DiscountService {
 
     @Override
     public Long removeDiscount(Long id) {
-        checkIfDiscountNotExists(id);
-
         try {
+            checkIfDiscountNotExists(id);
+
             discountRepository.deleteById(id);
             log.info("Discount with id '{}' has been removed successfully.", id);
             return id;
@@ -90,9 +89,9 @@ public class DiscountServiceImpl implements DiscountService {
 
     @Override
     public DiscountDto updateDiscount(DiscountDto discountDto) {
-        checkIfDiscountNotExists(discountDto.getId());
-
         try {
+            checkIfDiscountNotExists(discountDto.getId());
+
             Discount discount = discountRepository.getReferenceById(discountDto.getId());
             log.info("Discount with id '{}' has been found to update!'", discountDto.getId());
             discountMapper.updateModel(discountDto, discount);
