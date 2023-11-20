@@ -70,9 +70,16 @@ public class PaymentControllerAdvice {
 
     @ExceptionHandler({EntitySaveRepositoryException.class})
     protected ResponseEntity<AdviceResponseObject> savingException(Exception e, WebRequest request) {
-        log.error("Unable save record! {}", e.getMessage());
-        AdviceResponseObject response = new AdviceResponseObject("Unable save record!", e, request);
+        log.error("Unable save a record! {}", e.getMessage());
+        AdviceResponseObject response = new AdviceResponseObject("Unable save a record!", e, request);
         return ResponseEntity.internalServerError().body(response);
+    }
+
+    @ExceptionHandler({EntityGetRepositoryException.class})
+    protected ResponseEntity<AdviceResponseObject> getException(Exception e, WebRequest request) {
+        log.error("Unable get a record! {}", e.getMessage());
+        AdviceResponseObject response = new AdviceResponseObject("Unable get a record!", e, request);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     @ExceptionHandler({EntityNotFoundRepositoryException.class})

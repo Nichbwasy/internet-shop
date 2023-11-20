@@ -18,7 +18,12 @@
     </properties>
 
     <dependencies>
-
+        <!-- LIQUIBASE -->
+        <dependency>
+            <groupId>org.liquibase</groupId>
+            <artifactId>liquibase-core</artifactId>
+            <version>${liqubase-version}</version>
+        </dependency>
         <!-- MAPSTRUCT -->
         <dependency>
             <groupId>org.mapstruct</groupId>

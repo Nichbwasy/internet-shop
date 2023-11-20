@@ -1,4 +1,4 @@
-package com.shop.product.run.config;
+package com.shop.common.utils.all.config.dao;
 
 import liquibase.change.DatabaseChange;
 import liquibase.integration.spring.SpringLiquibase;
@@ -26,8 +26,8 @@ import java.sql.Statement;
 @ConditionalOnClass({ SpringLiquibase.class, DatabaseChange.class })
 @ConditionalOnProperty(prefix = "spring.liquibase", name = "enabled", matchIfMissing = true)
 @AutoConfigureAfter({ DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class })
-@Import({ProductSchemaInit.SpringLiquibaseDependsOnPostProcessor.class})
-public class ProductSchemaInit {
+@Import({DatabaseSchemaInitConfiguration.SpringLiquibaseDependsOnPostProcessor.class})
+public class DatabaseSchemaInitConfiguration {
 
     @Component
     @ConditionalOnProperty(prefix = "spring.liquibase", name = "enabled", matchIfMissing = true)
@@ -45,7 +45,7 @@ public class ProductSchemaInit {
         public void afterPropertiesSet() {
             // Creates schema if it not exists
             try (Connection connection = dataSource.getConnection();
-                Statement statement = connection.createStatement()) {
+                 Statement statement = connection.createStatement()) {
                 log.info("Creating an '{}' schema if it not exists.", schemaName);
                 statement.execute("create schema if not exists \"" + schemaName + "\" ");
             } catch (SQLException e) {
@@ -57,9 +57,9 @@ public class ProductSchemaInit {
 
     @ConditionalOnBean(SchemaInitBean.class)
     static class SpringLiquibaseDependsOnPostProcessor extends AbstractDependsOnBeanFactoryPostProcessor {
-
         SpringLiquibaseDependsOnPostProcessor() {
             super(SpringLiquibase.class, SchemaInitBean.class);
         }
     }
+
 }
