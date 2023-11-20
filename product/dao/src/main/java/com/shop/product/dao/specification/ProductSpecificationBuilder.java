@@ -16,7 +16,7 @@ public class ProductSpecificationBuilder {
     }
 
     public ProductSpecificationBuilder andLikeName(String name) {
-        if (!name.isBlank()) {
+        if (name != null && !name.isBlank()) {
             specification = specification.and((root, query, criteriaBuilder) ->
                     criteriaBuilder.like(root.get(Product_.name), "%" + name + "%"));
         }

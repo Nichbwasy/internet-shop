@@ -19,8 +19,8 @@ public class ProductFilterForm {
         private LocalDateTime minCreatedTime;
         private LocalDateTime maxCreatedTime;
 
-        private SortDirection sortByName;
-        private SortDirection sortByPrice;
-        private SortDirection sortByCreatedTime;
+        private SortDirection sortByName = SortDirection.NONE;
+        private SortDirection sortByPrice = SortDirection.NONE;
+        private SortDirection sortByCreatedTime = SortDirection.NONE;
 
 }
