@@ -9,6 +9,7 @@ import com.shop.product.service.mappers.DiscountMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -56,6 +57,7 @@ public class DiscountServiceImpl implements DiscountService {
     }
 
     @Override
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public DiscountDto addDiscount(DiscountDto discountDto) {
         try {
             Discount discount = discountMapper.mapToModel(discountDto);
@@ -72,6 +74,7 @@ public class DiscountServiceImpl implements DiscountService {
     }
 
     @Override
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public Long removeDiscount(Long id) {
         try {
             checkIfDiscountNotExists(id);
@@ -88,6 +91,7 @@ public class DiscountServiceImpl implements DiscountService {
     }
 
     @Override
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public DiscountDto updateDiscount(DiscountDto discountDto) {
         try {
             checkIfDiscountNotExists(discountDto.getId());
