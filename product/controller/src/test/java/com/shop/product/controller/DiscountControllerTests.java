@@ -2,6 +2,10 @@ package com.shop.product.controller;
 
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.shop.authorization.client.TokensApiClient;
+import com.shop.authorization.common.constant.UsersRoles;
+import com.shop.authorization.common.constant.jwt.TokenStatus;
+import com.shop.authorization.dto.token.JwtAuthenticationTokenDataDto;
 import com.shop.common.utils.all.generator.StringGenerator;
 import com.shop.product.controller.config.CommonProductControllerTestConfiguration;
 import com.shop.product.controller.run.ProductControllerTestsRun;
@@ -12,11 +16,15 @@ import org.hamcrest.Matchers;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -28,19 +36,24 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Random;
 
 @Testcontainers
-@AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc
 @SpringBootTest(classes = {ProductControllerTestsRun.class, CommonProductControllerTestConfiguration.class})
 public class DiscountControllerTests {
 
+    @Value("${test.access.token}")
+    private String TEST_ACCESS_TOKEN ;
     @Autowired
     private MockMvc mockMvc;
     @Autowired
     private DiscountController discountController;
     @Autowired
     private DiscountRepository discountRepository;
+    @Autowired
+    private TokensApiClient tokensApiClient;
 
     @Container
     private final static PostgreSQLContainer postgreSQLContainer =
@@ -60,6 +73,19 @@ public class DiscountControllerTests {
         jsonMapper.registerModule(new JavaTimeModule());
     }
 
+    @BeforeEach
+    public void mockApiTokensClient() {
+        JwtAuthenticationTokenDataDto tokenDataDto = new JwtAuthenticationTokenDataDto();
+        tokenDataDto.setUsername("TEST");
+        tokenDataDto.setAuthorities(List.of(UsersRoles.ADMIN));
+        tokenDataDto.setAuthenticated(true);
+
+        Mockito.when(tokensApiClient.validateAccessToken(Mockito.anyString()))
+                .thenReturn(ResponseEntity.ok().body(TokenStatus.OK));
+        Mockito.when(tokensApiClient.getAuthenticationFromToken(Mockito.anyString()))
+                .thenReturn(ResponseEntity.ok().body(tokenDataDto));
+    }
+
     @AfterEach
     public void resetDatabase() {
         discountRepository.deleteAll();
@@ -71,7 +97,8 @@ public class DiscountControllerTests {
         discountRepository.save(generateRandomDiscount());
 
         mockMvc.perform(MockMvcRequestBuilders.get("/discount")
-                    .contentType(MediaType.APPLICATION_JSON))
+                        .header("Authorization", TEST_ACCESS_TOKEN)
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
@@ -85,6 +112,7 @@ public class DiscountControllerTests {
         Discount discount = discountRepository.save(generateRandomDiscount());
 
         mockMvc.perform(MockMvcRequestBuilders.get("/discount/" + discount.getId())
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -97,6 +125,7 @@ public class DiscountControllerTests {
     @Test
     public void getNotExistedDiscountTest() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/discount/1")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
@@ -108,6 +137,7 @@ public class DiscountControllerTests {
         DiscountDto discountDto = generateRandomDiscountDto();
 
         mockMvc.perform(MockMvcRequestBuilders.post("/discount")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(discountDto))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -126,6 +156,7 @@ public class DiscountControllerTests {
         discountDto.setName(discount.getName());
 
         mockMvc.perform(MockMvcRequestBuilders.post("/discount")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(discountDto))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -139,6 +170,7 @@ public class DiscountControllerTests {
     @Test
     public void addNullDataDiscountTest() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.post("/discount")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(new DiscountDto()))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -149,6 +181,7 @@ public class DiscountControllerTests {
     @Test
     public void addNullDiscountTest() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.post("/discount")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(null))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -161,6 +194,7 @@ public class DiscountControllerTests {
         Discount discount = discountRepository.save(generateRandomDiscount());
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/discount/" + discount.getId())
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -171,6 +205,7 @@ public class DiscountControllerTests {
     @Test
     public void removeNotExistedDiscountTest() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.delete("/discount/1")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isInternalServerError())
@@ -184,6 +219,7 @@ public class DiscountControllerTests {
         discountDto.setId(discount.getId());
 
         mockMvc.perform(MockMvcRequestBuilders.put("/discount")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(discountDto))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -200,6 +236,7 @@ public class DiscountControllerTests {
         discountDto.setId(1L);
 
         mockMvc.perform(MockMvcRequestBuilders.put("/discount")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(discountDto))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -210,6 +247,7 @@ public class DiscountControllerTests {
     @Test
     public void updateNullDataDiscountTest() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.put("/discount")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(new DiscountDto()))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -220,6 +258,7 @@ public class DiscountControllerTests {
     @Test
     public void updateNullDiscountTest() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.put("/discount")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(null))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())

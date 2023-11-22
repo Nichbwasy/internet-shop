@@ -54,7 +54,7 @@ public class ProductWebSecurityConfig {
                         .requestMatchers("/api/tokens", "/api/tokens/**",
                                 "/swagger-ui.html", "/swagger-ui/**", "/v3/**", "/error", "/favicon.ico")
                         .permitAll()
-                        .requestMatchers("/category/**", "/discount/**", "/product/**")
+                        .requestMatchers("/category/**", "/discount/**", "/products/**")
                         .hasAnyAuthority(UsersRoles.ADMIN, UsersRoles.MICROSERVICE)
                         .requestMatchers("/api/**")
                         .hasAnyAuthority(UsersRoles.ADMIN, UsersRoles.MICROSERVICE)

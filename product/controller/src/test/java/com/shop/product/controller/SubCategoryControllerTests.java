@@ -1,6 +1,10 @@
 package com.shop.product.controller;
 
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.shop.authorization.client.TokensApiClient;
+import com.shop.authorization.common.constant.UsersRoles;
+import com.shop.authorization.common.constant.jwt.TokenStatus;
+import com.shop.authorization.dto.token.JwtAuthenticationTokenDataDto;
 import com.shop.product.controller.config.CommonProductControllerTestConfiguration;
 import com.shop.product.controller.run.ProductControllerTestsRun;
 import com.shop.product.dao.SubCategoryRepository;
@@ -8,11 +12,15 @@ import com.shop.product.dto.SubCategoryDto;
 import com.shop.product.model.SubCategory;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -23,8 +31,10 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.util.List;
+
 @Testcontainers
-@AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc
 @SpringBootTest(classes = {ProductControllerTestsRun.class, CommonProductControllerTestConfiguration.class})
 public class SubCategoryControllerTests {
 
@@ -32,8 +42,11 @@ public class SubCategoryControllerTests {
     private MockMvc mockMvc;
     @Autowired
     private SubCategoryRepository subCategoryRepository;
-
+    @Autowired
+    private TokensApiClient tokensApiClient;
     private final static JsonMapper jsonMapper = new JsonMapper();
+    @Value("${test.access.token}")
+    private String TEST_ACCESS_TOKEN ;
 
     @Container
     private final static PostgreSQLContainer postgreSQLContainer =
@@ -42,6 +55,19 @@ public class SubCategoryControllerTests {
     @AfterEach
     public void resetDatabase() {
         subCategoryRepository.deleteAll();
+    }
+
+    @BeforeEach
+    public void mockApiTokensClient() {
+        JwtAuthenticationTokenDataDto tokenDataDto = new JwtAuthenticationTokenDataDto();
+        tokenDataDto.setUsername("TEST");
+        tokenDataDto.setAuthorities(List.of(UsersRoles.ADMIN));
+        tokenDataDto.setAuthenticated(true);
+
+        Mockito.when(tokensApiClient.validateAccessToken(Mockito.anyString()))
+                .thenReturn(ResponseEntity.ok().body(TokenStatus.OK));
+        Mockito.when(tokensApiClient.getAuthenticationFromToken(Mockito.anyString()))
+                .thenReturn(ResponseEntity.ok().body(tokenDataDto));
     }
 
     @DynamicPropertySource
@@ -57,6 +83,7 @@ public class SubCategoryControllerTests {
         subCategoryRepository.save(new SubCategory(null, "Sub2"));
 
         mockMvc.perform(MockMvcRequestBuilders.get("/category/sub")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -71,7 +98,8 @@ public class SubCategoryControllerTests {
         SubCategory subCategory = subCategoryRepository.save(new SubCategory(null, "Sub1"));
 
         mockMvc.perform(MockMvcRequestBuilders.get("/category/sub/" + subCategory.getId())
-                    .contentType(MediaType.APPLICATION_JSON))
+                        .header("Authorization", TEST_ACCESS_TOKEN)
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
@@ -82,6 +110,7 @@ public class SubCategoryControllerTests {
     @Test
     public void getNotExistedSubCategoryTest() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/category/sub/1")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
@@ -93,6 +122,7 @@ public class SubCategoryControllerTests {
         SubCategoryDto subCategoryDto = new SubCategoryDto(null, "NewSub");
 
         mockMvc.perform(MockMvcRequestBuilders.post("/category/sub")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(subCategoryDto))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -108,6 +138,7 @@ public class SubCategoryControllerTests {
         SubCategoryDto subCategoryDto = new SubCategoryDto(null, subCategory.getName());
 
         mockMvc.perform(MockMvcRequestBuilders.post("/category/sub")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(subCategoryDto))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -120,6 +151,7 @@ public class SubCategoryControllerTests {
         SubCategoryDto subCategoryDto = new SubCategoryDto();
 
         mockMvc.perform(MockMvcRequestBuilders.post("/category/sub")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(subCategoryDto))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -131,6 +163,7 @@ public class SubCategoryControllerTests {
     public void addNullCategoryTest() throws Exception {
 
         mockMvc.perform(MockMvcRequestBuilders.post("/category/sub")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(null))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -143,6 +176,7 @@ public class SubCategoryControllerTests {
         SubCategory subCategory = subCategoryRepository.save(new SubCategory(null, "Sub1"));
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/category/sub/" + subCategory.getId())
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -153,6 +187,7 @@ public class SubCategoryControllerTests {
     @Test
     public void removeNotExistedSubCategoryTest() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.delete("/category/sub/1")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isInternalServerError())
@@ -165,6 +200,7 @@ public class SubCategoryControllerTests {
         SubCategoryDto subCategoryDto = new SubCategoryDto(subCategory.getId(), "NewSub1");
 
         mockMvc.perform(MockMvcRequestBuilders.put("/category/sub")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(subCategoryDto))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -179,6 +215,7 @@ public class SubCategoryControllerTests {
         SubCategoryDto subCategoryDto = new SubCategoryDto(1L, "NewSub1");
 
         mockMvc.perform(MockMvcRequestBuilders.put("/category/sub")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(subCategoryDto))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -191,6 +228,7 @@ public class SubCategoryControllerTests {
         SubCategoryDto subCategoryDto = new SubCategoryDto();
 
         mockMvc.perform(MockMvcRequestBuilders.put("/category/sub")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(subCategoryDto))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -201,6 +239,7 @@ public class SubCategoryControllerTests {
     @Test
     public void updateNullSubCategoryTest() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.put("/category/sub")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(null))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())

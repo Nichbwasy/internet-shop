@@ -1,6 +1,10 @@
 package com.shop.product.controller;
 
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.shop.authorization.client.TokensApiClient;
+import com.shop.authorization.common.constant.UsersRoles;
+import com.shop.authorization.common.constant.jwt.TokenStatus;
+import com.shop.authorization.dto.token.JwtAuthenticationTokenDataDto;
 import com.shop.product.controller.config.CommonProductControllerTestConfiguration;
 import com.shop.product.controller.run.ProductControllerTestsRun;
 import com.shop.product.dao.CategoryRepository;
@@ -12,11 +16,15 @@ import com.shop.product.model.SubCategory;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -31,16 +39,20 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.util.List;
 
 @Testcontainers
-@AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc
 @SpringBootTest(classes = {ProductControllerTestsRun.class, CommonProductControllerTestConfiguration.class})
 public class CategoryControllerTests {
 
+    @Value("${test.access.token}")
+    private String TEST_ACCESS_TOKEN ;
     @Autowired
     private MockMvc mockMvc;
     @Autowired
     private SubCategoryRepository subCategoryRepository;
     @Autowired
     private CategoryRepository categoryRepository;
+    @Autowired
+    private TokensApiClient tokensApiClient;
 
     private final static JsonMapper jsonMapper = new JsonMapper();
 
@@ -55,6 +67,19 @@ public class CategoryControllerTests {
         dynamicPropertyRegistry.add("spring.datasource.password", postgreSQLContainer::getPassword);
     }
 
+    @BeforeEach
+    public void mockApiTokensClient() {
+        JwtAuthenticationTokenDataDto tokenDataDto = new JwtAuthenticationTokenDataDto();
+        tokenDataDto.setUsername("TEST");
+        tokenDataDto.setAuthorities(List.of(UsersRoles.ADMIN));
+        tokenDataDto.setAuthenticated(true);
+
+        Mockito.when(tokensApiClient.validateAccessToken(Mockito.anyString()))
+                .thenReturn(ResponseEntity.ok().body(TokenStatus.OK));
+        Mockito.when(tokensApiClient.getAuthenticationFromToken(Mockito.anyString()))
+                .thenReturn(ResponseEntity.ok().body(tokenDataDto));
+    }
+
     @AfterEach
     public void resetDatabase() {
         subCategoryRepository.deleteAll();
@@ -67,6 +92,7 @@ public class CategoryControllerTests {
         categoryRepository.save(new Category(null, "Cat2", null));
 
         mockMvc.perform(MockMvcRequestBuilders.get("/category")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -81,6 +107,7 @@ public class CategoryControllerTests {
         Category category = categoryRepository.save(new Category(null, "Cat1", null));
 
         mockMvc.perform(MockMvcRequestBuilders.get("/category/" + category.getId())
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -92,6 +119,7 @@ public class CategoryControllerTests {
     @Test
     public void getNotExistedCategoryTest() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/category/1")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
@@ -103,6 +131,7 @@ public class CategoryControllerTests {
         CategoryDto categoryDto = new CategoryDto(null, "NewCat1", null);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/category")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(categoryDto))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -118,6 +147,7 @@ public class CategoryControllerTests {
         CategoryDto categoryDto = new CategoryDto(null, "Cat1", null);
 
         mockMvc.perform(MockMvcRequestBuilders.post("/category")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(categoryDto))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -130,6 +160,7 @@ public class CategoryControllerTests {
         CategoryDto categoryDto = new CategoryDto();
 
         mockMvc.perform(MockMvcRequestBuilders.post("/category")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(categoryDto))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -140,6 +171,7 @@ public class CategoryControllerTests {
     @Test
     public void addNullCategoryTest() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.post("/category")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(null))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -152,6 +184,7 @@ public class CategoryControllerTests {
         Category category = categoryRepository.save(new Category(null, "Cat1", null));
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/category/" + category.getId())
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -162,6 +195,7 @@ public class CategoryControllerTests {
     @Test
     public void removeNotExistedCategoryTest() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.delete("/category/1")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isInternalServerError())
@@ -174,6 +208,7 @@ public class CategoryControllerTests {
         CategoryDto categoryDto = new CategoryDto(category.getId(), "Cat1", null);
 
         mockMvc.perform(MockMvcRequestBuilders.put("/category")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(categoryDto))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -188,6 +223,7 @@ public class CategoryControllerTests {
         CategoryDto categoryDto = new CategoryDto(1L, "Cat1", null);
 
         mockMvc.perform(MockMvcRequestBuilders.put("/category")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(categoryDto))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -200,6 +236,7 @@ public class CategoryControllerTests {
         CategoryDto categoryDto = new CategoryDto();
 
         mockMvc.perform(MockMvcRequestBuilders.put("/category")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(categoryDto))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -210,6 +247,7 @@ public class CategoryControllerTests {
     @Test
     public void updateNullCategoryTest() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.put("/category")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(null))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -226,6 +264,7 @@ public class CategoryControllerTests {
         AddOrRemoveForm form = new AddOrRemoveForm(category.getId(), List.of(0L, sub1.getId(), sub2.getId()));
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/category/new/sub")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -247,6 +286,7 @@ public class CategoryControllerTests {
         AddOrRemoveForm form = new AddOrRemoveForm(1L, List.of(1L, 2L));
 
         mockMvc.perform(MockMvcRequestBuilders.post("/category/new/sub")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -259,6 +299,7 @@ public class CategoryControllerTests {
         AddOrRemoveForm form = new AddOrRemoveForm();
 
         mockMvc.perform(MockMvcRequestBuilders.post("/category/new/sub")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -269,6 +310,7 @@ public class CategoryControllerTests {
     @Test
     public void addNullSubCategoryTest() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.post("/category/new/sub")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(null))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -285,6 +327,7 @@ public class CategoryControllerTests {
         AddOrRemoveForm form = new AddOrRemoveForm(category.getId(), List.of(0L, sub1.getId(), sub2.getId()));
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/category/removing/sub")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -300,6 +343,7 @@ public class CategoryControllerTests {
         AddOrRemoveForm form = new AddOrRemoveForm(1L, List.of(1L, 2L));
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/category/removing/sub")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -312,6 +356,7 @@ public class CategoryControllerTests {
         AddOrRemoveForm form = new AddOrRemoveForm();
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/category/removing/sub")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -322,6 +367,7 @@ public class CategoryControllerTests {
     @Test
     public void removeNullSubCategoriesTest() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.delete("/category/removing/sub")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(null))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())

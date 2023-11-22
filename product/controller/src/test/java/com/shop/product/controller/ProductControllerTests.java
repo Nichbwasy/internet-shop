@@ -3,6 +3,10 @@ package com.shop.product.controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.shop.authorization.client.TokensApiClient;
+import com.shop.authorization.common.constant.UsersRoles;
+import com.shop.authorization.common.constant.jwt.TokenStatus;
+import com.shop.authorization.dto.token.JwtAuthenticationTokenDataDto;
 import com.shop.common.utils.all.consts.SortDirection;
 import com.shop.common.utils.all.generator.StringGenerator;
 import com.shop.product.controller.config.CommonProductControllerTestConfiguration;
@@ -19,15 +23,14 @@ import com.shop.product.model.Discount;
 import com.shop.product.model.Product;
 import org.hamcrest.Matchers;
 import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -48,12 +51,14 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 @Testcontainers
-@AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc
 @SpringBootTest(classes = {ProductControllerTestsRun.class, CommonProductControllerTestConfiguration.class})
 public class ProductControllerTests {
 
     @Value("${products.page.size}")
     private Integer PAGE_SIZE;
+    @Value("${test.access.token}")
+    private String TEST_ACCESS_TOKEN ;
 
     @Autowired
     private MockMvc mockMvc;
@@ -63,6 +68,8 @@ public class ProductControllerTests {
     private DiscountRepository discountRepository;
     @Autowired
     private CategoryRepository categoryRepository;
+    @Autowired
+    private TokensApiClient tokensApiClient;
 
     @Container
     private final static PostgreSQLContainer postgreSQLContainer =
@@ -82,6 +89,19 @@ public class ProductControllerTests {
         jsonMapper.registerModule(new JavaTimeModule());
     }
 
+    @BeforeEach
+    public void mockApiTokensClient() {
+        JwtAuthenticationTokenDataDto tokenDataDto = new JwtAuthenticationTokenDataDto();
+        tokenDataDto.setUsername("TEST");
+        tokenDataDto.setAuthorities(List.of(UsersRoles.ADMIN));
+        tokenDataDto.setAuthenticated(true);
+
+        Mockito.when(tokensApiClient.validateAccessToken(Mockito.anyString()))
+                .thenReturn(ResponseEntity.ok().body(TokenStatus.OK));
+        Mockito.when(tokensApiClient.getAuthenticationFromToken(Mockito.anyString()))
+                .thenReturn(ResponseEntity.ok().body(tokenDataDto));
+    }
+
     @AfterEach
     public void refreshDatabase() {
         productRepository.deleteAll();
@@ -96,6 +116,7 @@ public class ProductControllerTests {
         for (int i = 0; i < PAGE_SIZE + 1; i++) products.add(productRepository.save(generateProduct()));
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/products/1")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -124,6 +145,7 @@ public class ProductControllerTests {
         }
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/products/1")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -158,6 +180,7 @@ public class ProductControllerTests {
         }
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/products/1")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -193,6 +216,7 @@ public class ProductControllerTests {
         }
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/products/1")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -226,6 +250,7 @@ public class ProductControllerTests {
         }
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/products/1")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -250,6 +275,7 @@ public class ProductControllerTests {
         ProductFilterForm form = new ProductFilterForm();
 
         mockMvc.perform(MockMvcRequestBuilders.post("/products/999")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -265,6 +291,7 @@ public class ProductControllerTests {
         ProductFilterForm form = new ProductFilterForm();
 
         mockMvc.perform(MockMvcRequestBuilders.post("/products/0")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -277,6 +304,7 @@ public class ProductControllerTests {
         ProductFilterForm form = new ProductFilterForm();
 
         mockMvc.perform(MockMvcRequestBuilders.post("/products/-1")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -288,6 +316,7 @@ public class ProductControllerTests {
     public void getProductsPageWithoutFormTest() throws Exception {
 
         mockMvc.perform(MockMvcRequestBuilders.post("/products/1")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isInternalServerError())
@@ -299,6 +328,7 @@ public class ProductControllerTests {
         Product product = productRepository.save(generateProduct());
 
         mockMvc.perform(MockMvcRequestBuilders.get("/products/product/1")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -311,6 +341,7 @@ public class ProductControllerTests {
     @Test
     public void getNotExistedProductTest() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/products/product/1")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
@@ -322,6 +353,7 @@ public class ProductControllerTests {
         NewProductForm form = generateProductForm();
 
         MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.post("/products")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -348,6 +380,7 @@ public class ProductControllerTests {
         form.setDescription(product.getDescription());
 
         MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.post("/products")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -371,6 +404,7 @@ public class ProductControllerTests {
         NewProductForm form = new NewProductForm();
 
         mockMvc.perform(MockMvcRequestBuilders.post("/products")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -381,6 +415,7 @@ public class ProductControllerTests {
     @Test
     public void addNullProductTest() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.post("/products")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(null))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -393,6 +428,7 @@ public class ProductControllerTests {
         Product product = productRepository.save(generateProduct());
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/products/" + product.getId())
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(null))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -404,6 +440,7 @@ public class ProductControllerTests {
     @Test
     public void removeNotExistedProductTest() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.delete("/products/1")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(null))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -418,6 +455,7 @@ public class ProductControllerTests {
         productDto.setId(product.getId());
 
         mockMvc.perform(MockMvcRequestBuilders.put("/products")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(productDto))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -434,6 +472,7 @@ public class ProductControllerTests {
         productDto.setId(1L);
 
         mockMvc.perform(MockMvcRequestBuilders.put("/products")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(productDto))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -446,6 +485,7 @@ public class ProductControllerTests {
         ProductDto productDto = new ProductDto();
 
         mockMvc.perform(MockMvcRequestBuilders.put("/products")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(productDto))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -456,6 +496,7 @@ public class ProductControllerTests {
     @Test
     public void updateNullProductTest() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.put("/products")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(null))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -471,6 +512,7 @@ public class ProductControllerTests {
         AddOrRemoveForm form = new AddOrRemoveForm(0L, List.of(0L, cat1.getId(), cat2.getId()));
 
         MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.post("/products/product/" + product.getId() + "/new/category")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -494,6 +536,7 @@ public class ProductControllerTests {
         AddOrRemoveForm form = new AddOrRemoveForm(0L, List.of(0L, 1L, 2L));
 
         mockMvc.perform(MockMvcRequestBuilders.post("/products/product/1/new/category")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -506,6 +549,7 @@ public class ProductControllerTests {
         AddOrRemoveForm form = new AddOrRemoveForm();
 
         mockMvc.perform(MockMvcRequestBuilders.post("/products/product/1/new/category")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -516,6 +560,7 @@ public class ProductControllerTests {
     @Test
     public void addNullCategoriesTest() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.post("/products/product/1/new/category")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(null))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -533,6 +578,7 @@ public class ProductControllerTests {
         AddOrRemoveForm form = new AddOrRemoveForm(0L, List.of(0L, cat1.getId(), cat2.getId()));
 
         MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.delete("/products/product/" + product.getId() + "/removing/category")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -551,6 +597,7 @@ public class ProductControllerTests {
         AddOrRemoveForm form = new AddOrRemoveForm(0L, List.of(0L, 1L, 2L));
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/products/product/1/removing/category")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -563,6 +610,7 @@ public class ProductControllerTests {
         AddOrRemoveForm form = new AddOrRemoveForm();
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/products/product/1/removing/category")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -573,6 +621,7 @@ public class ProductControllerTests {
     @Test
     public void removeNullCategoryTest() throws Exception{
         mockMvc.perform(MockMvcRequestBuilders.delete("/products/product/1/removing/category")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(null))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -588,6 +637,7 @@ public class ProductControllerTests {
         AddOrRemoveForm form = new AddOrRemoveForm(0L, List.of(0L, dis1.getId(), dis2.getId()));
 
         MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.post("/products/product/" + product.getId() + "/new/discount")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -611,6 +661,7 @@ public class ProductControllerTests {
         AddOrRemoveForm form = new AddOrRemoveForm(0L, List.of(0L, 1L, 2L));
 
         mockMvc.perform(MockMvcRequestBuilders.post("/products/product/1/new/discount")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -623,6 +674,7 @@ public class ProductControllerTests {
         AddOrRemoveForm form = new AddOrRemoveForm();
 
         mockMvc.perform(MockMvcRequestBuilders.post("/products/product/1/new/discount")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -633,6 +685,7 @@ public class ProductControllerTests {
     @Test
     public void addNullDiscountsTest() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.post("/products/product/1/new/discount")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(null))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -650,6 +703,7 @@ public class ProductControllerTests {
         AddOrRemoveForm form = new AddOrRemoveForm(0L, List.of(0L, dis1.getId(), dis2.getId()));
 
         MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.delete("/products/product/" + product.getId() + "/removing/discount")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -668,6 +722,7 @@ public class ProductControllerTests {
         AddOrRemoveForm form = new AddOrRemoveForm(0L, List.of(0L, 1L, 2L));
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/products/product/1/removing/discount")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -680,6 +735,7 @@ public class ProductControllerTests {
         AddOrRemoveForm form = new AddOrRemoveForm();
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/products/product/1/removing/discount")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(form))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -690,6 +746,7 @@ public class ProductControllerTests {
     @Test
     public void removeNullDiscountsTest() throws Exception{
         mockMvc.perform(MockMvcRequestBuilders.delete("/products/product/1/removing/discount")
+                        .header("Authorization", TEST_ACCESS_TOKEN)
                         .content(jsonMapper.writeValueAsString(null))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())

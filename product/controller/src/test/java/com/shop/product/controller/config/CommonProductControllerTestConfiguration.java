@@ -1,6 +1,6 @@
 package com.shop.product.controller.config;
 
-import com.shop.common.utils.filter.CommonJwtTokenFilter;
+import com.shop.authorization.client.TokensApiClient;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Configuration;
@@ -16,6 +16,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 public class CommonProductControllerTestConfiguration {
 
     @MockBean
-    public CommonJwtTokenFilter jwtTokenFilter;
+    public TokensApiClient tokensApiClient;
 
 }
