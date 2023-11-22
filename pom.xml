@@ -11,6 +11,7 @@
     <modules>
         <module>authorization</module>
         <module>common-utils</module>
+        <module>product</module>
     </modules>
 
     <properties>
@@ -20,11 +21,19 @@
         <spring-cloud.version>2022.0.1</spring-cloud.version>
 
         <postgres-version>42.5.4</postgres-version>
+        <h2-version>2.2.220</h2-version>
+        <liqubase-version>4.22.0</liqubase-version>
+        <testcontainer-version>1.19.1</testcontainer-version>
         <spring-boot-version>3.1.4</spring-boot-version>
+        <hibernate-version>6.2.13.Final</hibernate-version>
+        <jakarta-xml-bind-version>4.0.0</jakarta-xml-bind-version>
         <spring-cloud-openfeign-version>4.0.2</spring-cloud-openfeign-version>
         <jakarta-validation-api-version>3.0.2</jakarta-validation-api-version>
         <mapstruct-version>1.5.5.Final</mapstruct-version>
         <swagger-version>2.2.0</swagger-version>
+        <lombok-version>1.18.26</lombok-version>
+        <slf4j-version>2.0.7</slf4j-version>
+        <jackson-version>2.15.1</jackson-version>
     </properties>
 
     <dependencies>

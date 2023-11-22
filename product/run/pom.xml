@@ -4,18 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>com.shop.common-utils</groupId>
-        <artifactId>common-utils</artifactId>
+        <groupId>com.shop.product</groupId>
+        <artifactId>product</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>all</artifactId>
+    <artifactId>run-product</artifactId>
     <packaging>jar</packaging>
-
-    <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-    </properties>
 
     <dependencies>
         <!-- LIQUIBASE -->
@@ -24,17 +19,15 @@
             <artifactId>liquibase-core</artifactId>
             <version>${liqubase-version}</version>
         </dependency>
-        <!-- MAPSTRUCT -->
+
         <dependency>
-            <groupId>org.mapstruct</groupId>
-            <artifactId>mapstruct</artifactId>
-            <version>${mapstruct-version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mapstruct</groupId>
-            <artifactId>mapstruct-processor</artifactId>
-            <version>${mapstruct-version}</version>
+            <groupId>com.shop.product</groupId>
+            <artifactId>controller-product</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
+
+
+
 
 </project>
