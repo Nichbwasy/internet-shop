@@ -15,6 +15,14 @@ public class ProductSpecificationBuilder {
         this.specification = Specification.where(null);
     }
 
+    public ProductSpecificationBuilder byApprovalStatus(String approvalStatus) {
+        if (approvalStatus != null && !approvalStatus.isBlank()) {
+            specification = specification.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.equal(root.get(Product_.approvalStatus), approvalStatus));
+        }
+        return this;
+    }
+
     public ProductSpecificationBuilder andLikeName(String name) {
         if (name != null && !name.isBlank()) {
             specification = specification.and((root, query, criteriaBuilder) ->

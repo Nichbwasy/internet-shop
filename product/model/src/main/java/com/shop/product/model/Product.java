@@ -54,6 +54,11 @@ public class Product {
     @EqualsAndHashCode.Exclude
     private List<Category> categories;
 
+    @NotNull(message = "Product approval status is mandatory!")
+    @Size(min = 3, max = 64, message = "Product approval status must contains from 3 to 64 characters!")
+    @Column(name = "approval_status", length = 64, nullable = false, columnDefinition = "false")
+    private String approvalStatus;
+
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
     @JoinTable(name = "product_discount",
             joinColumns = @JoinColumn(name = "product_id"),

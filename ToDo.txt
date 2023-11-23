@@ -1,6 +1,7 @@
 Authorization microservice: [Done]
     - Add user with admins' rights [Done]
         - Generate long life access token for admin [Done]
+    - Add new types of roles (Worker/Seller) [Done]
 Product microservice: [In progress]
     - Add some dml to the product service [Done]
     - Adding/removing sub category to a role [Done]
@@ -15,6 +16,7 @@ Product microservice: [In progress]
     - Write integrate tests for the controller layer [Done]
         - Fix security filter chain for a tests [Done]
     - Add random code generation to the code of product [Done]
+    - Add client to get filtered products page [Done]
 Shop microservice: [In progress]
     - Create base database model [Done]
         - Create base yml liquibase script [Done]
@@ -23,11 +25,24 @@ Shop microservice: [In progress]
         - Create repositories [Done]
         - Create services [Done]
         - Create controllers [Done]
-    - Showing page of filtered products (Only approved products)
-    - Approving products (Can do only admin/worker)
+    - Showing page of filtered products (Only approved products) [Done]
+    - Show products by type (only for workers/admins) [In progress]
+        - Unapproved [In progress]
+        - Approved
+        - Banned
+        - Created
+    - Approving products (Can do only admin/worker) [In progress]
+    - Add controller advice [Done]
+    - Add security
+    - Drop ShopProduct table (leve products to product microservice) [Done]
+    - Known bugs to fix
+        - When gets filtered shop products it can return lesser than page size.
+          (It happens when product not approved in shop) (move approve field from the ShopProduct
+          to the Product) [Done]
 Seller microservice: ??? (Seller's information, seller page, adding a new products)
 Media microservice: ??? (Contains all media such imgs, videos of products (MinIO))
 Global:
+    - Create common controller advice configuration with common exceptions
     - Fix tokens refreshing issue
     - Fix advice (security advice doesn't catch Jwt tokens exceptions, for some reason)
     - Write java docks (no chance)

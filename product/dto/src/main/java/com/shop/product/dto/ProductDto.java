@@ -20,6 +20,7 @@ public class ProductDto {
     private LocalDateTime createdTime;
     private Integer count;
     private BigDecimal price;
+    private String approvalStatus;
     private List<CategoryDto> categories;
     private List<DiscountDto> discounts;
 

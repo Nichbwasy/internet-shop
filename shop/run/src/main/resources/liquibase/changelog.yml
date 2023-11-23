@@ -62,12 +62,12 @@ databaseChangeLog:
                     nullable: 'false'
 
   - changeSet:
-      id: create-user_cart_shop_product-table
+      id: create-user-cart-shop-product-table
       author: jvsSEN
       changes:
         - createTable:
             schemaName: shop
-            tableName: user_cart
+            tableName: user_cart_shop_product
             columns:
               - column:
                   name: user_cart_id
@@ -77,5 +77,75 @@ databaseChangeLog:
               - column:
                   name: shop_product_id
                   type: bigint
+                  constraints:
+                    nullable: 'false'
+  - changeSet:
+      id: add-tables-references
+      author: jvsSEN
+      changes:
+        - sql:
+            dbms: 'postgresql'
+            splitStatement: 'true'
+            sql:
+              ALTER TABLE "shop".user_cart_shop_product ADD FOREIGN KEY (user_cart_id) REFERENCES "shop".user_cart (id) ON DELETE CASCADE;
+              ALTER TABLE "shop".user_cart_shop_product ADD FOREIGN KEY (shop_product_id) REFERENCES "shop".shop_product (id) ON DELETE CASCADE;
+
+  - changeSet:
+      id: remove-approval-status-column-from-shop-product-table
+      author: jvsSEN
+      changes:
+        - dropColumn:
+            schemaName: shop
+            tableName: shop_product
+            columns:
+              - column:
+                  name: approval_status
+
+  - changeSet:
+      id: drop-user-cart-shop-product-and-shop-product-tables
+      author: jsvSEN
+      changes:
+        - dropTable:
+            schemaName: shop
+            tableName: user_cart_shop_product
+            cascadeConstraints: 'true'
+        - dropTable:
+            schemaName: shop
+            tableName: shop_product
+            cascadeConstraints: 'true'
+
+  - changeSet:
+      id: create-cart-item-table
+      author: jvsSEN
+      changes:
+        - createTable:
+            schemaName: shop
+            tableName: cart_item
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  constraints:
+                    unique: 'true'
+                    nullable: 'false'
+              - column:
+                  name: user_cart_id
+                  type: bigint
+                  constraints:
+                    nullable: 'false'
+              - column:
+                  name: product_id
+                  type: bigint
+                  constraints:
+                    nullable: 'false'
+              - column:
+                  name: addition_time
+                  type: timestamp
+                  constraints:
+                    nullable: 'false'
+              - column:
+                  name: count
+                  type: integer
+                  defaultValue: '1'
                   constraints:
                     nullable: 'false'

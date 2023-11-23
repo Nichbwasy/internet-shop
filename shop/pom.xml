@@ -21,6 +21,7 @@
         <module>controller</module>
         <module>dto</module>
         <module>run</module>
+        <module>common</module>
     </modules>
 
     <properties>

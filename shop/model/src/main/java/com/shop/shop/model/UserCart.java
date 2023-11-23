@@ -22,13 +22,9 @@ public class UserCart {
     @Column(name = "user_id", nullable = false, unique = true)
     private Long userId;
 
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
-    @JoinTable(name = "user_cart_shop_product",
-            joinColumns = @JoinColumn(name = "user_cart_id"),
-            inverseJoinColumns = @JoinColumn(name = "shop_product_id")
-    )
+    @OneToMany(targetEntity = CartItem.class, fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    List<ShopProduct> products;
+    List<CartItem> cartItems;
 
 }

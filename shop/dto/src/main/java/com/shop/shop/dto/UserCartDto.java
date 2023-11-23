@@ -13,7 +13,7 @@ public class UserCartDto {
 
     private Long id;
     private Long userId;
-    List<ShopProductDto> products;
+    private List<CartItemDto> cartItemDtos;
 
 
 }

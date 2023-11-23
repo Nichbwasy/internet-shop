@@ -2,6 +2,7 @@ package com.shop.product.service.impl;
 
 import com.shop.common.utils.all.exception.dao.*;
 import com.shop.common.utils.all.generator.StringGenerator;
+import com.shop.product.common.constant.ApprovalStatuses;
 import com.shop.product.dao.CategoryRepository;
 import com.shop.product.dao.DiscountRepository;
 import com.shop.product.dao.ProductRepository;
@@ -73,6 +74,7 @@ public class ProductServiceImpl implements ProductService {
             product.setCategories(categories);
             product.setDiscounts(discounts);
             product.setCreatedTime(LocalDateTime.now());
+            product.setApprovalStatus(ApprovalStatuses.CREATED);
             product.setCode(StringGenerator.generate(64));
 
             product = productRepository.save(product);
@@ -243,6 +245,21 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
+    @Override
+    public List<ProductDto> getPageOfFilteredApprovalProducts(Integer page, ProductFilterForm form) {
+        try {
+            PageRequest pageRequest = PageRequest.of(page - 1, PAGE_SIZE, getSort(form));
+            Page<Product> products = productRepository.findAll(getApprovalSpecification(form), pageRequest);
+
+            return products.stream()
+                    .map(productMapper::mapToDto)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Unable get '{}' page of products! {}", page, e.getMessage());
+            throw new GetProductsPageException("Unable get '%s' page of products! %s".formatted(page, e.getMessage()));
+        }
+    }
+
     private static Sort getSort(ProductFilterForm form) {
         ProductSortBuilder productSortBuilder = new ProductSortBuilder();
         return productSortBuilder
@@ -260,6 +277,17 @@ public class ProductServiceImpl implements ProductService {
                 .andBetweenCreationTime(form.getMinCreatedTime(), form.getMaxCreatedTime())
                 .build();
     }
+
+    private static Specification<Product> getApprovalSpecification(ProductFilterForm form) {
+        ProductSpecificationBuilder productSpecificationBuilder = new ProductSpecificationBuilder();
+        return productSpecificationBuilder
+                .byApprovalStatus(ApprovalStatuses.APPROVED)
+                .andLikeName(form.getName())
+                .andBetweenPrice(form.getMinPrice(), form.getMaxPrice())
+                .andBetweenCreationTime(form.getMinCreatedTime(), form.getMaxCreatedTime())
+                .build();
+    }
+
 
     private void checkIfProductNotExists(Long id) {
         if (!productRepository.existsById(id)) {

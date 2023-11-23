@@ -19,5 +19,6 @@ public interface ProductService {
     ProductDto removeDiscounts(AddOrRemoveForm form);
 
     List<ProductDto> getPageOfFilteredProducts(Integer page, ProductFilterForm form);
+    List<ProductDto> getPageOfFilteredApprovalProducts(Integer page, ProductFilterForm form);
 
 }
