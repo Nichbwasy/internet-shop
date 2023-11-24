@@ -10,7 +10,9 @@ import com.shop.common.utils.exception.jwt.token.JwtTokenExpiredException;
 import com.shop.common.utils.exception.jwt.token.JwtTokenMalformedException;
 import com.shop.common.utils.exception.jwt.token.JwtTokenUnsupportedException;
 import com.shop.common.utils.exception.jwt.token.JwtTokenWrongSignatureException;
+import com.shop.shop.service.exception.shop.GetProductClientException;
 import com.shop.shop.service.exception.shop.GetProductsClientException;
+import com.shop.shop.service.exception.shop.ProductNotFoundException;
 import com.shop.shop.service.exception.shop.ProductsNotFoundForFilterException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -124,11 +126,20 @@ public class ShopControllerAdvice {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
-    @ExceptionHandler({GetProductsClientException.class})
+    @ExceptionHandler({GetProductClientException.class, GetProductsClientException.class})
     protected ResponseEntity<AdviceResponseObject> getProductsClientException(Exception e, WebRequest request) {
-        log.error("Unable to get products from products microservice! {}", e.getMessage());
+        log.error("Unable to get product(s) from products microservice! {}", e.getMessage());
         AdviceResponseObject response = new AdviceResponseObject(
-                "Unable to get products from products microservice!", e, request
+                "Unable to get product(s) from products microservice!", e, request
+        );
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    @ExceptionHandler(ProductNotFoundException.class)
+    protected ResponseEntity<AdviceResponseObject> productsNotFoundException(Exception e, WebRequest request) {
+        log.error("Nothing was found for product! {}", e.getMessage());
+        AdviceResponseObject response = new AdviceResponseObject(
+                "Nothing was found for product!", e, request
         );
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }

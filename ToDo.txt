@@ -26,16 +26,14 @@ Shop microservice: [In progress]
         - Create services [Done]
         - Create controllers [Done]
     - Showing page of filtered products (Only approved products) [Done]
-    - Show products by type (only for workers/admins) [In progress]
-        - Unapproved [In progress]
-        - Approved
-        - Banned
-        - Created
-    - Approving products (Can do only admin/worker) [In progress]
+    - Show products by type (only for workers/admins) [Done]
+        - All/Created/Approved/Unapproved/Banned [Done]
+    - Changing products (only for workers/admins) [Done]
+    - Approving products (Can do only admin/worker) [Done]
     - Add controller advice [Done]
     - Add security
     - Drop ShopProduct table (leve products to product microservice) [Done]
-    - Known bugs to fix
+    - Known bugs to fix [Done]
         - When gets filtered shop products it can return lesser than page size.
           (It happens when product not approved in shop) (move approve field from the ShopProduct
           to the Product) [Done]

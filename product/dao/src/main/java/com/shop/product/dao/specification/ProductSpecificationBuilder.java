@@ -17,7 +17,7 @@ public class ProductSpecificationBuilder {
 
     public ProductSpecificationBuilder byApprovalStatus(String approvalStatus) {
         if (approvalStatus != null && !approvalStatus.isBlank()) {
-            specification = specification.and((root, query, criteriaBuilder) ->
+            specification = specification.or((root, query, criteriaBuilder) ->
                     criteriaBuilder.equal(root.get(Product_.approvalStatus), approvalStatus));
         }
         return this;
