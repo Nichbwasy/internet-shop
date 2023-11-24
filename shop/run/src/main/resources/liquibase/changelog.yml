@@ -149,3 +149,18 @@ databaseChangeLog:
                   defaultValue: '1'
                   constraints:
                     nullable: 'false'
+
+  - changeSet:
+      id: add-user-login-column-in-user-cart-table
+      author: jvsSEN
+      changes:
+        - addColumn:
+            schemaName: shop
+            tableName: user_cart
+            columns:
+              - column:
+                  name: user_login
+                  type: varchar(64)
+                  constraints:
+                    unique: 'true'
+                    nullable: 'false'

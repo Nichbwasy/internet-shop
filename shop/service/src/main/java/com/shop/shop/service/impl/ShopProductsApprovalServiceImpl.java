@@ -79,7 +79,7 @@ public class ShopProductsApprovalServiceImpl implements ShopProductsApprovalServ
             return productApiClient.getProduct(id).getBody();
         } catch (Exception e) {
             log.error("Exception while getting product from client! {}", e.getMessage());
-            throw new GetProductClientException(
+            throw new NullProductClientException(
                     "Exception while getting product from client! %s".formatted(e.getMessage())
             );
         }

@@ -31,6 +31,11 @@
             <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
+            <groupId>com.shop.authorization</groupId>
+            <artifactId>client-authorization</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
             <groupId>com.shop.shop</groupId>
             <artifactId>dao-shop</artifactId>
             <version>1.0-SNAPSHOT</version>

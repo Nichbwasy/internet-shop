@@ -2,7 +2,7 @@ package com.shop.product.controller.advice;
 
 import com.shop.common.utils.all.dto.advice.AdviceResponseObject;
 import com.shop.common.utils.all.exception.dao.*;
-import com.shop.common.utils.all.exception.service.ServiceException;
+import com.shop.common.utils.all.exception.service.CommonServiceException;
 import com.shop.common.utils.exception.jwt.JwtFilterSecurityException;
 import com.shop.common.utils.exception.jwt.JwtTokenNotFoundException;
 import com.shop.common.utils.exception.jwt.JwtTokenValidationException;
@@ -38,14 +38,14 @@ public class PaymentControllerAdvice {
         return ResponseEntity.internalServerError().body(response);
     }
 
-    @ExceptionHandler({ServiceException.class})
+    @ExceptionHandler({CommonServiceException.class})
     protected ResponseEntity<AdviceResponseObject> serviceException(Exception e, WebRequest request) {
         log.error("Service exception! {}", e.getMessage());
         AdviceResponseObject response = new AdviceResponseObject("Service exception!", e, request);
         return ResponseEntity.internalServerError().body(response);
     }
 
-    @ExceptionHandler({RepositoryException.class})
+    @ExceptionHandler({CommonRepositoryException.class})
     protected ResponseEntity<AdviceResponseObject> repositoryException(Exception e, WebRequest request) {
         log.error("Repository exception! {}", e.getMessage());
         AdviceResponseObject response = new AdviceResponseObject("Repository exception!", e, request);

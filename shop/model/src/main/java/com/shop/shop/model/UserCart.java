@@ -3,6 +3,8 @@ package com.shop.shop.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.util.List;
@@ -21,6 +23,12 @@ public class UserCart {
     @Min(value = 1, message = "User's cart user id can't be lesser than 1!")
     @Column(name = "user_id", nullable = false, unique = true)
     private Long userId;
+
+    @NotNull(message = "User's login in cart is mandatory!")
+    @Size(min = 3, max = 64, message = "User's login in cart must contains from 3 to 64 characters!")
+    @Pattern(regexp = "^[a-zA-Z0-9_-]{3,64}$", message = "Invalid user's login  format!")
+    @Column(name = "user_login", nullable = false, unique = true)
+    private String userLogin;
 
     @OneToMany(targetEntity = CartItem.class, fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
     @ToString.Exclude

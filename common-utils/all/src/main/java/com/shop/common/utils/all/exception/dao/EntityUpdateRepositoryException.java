@@ -1,6 +1,6 @@
 package com.shop.common.utils.all.exception.dao;
 
-public class EntityUpdateRepositoryException extends RepositoryException {
+public class EntityUpdateRepositoryException extends CommonRepositoryException {
     public EntityUpdateRepositoryException() {
     }
 

@@ -2,7 +2,7 @@ package com.shop.shop.controller.advice;
 
 import com.shop.common.utils.all.dto.advice.AdviceResponseObject;
 import com.shop.common.utils.all.exception.dao.*;
-import com.shop.common.utils.all.exception.service.ServiceException;
+import com.shop.common.utils.all.exception.service.CommonServiceException;
 import com.shop.common.utils.exception.jwt.JwtFilterSecurityException;
 import com.shop.common.utils.exception.jwt.JwtTokenNotFoundException;
 import com.shop.common.utils.exception.jwt.JwtTokenValidationException;
@@ -10,8 +10,8 @@ import com.shop.common.utils.exception.jwt.token.JwtTokenExpiredException;
 import com.shop.common.utils.exception.jwt.token.JwtTokenMalformedException;
 import com.shop.common.utils.exception.jwt.token.JwtTokenUnsupportedException;
 import com.shop.common.utils.exception.jwt.token.JwtTokenWrongSignatureException;
-import com.shop.shop.service.exception.shop.GetProductClientException;
 import com.shop.shop.service.exception.shop.GetProductsClientException;
+import com.shop.shop.service.exception.shop.NullProductClientException;
 import com.shop.shop.service.exception.shop.ProductNotFoundException;
 import com.shop.shop.service.exception.shop.ProductsNotFoundForFilterException;
 import lombok.extern.slf4j.Slf4j;
@@ -36,14 +36,14 @@ public class ShopControllerAdvice {
         return ResponseEntity.internalServerError().body(response);
     }
 
-    @ExceptionHandler({ServiceException.class})
+    @ExceptionHandler({CommonServiceException.class})
     protected ResponseEntity<AdviceResponseObject> serviceException(Exception e, WebRequest request) {
         log.error("Service exception! {}", e.getMessage());
         AdviceResponseObject response = new AdviceResponseObject("Service exception!", e, request);
         return ResponseEntity.internalServerError().body(response);
     }
 
-    @ExceptionHandler({RepositoryException.class})
+    @ExceptionHandler({CommonRepositoryException.class})
     protected ResponseEntity<AdviceResponseObject> repositoryException(Exception e, WebRequest request) {
         log.error("Repository exception! {}", e.getMessage());
         AdviceResponseObject response = new AdviceResponseObject("Repository exception!", e, request);
@@ -126,7 +126,7 @@ public class ShopControllerAdvice {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
-    @ExceptionHandler({GetProductClientException.class, GetProductsClientException.class})
+    @ExceptionHandler({NullProductClientException.class, GetProductsClientException.class})
     protected ResponseEntity<AdviceResponseObject> getProductsClientException(Exception e, WebRequest request) {
         log.error("Unable to get product(s) from products microservice! {}", e.getMessage());
         AdviceResponseObject response = new AdviceResponseObject(

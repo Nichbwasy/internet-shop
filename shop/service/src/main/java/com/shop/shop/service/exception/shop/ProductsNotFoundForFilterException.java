@@ -1,8 +1,8 @@
 package com.shop.shop.service.exception.shop;
 
-import com.shop.common.utils.all.exception.service.ServiceException;
+import com.shop.common.utils.all.exception.service.CommonServiceException;
 
-public class ProductsNotFoundForFilterException extends ServiceException {
+public class ProductsNotFoundForFilterException extends CommonServiceException {
 
     public ProductsNotFoundForFilterException() {
     }

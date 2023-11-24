@@ -1,8 +1,8 @@
 package com.shop.product.service.impl;
 
+import com.shop.common.utils.all.consts.ApprovalStatuses;
 import com.shop.common.utils.all.exception.dao.*;
 import com.shop.common.utils.all.generator.StringGenerator;
-import com.shop.product.common.constant.ApprovalStatuses;
 import com.shop.product.dao.CategoryRepository;
 import com.shop.product.dao.DiscountRepository;
 import com.shop.product.dao.ProductRepository;

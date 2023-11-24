@@ -1,8 +1,8 @@
 package com.shop.product.service.exception.product;
 
-import com.shop.common.utils.all.exception.service.ServiceException;
+import com.shop.common.utils.all.exception.service.CommonServiceException;
 
-public class AddingCategoryException extends ServiceException {
+public class AddingCategoryException extends CommonServiceException {
 
     public AddingCategoryException() {
     }

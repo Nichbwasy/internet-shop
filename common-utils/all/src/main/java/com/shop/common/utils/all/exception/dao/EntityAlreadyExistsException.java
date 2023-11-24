@@ -1,6 +1,6 @@
 package com.shop.common.utils.all.exception.dao;
 
-public class EntityAlreadyExistsException extends RepositoryException {
+public class EntityAlreadyExistsException extends CommonRepositoryException {
 
     public EntityAlreadyExistsException() {
     }

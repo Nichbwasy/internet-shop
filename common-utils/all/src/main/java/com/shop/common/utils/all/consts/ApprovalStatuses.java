@@ -1,4 +1,4 @@
-package com.shop.product.common.constant;
+package com.shop.common.utils.all.consts;
 
 public class ApprovalStatuses {
 

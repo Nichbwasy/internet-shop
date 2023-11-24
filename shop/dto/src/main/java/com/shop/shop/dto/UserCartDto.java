@@ -13,6 +13,7 @@ public class UserCartDto {
 
     private Long id;
     private Long userId;
+    private String userLogin;
     private List<CartItemDto> cartItemDtos;
 
 
