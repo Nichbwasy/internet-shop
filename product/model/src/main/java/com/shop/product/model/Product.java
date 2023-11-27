@@ -59,6 +59,9 @@ public class Product {
     @Column(name = "approval_status", length = 64, nullable = false, columnDefinition = "false")
     private String approvalStatus;
 
+    @Column(name = "media_id", columnDefinition = "null")
+    private Long mediaId;
+
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
     @JoinTable(name = "product_discount",
             joinColumns = @JoinColumn(name = "product_id"),

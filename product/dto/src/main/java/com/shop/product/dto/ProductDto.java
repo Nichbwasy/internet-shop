@@ -21,6 +21,7 @@ public class ProductDto {
     private Integer count;
     private BigDecimal price;
     private String approvalStatus;
+    private Long mediaId;
     private List<CategoryDto> categories;
     private List<DiscountDto> discounts;
 
