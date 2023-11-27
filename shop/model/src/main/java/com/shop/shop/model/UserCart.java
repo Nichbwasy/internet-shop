@@ -30,9 +30,13 @@ public class UserCart {
     @Column(name = "user_login", nullable = false, unique = true)
     private String userLogin;
 
-    @OneToMany(targetEntity = CartItem.class, fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.MERGE)
+    @JoinTable(name = "user_cart_cart_item",
+            joinColumns = @JoinColumn(name = "user_cart_id"),
+            inverseJoinColumns = @JoinColumn(name = "cart_item_id")
+    )
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    List<CartItem> cartItems;
+    private List<CartItem> cartItems;
 
 }

@@ -4,6 +4,7 @@ import com.shop.authorization.client.TokensApiClient;
 import com.shop.authorization.dto.token.AccessTokenUserInfoDto;
 import com.shop.common.utils.all.consts.ApprovalStatuses;
 import com.shop.common.utils.all.exception.dao.CommonRepositoryException;
+import com.shop.common.utils.all.exception.dao.EntityDeleteRepositoryException;
 import com.shop.product.client.ProductApiClient;
 import com.shop.product.dto.ProductDto;
 import com.shop.product.dto.form.product.ProductFilterForm;
@@ -65,11 +66,9 @@ public class ShopProductsPageServiceImpl implements ShopProductsPageService {
 
         checkProductCount(form, productDto);
 
-        CartItem cartItem = saveCartItem(userCart, form, productDto);
-
-        // Is it possible make it more beautiful?
         if (userCart.getCartItems() == null) userCart.setCartItems(new ArrayList<>());
-        userCart.getCartItems().add(cartItem);
+
+        addProductToCart(form, userCart, productDto);
 
         return userCartMapper.mapToDto(userCart);
     }
@@ -81,9 +80,49 @@ public class ShopProductsPageServiceImpl implements ShopProductsPageService {
         checkIfUserInfoIsNull(userInfo);
 
         UserCart userCart = getOrCreateUserCart(userInfo);
-        userCart.getCartItems().removeIf(item -> item.getId().equals(form.getProductId()));
+        removeProductFromCart(form, userCart);
 
         return userCartMapper.mapToDto(userCart);
+    }
+
+    private void addProductToCart(AddProductToCartForm form, UserCart userCart, ProductDto productDto) {
+        userCart.getCartItems().stream()
+                .filter(item -> item.getProductId().equals(form.getProductId()))
+                .findFirst().ifPresentOrElse(
+                        item -> {
+                            int newCount = item.getCount() + form.getCount();
+                            if (productDto.getCount() < newCount) {
+                                log.warn("Unable add more to cart! Adding number of products more than product's count!");
+                                throw new NotEnoughProductsException(
+                                        "Unable add more to cart! Adding number of products more than product's count!"
+                                );
+                            }
+                            item.setCount(newCount);
+                        },
+                        () -> {
+                            CartItem cartItem = saveCartItem(form, productDto);
+                            userCart.getCartItems().add(cartItem);
+                        });
+    }
+
+    private void removeProductFromCart(RemoveProductFromCartForm form, UserCart userCart) {
+        try {
+            userCart.getCartItems().removeIf(item -> {
+                if (item.getProductId().equals(form.getProductId())) {
+                    log.info("Product '{}' has been removed from '{}' user's cart.",
+                            item.getProductId(), userCart.getUserLogin());
+                    return true;
+                }
+                return false;
+            });
+        } catch (Exception e) {
+            log.error("Exception while removing product with id '{}' from '{}' cart! {}",
+                    form.getProductId(), userCart.getUserLogin(), e.getMessage());
+            throw new EntityDeleteRepositoryException(
+                    "Exception while removing product with id '%s' from '%s' cart! %s".formatted(
+                    form.getProductId(), userCart.getUserLogin(), e.getMessage())
+            );
+        }
     }
 
     @Override
@@ -96,7 +135,7 @@ public class ShopProductsPageServiceImpl implements ShopProductsPageService {
         return new ShopPageProductInfoDto(productDto);
     }
 
-    private static void checkIfProductApproved(Long productId, ProductDto productDto) {
+    private void checkIfProductApproved(Long productId, ProductDto productDto) {
         if (!productDto.getApprovalStatus().equals(ApprovalStatuses.APPROVED)) {
             log.warn("Unable to show unapproved product! Product with id '{}' unapproved!", productId);
             throw new ProductForbiddenException(
@@ -105,9 +144,8 @@ public class ShopProductsPageServiceImpl implements ShopProductsPageService {
         }
     }
 
-    private CartItem saveCartItem(UserCart userCart, AddProductToCartForm form, ProductDto productDto) {
+    private CartItem saveCartItem(AddProductToCartForm form, ProductDto productDto) {
         CartItem cartItem = new CartItem();
-        cartItem.setUserCart(userCart);
         cartItem.setProductId(productDto.getId());
         cartItem.setCount(form.getCount());
         cartItem.setAdditionTime(LocalDateTime.now());

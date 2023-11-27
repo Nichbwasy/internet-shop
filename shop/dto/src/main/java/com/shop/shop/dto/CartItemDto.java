@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 public class CartItemDto {
 
     private Long id;
-    private UserCartDto userCartDto;
     private Long productId;
     private LocalDateTime additionTime;
     private Integer count;
