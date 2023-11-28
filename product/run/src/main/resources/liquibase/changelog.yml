@@ -224,3 +224,18 @@ databaseChangeLog:
               ALTER TABLE "product".product_discount ADD FOREIGN KEY (discount_id) REFERENCES "product".discount (id) ON DELETE CASCADE;
   - include:
       file: liquibase/scripts/dml.yml
+
+  - changeSet:
+      id: add-approval-status-column-to-product-table
+      author: jvsSEN
+      changes:
+        - addColumn:
+            schemaName: product
+            tableName: product
+            columns:
+              - column:
+                  name: approval_status
+                  type: varchar(64)
+                  defaultValue: "NONE"
+                  constraints:
+                    nullable: 'false'

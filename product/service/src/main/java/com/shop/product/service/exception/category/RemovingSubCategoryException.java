@@ -1,8 +1,8 @@
 package com.shop.product.service.exception.category;
 
-import com.shop.common.utils.all.exception.service.ServiceException;
+import com.shop.common.utils.all.exception.service.CommonServiceException;
 
-public class RemovingSubCategoryException extends ServiceException {
+public class RemovingSubCategoryException extends CommonServiceException {
 
     public RemovingSubCategoryException() {
     }

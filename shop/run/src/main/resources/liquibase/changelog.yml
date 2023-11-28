@@ -1,0 +1,191 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-shop-product-table
+      author: jvsSEN
+      changes:
+        - createTable:
+            schemaName: shop
+            tableName: shop_product
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  constraints:
+                    unique: 'true'
+                    nullable: 'false'
+              - column:
+                  name: code
+                  type: varchar(64)
+                  constraints:
+                    unique: 'true'
+                    nullable: 'false'
+              - column:
+                  name: product_id
+                  type: bigint
+                  constraints:
+                    nullable: 'false'
+              - column:
+                  name: seller_id
+                  type: bigint
+                  constraints:
+                    nullable: 'false'
+              - column:
+                  name: creation_time
+                  type: timestamp
+                  constraints:
+                    nullable: 'false'
+              - column:
+                  name: approval_status
+                  type: varchar(64)
+                  constraints:
+                    nullable: 'false'
+
+  - changeSet:
+      id: create-user_cart-table
+      author: jvsSEN
+      changes:
+        - createTable:
+            schemaName: shop
+            tableName: user_cart
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  constraints:
+                    unique: 'true'
+                    nullable: 'false'
+              - column:
+                  name: user_id
+                  type: bigint
+                  constraints:
+                    unique: 'true'
+                    nullable: 'false'
+
+  - changeSet:
+      id: create-user-cart-shop-product-table
+      author: jvsSEN
+      changes:
+        - createTable:
+            schemaName: shop
+            tableName: user_cart_shop_product
+            columns:
+              - column:
+                  name: user_cart_id
+                  type: bigint
+                  constraints:
+                    nullable: 'false'
+              - column:
+                  name: shop_product_id
+                  type: bigint
+                  constraints:
+                    nullable: 'false'
+  - changeSet:
+      id: add-tables-references
+      author: jvsSEN
+      changes:
+        - sql:
+            dbms: 'postgresql'
+            splitStatement: 'true'
+            sql:
+              ALTER TABLE "shop".user_cart_shop_product ADD FOREIGN KEY (user_cart_id) REFERENCES "shop".user_cart (id) ON DELETE CASCADE;
+              ALTER TABLE "shop".user_cart_shop_product ADD FOREIGN KEY (shop_product_id) REFERENCES "shop".shop_product (id) ON DELETE CASCADE;
+
+  - changeSet:
+      id: remove-approval-status-column-from-shop-product-table
+      author: jvsSEN
+      changes:
+        - dropColumn:
+            schemaName: shop
+            tableName: shop_product
+            columns:
+              - column:
+                  name: approval_status
+
+  - changeSet:
+      id: drop-user-cart-shop-product-and-shop-product-tables
+      author: jsvSEN
+      changes:
+        - dropTable:
+            schemaName: shop
+            tableName: user_cart_shop_product
+            cascadeConstraints: 'true'
+        - dropTable:
+            schemaName: shop
+            tableName: shop_product
+            cascadeConstraints: 'true'
+
+  - changeSet:
+      id: create-cart-item-table
+      author: jvsSEN
+      changes:
+        - createTable:
+            schemaName: shop
+            tableName: cart_item
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  constraints:
+                    unique: 'true'
+                    nullable: 'false'
+              - column:
+                  name: product_id
+                  type: bigint
+                  constraints:
+                    nullable: 'false'
+              - column:
+                  name: addition_time
+                  type: timestamp
+                  constraints:
+                    nullable: 'false'
+              - column:
+                  name: count
+                  type: integer
+                  defaultValue: '1'
+                  constraints:
+                    nullable: 'false'
+
+  - changeSet:
+      id: add-user-login-column-in-user-cart-table
+      author: jvsSEN
+      changes:
+        - addColumn:
+            schemaName: shop
+            tableName: user_cart
+            columns:
+              - column:
+                  name: user_login
+                  type: varchar(64)
+                  constraints:
+                    unique: 'true'
+                    nullable: 'false'
+
+  - changeSet:
+      id: create-user-cart-cart-items-table
+      author: jvsSEN
+      changes:
+        - createTable:
+            schemaName: shop
+            tableName: user_cart_cart_item
+            columns:
+              - column:
+                  name: user_cart_id
+                  type: bigint
+                  constraints:
+                    nullable: 'false'
+              - column:
+                  name: cart_item_id
+                  type: bigint
+                  constraints:
+                    nullable: 'false'
+
+  - changeSet:
+      id: add-user-cart-cart-items-tables-references
+      author: jvsSEN
+      changes:
+        - sql:
+            dbms: 'postgresql'
+            splitStatement: 'true'
+            sql:
+              ALTER TABLE "shop".user_cart_cart_item ADD FOREIGN KEY (user_cart_id) REFERENCES "shop".user_cart (id) ON DELETE CASCADE;
+              ALTER TABLE "shop".user_cart_cart_item ADD FOREIGN KEY (cart_item_id) REFERENCES "shop".cart_item (id) ON DELETE CASCADE;

@@ -18,6 +18,17 @@
             <artifactId>spring-cloud-starter-openfeign</artifactId>
             <version>${spring-cloud-openfeign-version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+            <version>${spring-cloud-openfeign-version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.shop.product</groupId>
+            <artifactId>dto-product</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
 </project>

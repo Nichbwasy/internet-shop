@@ -12,6 +12,7 @@
         <module>authorization</module>
         <module>common-utils</module>
         <module>product</module>
+        <module>shop</module>
     </modules>
 
     <properties>

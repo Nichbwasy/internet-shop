@@ -58,6 +58,8 @@ public class ProductWebSecurityConfig {
                         .hasAnyAuthority(UsersRoles.ADMIN, UsersRoles.MICROSERVICE)
                         .requestMatchers("/api/**")
                         .hasAnyAuthority(UsersRoles.ADMIN, UsersRoles.MICROSERVICE)
+                        .requestMatchers("/api/products/approval/**")
+                        .hasAnyAuthority(UsersRoles.ADMIN, UsersRoles.MICROSERVICE, UsersRoles.WORKER)
                 ).build();
     }
 

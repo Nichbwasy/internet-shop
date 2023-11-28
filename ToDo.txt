@@ -1,6 +1,7 @@
 Authorization microservice: [Done]
     - Add user with admins' rights [Done]
         - Generate long life access token for admin [Done]
+    - Add new types of roles (Worker/Seller) [Done]
 Product microservice: [In progress]
     - Add some dml to the product service [Done]
     - Adding/removing sub category to a role [Done]
@@ -15,6 +16,38 @@ Product microservice: [In progress]
     - Write integrate tests for the controller layer [Done]
         - Fix security filter chain for a tests [Done]
     - Add random code generation to the code of product [Done]
+    - Add client to get filtered products page [Done]
+Shop microservice: [In progress]
+    - Create base database model [Done]
+        - Create base yml liquibase script [Done]
+    - Created base architecture [Done]
+        - Create models [Done]
+        - Create repositories [Done]
+        - Create services [Done]
+        - Create controllers [Done]
+    - Showing page of filtered products (Only approved products) [Done]
+    - Show products by type (only for workers/admins) [Done]
+        - All/Created/Approved/Unapproved/Banned [Done]
+    - Changing products (only for workers/admins) [Done]
+    - Approving products (Can do only admin/worker) [Done]
+    - Add controller advice [Done]
+    - Add security [In progress]
+    - Drop ShopProduct table (leve products to product microservice) [Done]
+    - Adding products to user's cart [Done]
+    - Removing products from user's cart [Done]
+    - Show product info for a user (only approved) [Done]
+    - Known bugs to fix [Done]
+        - Removing products from cart doesn't work [Done]
+        - After adding the same product several times it adds in cart like a new item instead of increasing count [Done]
+        - Fix add new product to cart (ERROR: relation \"user_cart_cart_items\" does not exist\n  Position: 13]
+          [insert into user_cart_cart_items (user_cart_id,cart_items_id) values (?,?)]) [Done]
+        - When gets filtered shop products it can return lesser than page size.
+          (It happens when product not approved in shop) (move approve field from the ShopProduct
+          to the Product) [Done]
+Seller microservice: ??? (Seller's information, seller page, adding a new products, and so on...)
+Media microservice: ??? (Contains all media such imgs, videos(idk how to do this) of products (MinIO))
 Global:
+    - Create common controller advice configuration with common exceptions
+    - Fix tokens refreshing issue
     - Fix advice (security advice doesn't catch Jwt tokens exceptions, for some reason)
     - Write java docks (no chance)

@@ -1,5 +1,6 @@
 package com.shop.product.service.impl;
 
+import com.shop.common.utils.all.consts.ApprovalStatuses;
 import com.shop.common.utils.all.exception.dao.*;
 import com.shop.common.utils.all.generator.StringGenerator;
 import com.shop.product.dao.CategoryRepository;
@@ -9,6 +10,8 @@ import com.shop.product.dao.sort.ProductSortBuilder;
 import com.shop.product.dao.specification.ProductSpecificationBuilder;
 import com.shop.product.dto.ProductDto;
 import com.shop.product.dto.form.AddOrRemoveForm;
+import com.shop.product.dto.form.product.ApprovalStatusProductFilterForm;
+import com.shop.product.dto.form.product.ChangeProductDataForm;
 import com.shop.product.dto.form.product.NewProductForm;
 import com.shop.product.dto.form.product.ProductFilterForm;
 import com.shop.product.model.Category;
@@ -73,6 +76,7 @@ public class ProductServiceImpl implements ProductService {
             product.setCategories(categories);
             product.setDiscounts(discounts);
             product.setCreatedTime(LocalDateTime.now());
+            product.setApprovalStatus(ApprovalStatuses.CREATED);
             product.setCode(StringGenerator.generate(64));
 
             product = productRepository.save(product);
@@ -229,10 +233,59 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    public ProductDto changeProductData(ChangeProductDataForm form) {
+        try {
+            checkIfProductNotExists(form.getProductId());
+            Product product = productRepository.getReferenceById(form.getProductId());
+            String oldStatus = product.getApprovalStatus();
+            product.setApprovalStatus(form.getApprovalStatus());
+            log.info("Product '{}' has changed status from '{}' to '{}'.",
+                    product.getId(), oldStatus, form.getApprovalStatus());
+            return productMapper.mapToDto(product);
+        } catch (Exception e) {
+            log.error("Unable update products approval status! {}", e.getMessage());
+            throw new EntityUpdateRepositoryException(
+                    "Unable update products approval status! %s".formatted(e.getMessage())
+            );
+        }
+    }
+
+    @Override
     public List<ProductDto> getPageOfFilteredProducts(Integer page, ProductFilterForm form) {
         try {
             PageRequest pageRequest = PageRequest.of(page - 1, PAGE_SIZE, getSort(form));
             Page<Product> products = productRepository.findAll(getSpecification(form), pageRequest);
+
+            return products.stream()
+                    .map(productMapper::mapToDto)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Unable get '{}' page of products! {}", page, e.getMessage());
+            throw new GetProductsPageException("Unable get '%s' page of products! %s".formatted(page, e.getMessage()));
+        }
+    }
+
+    @Override
+    public List<ProductDto> getPageOfFilteredApprovalProducts(Integer page, ProductFilterForm form) {
+        try {
+            PageRequest pageRequest = PageRequest.of(page - 1, PAGE_SIZE, getSort(form));
+            Page<Product> products = productRepository.findAll(getApprovalSpecification(form), pageRequest);
+
+            return products.stream()
+                    .map(productMapper::mapToDto)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Unable get '{}' page of products! {}", page, e.getMessage());
+            throw new GetProductsPageException("Unable get '%s' page of products! %s".formatted(page, e.getMessage()));
+        }
+    }
+
+    @Override
+    public List<ProductDto> getPageOfFilteredApprovalStatusProducts(Integer page, ApprovalStatusProductFilterForm form) {
+        try {
+            PageRequest pageRequest = PageRequest.of(page - 1, PAGE_SIZE, getSort(form));
+            Page<Product> products = productRepository.findAll(getApprovalStatusSpecification(form), pageRequest);
 
             return products.stream()
                     .map(productMapper::mapToDto)
@@ -260,6 +313,30 @@ public class ProductServiceImpl implements ProductService {
                 .andBetweenCreationTime(form.getMinCreatedTime(), form.getMaxCreatedTime())
                 .build();
     }
+
+    private static Specification<Product> getApprovalSpecification(ProductFilterForm form) {
+        ProductSpecificationBuilder productSpecificationBuilder = new ProductSpecificationBuilder();
+        return productSpecificationBuilder
+                .byApprovalStatus(ApprovalStatuses.APPROVED)
+                .andLikeName(form.getName())
+                .andBetweenPrice(form.getMinPrice(), form.getMaxPrice())
+                .andBetweenCreationTime(form.getMinCreatedTime(), form.getMaxCreatedTime())
+                .build();
+    }
+
+    private static Specification<Product> getApprovalStatusSpecification(ApprovalStatusProductFilterForm form) {
+        ProductSpecificationBuilder productSpecificationBuilder = new ProductSpecificationBuilder();
+        if (form.getShowCreated()) productSpecificationBuilder.byApprovalStatus(ApprovalStatuses.CREATED);
+        if (form.getShowApproved()) productSpecificationBuilder.byApprovalStatus(ApprovalStatuses.APPROVED);
+        if (form.getShowUnapproved()) productSpecificationBuilder.byApprovalStatus(ApprovalStatuses.UNAPPROVED);
+        if (form.getShowBanned()) productSpecificationBuilder.byApprovalStatus(ApprovalStatuses.BANNED);
+        return productSpecificationBuilder
+                .andLikeName(form.getName())
+                .andBetweenPrice(form.getMinPrice(), form.getMaxPrice())
+                .andBetweenCreationTime(form.getMinCreatedTime(), form.getMaxCreatedTime())
+                .build();
+    }
+
 
     private void checkIfProductNotExists(Long id) {
         if (!productRepository.existsById(id)) {
