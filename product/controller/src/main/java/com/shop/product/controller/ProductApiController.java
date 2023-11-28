@@ -46,4 +46,10 @@ public class ProductApiController {
         return ResponseEntity.ok().body(productService.getPageOfFilteredApprovalStatusProducts(page, form));
     }
 
+    @DeleteMapping("/removing")
+    public ResponseEntity<List<Long>> removeProducts(@RequestBody List<Long> ids) {
+        log.info("Trying to remove products with selected ids '{}'...", ids);
+        return ResponseEntity.ok().body(productService.removeProducts(ids));
+    }
+
 }

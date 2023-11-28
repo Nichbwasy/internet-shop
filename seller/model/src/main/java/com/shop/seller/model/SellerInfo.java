@@ -5,7 +5,6 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -44,6 +43,6 @@ public class SellerInfo {
     )
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    private List<SellerProduct> products = new ArrayList<>();
+    private List<SellerProduct> products;
 
 }

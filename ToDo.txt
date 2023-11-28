@@ -49,8 +49,10 @@ Seller microservice: (Seller's information, seller page, adding a new products, 
     - Created base database schema [Done]
     - Create yml script for database [Done]
     - Add base functional [In progress]
-        - Register user as a new seller (admin only) [In progress]
-        - Remove seller (admin only)
+        - Show sellers info [Done (Testing required)]
+        - Register user as a new seller (admin only) [Done (Testing required)]
+        - Remove seller (admin only) [Done (Testing required)]
+            - After removing seller all his product must be removed from system [Done (Testing required)]
         - Product management for seller
             - Add new product
             - Remove a product (if it belong to seller)

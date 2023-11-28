@@ -27,4 +27,7 @@ public interface ProductApiClient {
     ResponseEntity<List<ProductDto>> getFilteredApprovalStatusProducts(@PathVariable("page") Integer page,
                                                                  @RequestBody ApprovalStatusProductFilterForm form);
 
+    @DeleteMapping("/removing")
+    ResponseEntity<List<Long>> removeProducts(@RequestBody List<Long> ids);
+
 }

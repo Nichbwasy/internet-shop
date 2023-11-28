@@ -296,6 +296,20 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
+    @Override
+    @Transactional(isolation = Isolation.SERIALIZABLE)
+    public List<Long> removeProducts(List<Long> ids) {
+        try {
+            return ids.stream()
+                    .filter(productRepository::existsById)
+                    .peek(productRepository::deleteById)
+                    .toList();
+        } catch (Exception e) {
+            log.error("Exception while removing products! {}", e.getMessage());
+            throw new EntityDeleteRepositoryException("Exception while removing products! %s".formatted(e.getMessage()));
+        }
+    }
+
     private static Sort getSort(ProductFilterForm form) {
         ProductSortBuilder productSortBuilder = new ProductSortBuilder();
         return productSortBuilder
