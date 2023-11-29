@@ -50,6 +50,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Value("${products.page.size}")
     private Integer PAGE_SIZE;
+    @Value("${products.page.search.by.id}")
+    private Integer PAGE_PRODUCTS_BY_ID;
 
     @Override
     public ProductDto getProduct(Long id) {
@@ -307,6 +309,21 @@ public class ProductServiceImpl implements ProductService {
         } catch (Exception e) {
             log.error("Exception while removing products! {}", e.getMessage());
             throw new EntityDeleteRepositoryException("Exception while removing products! %s".formatted(e.getMessage()));
+        }
+    }
+
+    @Override
+    public List<ProductDto> getProductsPageByIds(Integer page, List<Long> ids) {
+        try {
+            PageRequest pageRequest = PageRequest.of(page - 1, PAGE_PRODUCTS_BY_ID);
+            return productRepository.findAllById(ids, pageRequest).stream()
+                    .map(productMapper::mapToDto)
+                    .toList();
+        } catch (Exception e) {
+            log.error("Exception while getting a page of products by ids! {}", e.getMessage());
+            throw new EntityGetRepositoryException(
+                    "Exception while getting a page of products by ids! %s".formatted(e.getMessage())
+            );
         }
     }
 

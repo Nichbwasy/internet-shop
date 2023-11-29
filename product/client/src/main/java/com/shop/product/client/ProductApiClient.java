@@ -30,4 +30,6 @@ public interface ProductApiClient {
     @DeleteMapping("/removing")
     ResponseEntity<List<Long>> removeProducts(@RequestBody List<Long> ids);
 
+    @GetMapping("/ids/{page}")
+    ResponseEntity<List<ProductDto>> getProductsByIds(@PathVariable("page") Integer page, @RequestBody List<Long> ids);
 }

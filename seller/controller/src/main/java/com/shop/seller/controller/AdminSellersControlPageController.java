@@ -3,7 +3,7 @@ package com.shop.seller.controller;
 import com.shop.seller.dto.SellerInfoDto;
 import com.shop.seller.dto.control.RegisterNewSellerForm;
 import com.shop.seller.dto.control.SellerDetailsDto;
-import com.shop.seller.service.SellersAdminControlService;
+import com.shop.seller.service.AdminSellersControlService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -15,9 +15,9 @@ import java.util.List;
 @RestController
 @RequestMapping("/admin/control/sellers")
 @RequiredArgsConstructor
-public class SellersAdminControlPageController {
+public class AdminSellersControlPageController {
 
-    private final SellersAdminControlService sellersService;
+    private final AdminSellersControlService sellersService;
 
     @GetMapping("/{page}")
     public ResponseEntity<List<SellerInfoDto>> getSellersPage(@PathVariable Integer page) {

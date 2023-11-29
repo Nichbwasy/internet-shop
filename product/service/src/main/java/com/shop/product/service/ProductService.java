@@ -25,4 +25,5 @@ public interface ProductService {
     List<ProductDto> getPageOfFilteredApprovalProducts(Integer page, ProductFilterForm form);
     List<ProductDto> getPageOfFilteredApprovalStatusProducts(Integer page, ApprovalStatusProductFilterForm form);
     List<Long> removeProducts(List<Long> ids);
+    List<ProductDto> getProductsPageByIds(Integer page, List<Long> ids);
 }

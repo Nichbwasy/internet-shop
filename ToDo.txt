@@ -53,10 +53,12 @@ Seller microservice: (Seller's information, seller page, adding a new products, 
         - Register user as a new seller (admin only) [Done (Testing required)]
         - Remove seller (admin only) [Done (Testing required)]
             - After removing seller all his product must be removed from system [Done (Testing required)]
-        - Product management for seller
+        - Product management for a seller [In progress]
+            - Show all products details [Done (Testing required)]
+            - Show product details [In progress]
             - Add new product
             - Remove a product (if it belong to seller)
-            - Edit a product
+            - Edit a product (if it belong to seller)
 Media microservice: ??? (Contains all media such imgs, videos(idk how to do this) of products (MinIO))
 Global:
     - Create common controller advice configuration with common exceptions

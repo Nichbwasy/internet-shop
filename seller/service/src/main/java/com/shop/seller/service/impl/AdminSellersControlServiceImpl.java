@@ -12,7 +12,7 @@ import com.shop.seller.dto.control.RegisterNewSellerForm;
 import com.shop.seller.dto.control.SellerDetailsDto;
 import com.shop.seller.model.SellerInfo;
 import com.shop.seller.model.SellerProduct;
-import com.shop.seller.service.SellersAdminControlService;
+import com.shop.seller.service.AdminSellersControlService;
 import com.shop.seller.service.exception.control.GetSellerDataUserApiClientException;
 import com.shop.seller.service.exception.control.SellerRegistrationException;
 import com.shop.seller.service.mapper.SellerDetailsMapper;
@@ -32,7 +32,7 @@ import java.util.List;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
-public class SellersAdminControlServiceImpl implements SellersAdminControlService {
+public class AdminSellersControlServiceImpl implements AdminSellersControlService {
 
     @Value("${admin.control.sellers.info.page.size}")
     private Integer SELLERS_INFO_PAGE_SIZE;

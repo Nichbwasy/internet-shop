@@ -6,7 +6,7 @@ import com.shop.seller.dto.control.SellerDetailsDto;
 
 import java.util.List;
 
-public interface SellersAdminControlService {
+public interface AdminSellersControlService {
 
     SellerDetailsDto getSellerInfo(Long sellerId);
     List<SellerInfoDto> getSellersInfoFromPage(Integer page);

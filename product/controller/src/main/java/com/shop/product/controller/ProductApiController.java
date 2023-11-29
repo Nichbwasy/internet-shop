@@ -20,6 +20,12 @@ public class ProductApiController {
 
     private final ProductService productService;
 
+    @GetMapping("/ids/{page}")
+    public ResponseEntity<List<ProductDto>> getProductsByIds(@PathVariable Integer page, @RequestBody List<Long> ids) {
+        log.info("Trying to get products with ids '{}'...", ids);
+        return ResponseEntity.ok().body(productService.getProductsPageByIds(page, ids));
+    }
+
     @GetMapping("/product/{id}")
     public ResponseEntity<ProductDto> getProduct(@PathVariable Long id) {
         log.info("Trying to get the product with id '{}'...", id);
