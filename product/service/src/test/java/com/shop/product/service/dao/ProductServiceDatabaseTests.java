@@ -1,24 +1,27 @@
-package com.shop.product.service;
+package com.shop.product.service.dao;
 
 import com.shop.common.utils.all.consts.SortDirection;
 import com.shop.product.dto.ProductDto;
 import com.shop.product.dto.form.product.NewProductForm;
 import com.shop.product.dto.form.product.ProductFilterForm;
-import com.shop.product.service.config.ProductServiceDatabaseTestsConfiguration;
+import com.shop.product.service.ProductService;
+import com.shop.product.service.dao.condig.ProductServiceDatabaseTestsConfiguration;
 import com.shop.product.service.exception.product.GetProductsPageException;
-import com.shop.product.service.run.ProductServiceDatabaseTestsRun;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD) // Reload context after each test
-@SpringBootTest(classes = {ProductServiceDatabaseTestsRun.class, ProductServiceDatabaseTestsConfiguration.class})
+@ExtendWith(SpringExtension.class)
+@DataJpaTest
+@ContextConfiguration(classes = ProductServiceDatabaseTestsConfiguration.class)
 public class ProductServiceDatabaseTests {
 
     @Autowired

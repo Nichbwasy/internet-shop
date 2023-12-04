@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 public class SellerDetailsDto extends SellerInfoDto {
 
-    private Long login;
-    private Long email;
+    private String login;
+    private String email;
 
 }

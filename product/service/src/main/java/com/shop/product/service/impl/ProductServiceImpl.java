@@ -316,7 +316,7 @@ public class ProductServiceImpl implements ProductService {
     public List<ProductDto> getProductsPageByIds(Integer page, List<Long> ids) {
         try {
             PageRequest pageRequest = PageRequest.of(page - 1, PAGE_PRODUCTS_BY_ID);
-            return productRepository.findAllById(ids, pageRequest).stream()
+            return productRepository.findAllByIdIn(ids, pageRequest).stream()
                     .map(productMapper::mapToDto)
                     .toList();
         } catch (Exception e) {

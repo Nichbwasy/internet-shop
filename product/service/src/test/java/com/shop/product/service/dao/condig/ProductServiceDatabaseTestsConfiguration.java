@@ -1,4 +1,4 @@
-package com.shop.product.service.config;
+package com.shop.product.service.dao.condig;
 
 import com.shop.product.dao.CategoryRepository;
 import com.shop.product.dao.DiscountRepository;
@@ -10,16 +10,21 @@ import com.shop.product.service.mappers.ProductMapperImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @Configuration
-@EntityScan(basePackages = {"com.shop.product.model"})
-@EnableJpaRepositories(basePackages = {"com.shop.product.dao"})
+@ComponentScan(basePackages = {
+        "com.shop.product.model",
+        "com.shop.product.dao"
+})
 @PropertySource("application-test.properties")
 @EnableTransactionManagement
+@EntityScan(basePackages = {"com.shop.product.model"})
+@EnableJpaRepositories(basePackages = {"com.shop.product.dao"})
 public class ProductServiceDatabaseTestsConfiguration {
 
     @Autowired

@@ -7,6 +7,7 @@ import com.shop.authorization.client.TokensApiClient;
 import com.shop.authorization.common.constant.UsersRoles;
 import com.shop.authorization.common.constant.jwt.TokenStatus;
 import com.shop.authorization.dto.token.JwtAuthenticationTokenDataDto;
+import com.shop.common.utils.all.consts.ApprovalStatuses;
 import com.shop.common.utils.all.consts.SortDirection;
 import com.shop.common.utils.all.generator.StringGenerator;
 import com.shop.product.controller.config.CommonProductControllerTestConfiguration;
@@ -764,6 +765,7 @@ public class ProductControllerTests {
         product.setCreatedTime(LocalDateTime.now());
         product.setCount(random.nextInt(1, 100));
         product.setPrice(BigDecimal.valueOf(random.nextDouble(0.01, 99.99)));
+        product.setApprovalStatus(ApprovalStatuses.APPROVED);
         return product;
     }
 
@@ -777,6 +779,7 @@ public class ProductControllerTests {
         productDto.setCreatedTime(LocalDateTime.now());
         productDto.setCount(random.nextInt(1, 100));
         productDto.setPrice(BigDecimal.valueOf(random.nextDouble(0.01, 99.99)));
+        productDto.setApprovalStatus(ApprovalStatuses.APPROVED);
         return productDto;
     }
 

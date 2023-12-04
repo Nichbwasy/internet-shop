@@ -4,7 +4,6 @@ databaseChangeLog:
       author: jvsSEN
       changes:
         - createTable:
-#            schemaName: product
             tableName: sub_category
             columns:
               - column:
@@ -24,7 +23,6 @@ databaseChangeLog:
       author: jvsSEN
       changes:
         createTable:
-#          schemaName: product
           tableName: category
           columns:
             - column:
@@ -45,7 +43,6 @@ databaseChangeLog:
       author: jvsSEN
       changes:
         createTable:
-#          schemaName: product
           tableName: product
           columns:
             - column:
@@ -89,7 +86,6 @@ databaseChangeLog:
       author: jvsSEN
       changes:
         - createTable:
-#            schemaName: product
             tableName: discount
             columns:
               - column:
@@ -133,7 +129,7 @@ databaseChangeLog:
       author: jvsSEN
       changes:
         - createTable:
-#            schemaName: product
+            
             tableName: category_sub_category
             columns:
               - column:
@@ -152,7 +148,6 @@ databaseChangeLog:
       author: jvsSEN
       changes:
         - createTable:
-#            schemaName: product
             tableName: product_category
             columns:
               - column:
@@ -171,7 +166,6 @@ databaseChangeLog:
       author: jvsSEN
       changes:
         - createTable:
-#            schemaName: product
             tableName: product_discount
             columns:
               - column:
@@ -190,19 +184,16 @@ databaseChangeLog:
       author: jvsSEN
       changes:
         - addDefaultValue:
-#            schemaName: product
             tableName: product
             columnName: count
             columnDatatype: integer
             defaultValue: 0
         - addDefaultValue:
-#            schemaName: product
             tableName: product
             columnName: price
             columnDatatype: numeric(32,9)
             defaultValue: 0.0
         - addDefaultValue:
-#            schemaName: product
             tableName: discount
             columnName: discount_value
             columnDatatype: real
@@ -216,19 +207,18 @@ databaseChangeLog:
             dbms: 'postgresql'
             splitStatement: 'true'
             sql:
-              ALTER TABLE product_category ADD FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE CASCADE;
-              ALTER TABLE product_category ADD FOREIGN KEY (category_id) REFERENCES category (id) ON DELETE CASCADE;
-              ALTER TABLE category_sub_category ADD FOREIGN KEY (category_id) REFERENCES category (id) ON DELETE CASCADE;
-              ALTER TABLE category_sub_category ADD FOREIGN KEY (sub_category_id) REFERENCES sub_category (id) ON DELETE CASCADE;
-              ALTER TABLE product_discount ADD FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE CASCADE;
-              ALTER TABLE product_discount ADD FOREIGN KEY (discount_id) REFERENCES discount (id) ON DELETE CASCADE;
-            
+              ALTER TABLE "product".product_category ADD FOREIGN KEY (product_id) REFERENCES "product".product (id) ON DELETE CASCADE;
+              ALTER TABLE "product".product_category ADD FOREIGN KEY (category_id) REFERENCES "product".category (id) ON DELETE CASCADE;
+              ALTER TABLE "product".category_sub_category ADD FOREIGN KEY (category_id) REFERENCES "product".category (id) ON DELETE CASCADE;
+              ALTER TABLE "product".category_sub_category ADD FOREIGN KEY (sub_category_id) REFERENCES "product".sub_category (id) ON DELETE CASCADE;
+              ALTER TABLE "product".product_discount ADD FOREIGN KEY (product_id) REFERENCES "product".product (id) ON DELETE CASCADE;
+              ALTER TABLE "product".product_discount ADD FOREIGN KEY (discount_id) REFERENCES "product".discount (id) ON DELETE CASCADE;
+
   - changeSet:
       id: add-approval-status-column-to-product-table
       author: jvsSEN
       changes:
         - addColumn:
-#            schemaName: product
             tableName: product
             columns:
               - column:
