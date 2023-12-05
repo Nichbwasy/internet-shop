@@ -38,7 +38,7 @@ public class AdminSellersControlPageController {
     }
 
     @DeleteMapping("/seller/{id}")
-    public ResponseEntity<List<Long>> removeSellerFromSystem(@PathVariable Long id) {
+    public ResponseEntity<Long> removeSellerFromSystem(@PathVariable Long id) {
         log.info("Trying to remove seller from '{}' from the system...", id);
         return ResponseEntity.ok().body(sellersService.removeSellerFromSystem(id));
     }

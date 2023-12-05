@@ -71,6 +71,7 @@ public class AdminSellersControlServiceImpl implements AdminSellersControlServic
     }
 
     @Override
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public SellerDetailsDto registerNewSeller(RegisterNewSellerForm form) {
         if (sellerInfoRepository.existsByUserId(form.getUserId())) {
             log.warn("User '{}' already the seller!", form.getUserId());
@@ -86,15 +87,15 @@ public class AdminSellersControlServiceImpl implements AdminSellersControlServic
 
     @Override
     @Transactional(isolation = Isolation.SERIALIZABLE)
-    public List<Long> removeSellerFromSystem(Long id) {
+    public Long removeSellerFromSystem(Long id) {
         SellerInfo sellerInfo = sellerInfoRepository.getReferenceById(id);
         List<Long> idsForRepo = sellerInfo.getProducts().stream().map(SellerProduct::getId).toList();
         List<Long> idsForClient = sellerInfo.getProducts().stream().map(SellerProduct::getProductId).toList();
 
-
-        List<Long> removedProductsIds = productApiClient.removeProducts(idsForClient).getBody();
+        productApiClient.removeProducts(idsForClient);
         sellerProductRepository.deleteAllById(idsForRepo);
-        return removedProductsIds;
+        sellerInfoRepository.deleteById(id);
+        return id;
     }
 
     private SellerUserDataDto makeUserAsSellerAndGetData(RegisterNewSellerForm form) {

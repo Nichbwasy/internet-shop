@@ -11,6 +11,6 @@ public interface AdminSellersControlService {
     SellerDetailsDto getSellerInfo(Long sellerId);
     List<SellerInfoDto> getSellersInfoFromPage(Integer page);
     SellerDetailsDto registerNewSeller(RegisterNewSellerForm form);
-    List<Long> removeSellerFromSystem(Long id);
+    Long removeSellerFromSystem(Long id);
 
 }

@@ -1,0 +1,121 @@
+package com.shop.product.service;
+
+import com.shop.authorization.client.TokensApiClient;
+import com.shop.authorization.dto.token.AccessTokenUserInfoDto;
+import com.shop.product.client.ProductApiClient;
+import com.shop.product.dto.ProductDto;
+import com.shop.product.service.config.SellerProductsControlServiceTestConfiguration;
+import com.shop.product.service.utils.GenSellerTestData;
+import com.shop.seller.dao.SellerInfoRepository;
+import com.shop.seller.dto.control.SellerProductDetailsDto;
+import com.shop.seller.model.SellerInfo;
+import com.shop.seller.model.SellerProduct;
+import com.shop.seller.service.SellerProductsControlService;
+import com.shop.seller.service.exception.control.GetUserInfoApiClientException;
+import com.shop.seller.service.exception.control.GettingSellersProductsDetailsException;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import java.util.List;
+
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(classes = SellerProductsControlServiceTestConfiguration.class)
+public class SellerProductsControlServiceTests {
+
+    @Autowired
+    private SellerInfoRepository sellerInfoRepository;
+    @Autowired
+    private ProductApiClient productApiClient;
+    @Autowired
+    private TokensApiClient tokensApiClient;
+    @Autowired
+    private SellerProductsControlService controlService;
+
+    @Test
+    public void showAllSellersProductsTest() {
+        AccessTokenUserInfoDto tokenUserInfo = GenSellerTestData.generateAccessTokenUserData();
+        SellerInfo sellerInfo = GenSellerTestData.generateSellerInfo();
+        ProductDto prodDto1 = GenSellerTestData.generateProduct();
+        ProductDto prodDto2 = GenSellerTestData.generateProduct();
+        SellerProduct prod1 = GenSellerTestData.generateSellerProduct();
+        SellerProduct prod2 = GenSellerTestData.generateSellerProduct();
+        prod1.setProductId(prodDto1.getId());
+        prod2.setProductId(prodDto2.getId());
+        sellerInfo.setUserId(tokenUserInfo.getUserId());
+        sellerInfo.setProducts(List.of(prod1, prod2));
+
+        Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString()))
+                .thenReturn(ResponseEntity.ok().body(tokenUserInfo));
+        Mockito.when(sellerInfoRepository.getByUserId(tokenUserInfo.getUserId())).thenReturn(sellerInfo);
+        Mockito.when(productApiClient.getProductsByIds(Mockito.anyInt(),
+                Mockito.anyList())).thenReturn(ResponseEntity.ok().body(List.of(prodDto1, prodDto2)));
+
+        List<SellerProductDetailsDto> result = controlService.showAllSellersProducts(1, "some_access_token");
+
+        Assertions.assertEquals(2, result.size());
+        Assertions.assertTrue(result.stream().anyMatch(p -> p.getProductId().equals(prodDto1.getId())));
+        Assertions.assertTrue(result.stream().anyMatch(p -> p.getProductId().equals(prodDto2.getId())));
+    }
+
+    @Test
+    public void showAllSellersProductsNotExistTest() {
+        Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenThrow(RuntimeException.class);
+
+        Assertions.assertThrows(GetUserInfoApiClientException.class,
+                () -> controlService.showAllSellersProducts(1, "some_access_token"));
+
+    }
+
+    @Test
+    public void showSellerProductTest() {
+        List<SellerProduct> products = List.of(GenSellerTestData.generateSellerProduct(), GenSellerTestData.generateSellerProduct());
+        Long searchId = products.get(0).getId();
+        Long searchedProductId = products.get(0).getProductId();
+        AccessTokenUserInfoDto tokenUserInfo = GenSellerTestData.generateAccessTokenUserData();
+        SellerInfo sellerInfo = GenSellerTestData.generateSellerInfo();
+        sellerInfo.setId(tokenUserInfo.getUserId());
+        sellerInfo.setProducts(products);
+        ProductDto product = GenSellerTestData.generateProduct();
+        product.setId(searchedProductId);
+
+        Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString()))
+                .thenReturn(ResponseEntity.ok().body(tokenUserInfo));
+        Mockito.when(sellerInfoRepository.getByUserId(tokenUserInfo.getUserId())).thenReturn(sellerInfo);
+        Mockito.when(productApiClient.getProduct(searchedProductId)).thenReturn(ResponseEntity.ok().body(product));
+
+        SellerProductDetailsDto result = controlService.showSellerProduct(searchId, "some_access_token");
+
+        Assertions.assertEquals(searchId, result.getId());
+    }
+
+    @Test
+    public void showSellerNotExistedProductTest() {
+        List<SellerProduct> products = List.of(GenSellerTestData.generateSellerProduct(), GenSellerTestData.generateSellerProduct());
+        AccessTokenUserInfoDto tokenUserInfo = GenSellerTestData.generateAccessTokenUserData();
+        SellerInfo sellerInfo = GenSellerTestData.generateSellerInfo();
+        sellerInfo.setId(tokenUserInfo.getUserId());
+        sellerInfo.setProducts(products);
+
+        Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString()))
+                .thenReturn(ResponseEntity.ok().body(tokenUserInfo));
+        Mockito.when(sellerInfoRepository.getByUserId(tokenUserInfo.getUserId())).thenReturn(sellerInfo);
+
+        Assertions.assertThrows(GettingSellersProductsDetailsException.class,
+                () -> controlService.showSellerProduct(1001L, "some_access_token"));
+    }
+
+    @Test
+    public void showSellerNotExistedUserProductTest() {
+        Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenThrow(RuntimeException.class);
+
+        Assertions.assertThrows(GetUserInfoApiClientException.class,
+                () -> controlService.showSellerProduct(1L, "some_access_token"));
+    }
+
+}

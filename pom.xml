@@ -26,7 +26,7 @@
         <h2-version>2.2.220</h2-version>
         <liqubase-version>4.22.0</liqubase-version>
         <testcontainer-version>1.19.1</testcontainer-version>
-        <spring-boot-version>3.1.4</spring-boot-version>
+        <spring-boot-version>3.0.5</spring-boot-version>
         <hibernate-version>6.2.13.Final</hibernate-version>
         <jakarta-xml-bind-version>4.0.0</jakarta-xml-bind-version>
         <spring-cloud-openfeign-version>4.0.2</spring-cloud-openfeign-version>

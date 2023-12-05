@@ -1,5 +1,6 @@
 # Compiled class file
 *.class
+*/.class
 
 # Log file
 *.log
@@ -11,9 +12,17 @@
 .mtj.tmp/
 
 #Folders
+.classpath
+.project
+.settings/
+target/
 postgres/**
 .idea/**
+*/target/*
+*/target/**
 **/target/**
+**/target/
+**/META-INF/
 
 # Package Files #
 *.jar

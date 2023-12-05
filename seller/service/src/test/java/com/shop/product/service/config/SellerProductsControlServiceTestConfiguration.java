@@ -1,0 +1,39 @@
+package com.shop.product.service.config;
+
+import com.shop.authorization.client.TokensApiClient;
+import com.shop.product.client.ProductApiClient;
+import com.shop.seller.dao.SellerInfoRepository;
+import com.shop.seller.service.SellerProductsControlService;
+import com.shop.seller.service.impl.SellerProductsControlServiceImpl;
+import com.shop.seller.service.mapper.SellerProductDetailsMapper;
+import com.shop.seller.service.mapper.SellerProductDetailsMapperImpl;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.PropertySource;
+
+@TestConfiguration
+@PropertySource("application-test.properties")
+public class SellerProductsControlServiceTestConfiguration {
+
+    @MockBean
+    public SellerInfoRepository sellerInfoRepository;
+    @MockBean
+    public ProductApiClient productApiClient;
+    @MockBean
+    public TokensApiClient tokensApiClient;
+    @Bean
+    public SellerProductDetailsMapper sellerProductDetailsMapper() {
+        return new SellerProductDetailsMapperImpl();
+    }
+    @Bean
+    public SellerProductsControlService sellerProductsControlService() {
+        return new SellerProductsControlServiceImpl(
+                sellerInfoRepository,
+                productApiClient,
+                tokensApiClient,
+                sellerProductDetailsMapper()
+        );
+    }
+
+}
