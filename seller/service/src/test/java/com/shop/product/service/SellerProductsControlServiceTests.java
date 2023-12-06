@@ -12,7 +12,7 @@ import com.shop.seller.model.SellerInfo;
 import com.shop.seller.model.SellerProduct;
 import com.shop.seller.service.SellerProductsControlService;
 import com.shop.seller.service.exception.control.GetUserInfoApiClientException;
-import com.shop.seller.service.exception.control.GettingSellersProductsDetailsException;
+import com.shop.seller.service.exception.control.GetSellerProductsDetailsException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -106,7 +106,7 @@ public class SellerProductsControlServiceTests {
                 .thenReturn(ResponseEntity.ok().body(tokenUserInfo));
         Mockito.when(sellerInfoRepository.getByUserId(tokenUserInfo.getUserId())).thenReturn(sellerInfo);
 
-        Assertions.assertThrows(GettingSellersProductsDetailsException.class,
+        Assertions.assertThrows(GetSellerProductsDetailsException.class,
                 () -> controlService.showSellerProduct(1001L, "some_access_token"));
     }
 

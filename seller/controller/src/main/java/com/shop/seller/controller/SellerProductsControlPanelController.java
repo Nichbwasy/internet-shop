@@ -30,11 +30,11 @@ public class SellerProductsControlPanelController {
 
     @GetMapping("/product/{id}")
     public ResponseEntity<SellerProductDetailsDto> showSellerProductDetails(
-            @PathVariable Long productId,
+            @PathVariable Long id,
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) {
-        log.info("Trying to get seller's product '{}' details...", productId);
+        log.info("Trying to get seller's product '{}' details...", id);
         String accessToken = authorization.substring(BEARER.length());
-        return ResponseEntity.ok().body(sellerProductsControlService.showSellerProduct(productId, accessToken));
+        return ResponseEntity.ok().body(sellerProductsControlService.showSellerProduct(id, accessToken));
     }
 
 }

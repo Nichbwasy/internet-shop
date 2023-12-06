@@ -10,7 +10,7 @@ import com.shop.seller.model.SellerInfo;
 import com.shop.seller.model.SellerProduct;
 import com.shop.seller.service.SellerProductsControlService;
 import com.shop.seller.service.exception.control.GetUserInfoApiClientException;
-import com.shop.seller.service.exception.control.GettingSellersProductsDetailsException;
+import com.shop.seller.service.exception.control.GetSellerProductsDetailsException;
 import com.shop.seller.service.mapper.SellerProductDetailsMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +41,7 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
             return mapProductsToProductDetails(sellerInfo, productDtos);
         } catch (Exception e) {
             log.error("Exception while getting sellers products! {}", e.getMessage());
-            throw new GettingSellersProductsDetailsException(
+            throw new GetSellerProductsDetailsException(
                     "Exception while getting sellers products! %s".formatted(e.getMessage())
             );
         }
@@ -56,7 +56,7 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
                     .filter(prod -> prod.getId().equals(productId))
                     .findFirst().orElseThrow(() -> {
                         log.warn("Product with id '{}' not exists or doesn't belong to the seller!", productId);
-                        return new GettingSellersProductsDetailsException(
+                        return new GetSellerProductsDetailsException(
                                 "Product with id '%s' not exists or doesn't belong to the seller!".formatted(productId)
                         );
                     });
@@ -67,7 +67,7 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
             return sellerDetails;
         } catch (Exception e) {
             log.error("Exception while getting sellers product with id '{}'! {}", productId, e.getMessage());
-            throw new GettingSellersProductsDetailsException(
+            throw new GetSellerProductsDetailsException(
                     "Exception while getting sellers product with id '%s'! %s".formatted(productId, e.getMessage())
             );
         }

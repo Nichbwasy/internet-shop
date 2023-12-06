@@ -1,0 +1,73 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-base-tables
+      author: jvsSEN
+      changes:
+        - createTable:
+            tableName: seller_info
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  constraints:
+                    unique: 'true'
+                    nullable: 'false'
+              - column:
+                  name: user_id
+                  type: bigint
+                  constraints:
+                    unique: 'true'
+                    nullable: 'false'
+              - column:
+                  name: registration_date
+                  type: timestamp
+                  constraints:
+                    nullable: 'false'
+              - column:
+                  name: rating
+                  type: real
+                  defaultValue: '5.0'
+                  constraints:
+                    nullable: 'false'
+              - column:
+                  name: description
+                  type: varchar(4092)
+
+        - createTable:
+            tableName: seller_product
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  constraints:
+                    unique: 'true'
+                    nullable: 'false'
+              - column:
+                  name: product_id
+                  type: bigint
+                  constraints:
+                    unique: 'true'
+                    nullable: 'false'
+
+        - createTable:
+            tableName: seller_info_seller_product
+            columns:
+              - column:
+                  name: seller_info_id
+                  type: bigint
+                  constraints:
+                    nullable: 'false'
+              - column:
+                  name: seller_product_id
+                  type: bigint
+                  constraints:
+                    nullable: 'false'
+
+        - sql:
+            dbms: 'postgresql'
+            splitStatement: 'true'
+            sql:
+              ALTER TABLE seller_info_seller_product ADD FOREIGN KEY (seller_info_id) 
+              REFERENCES seller_info (id) ON DELETE CASCADE;
+              ALTER TABLE seller_info_seller_product ADD FOREIGN KEY (seller_product_id) 
+              REFERENCES seller_product (id) ON DELETE CASCADE;
