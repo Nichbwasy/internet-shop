@@ -4,13 +4,18 @@ import com.shop.authorization.client.TokensApiClient;
 import com.shop.authorization.dto.token.AccessTokenUserInfoDto;
 import com.shop.product.client.ProductApiClient;
 import com.shop.product.dto.ProductDto;
+import com.shop.product.dto.form.product.NewProductForm;
 import com.shop.product.service.config.SellerProductsControlServiceTestConfiguration;
 import com.shop.product.service.utils.GenSellerTestData;
+import com.shop.product.service.utils.mapper.SellerServiceTestMapper;
 import com.shop.seller.dao.SellerInfoRepository;
+import com.shop.seller.dao.SellerProductRepository;
+import com.shop.seller.dto.control.CreateProductForm;
 import com.shop.seller.dto.control.SellerProductDetailsDto;
 import com.shop.seller.model.SellerInfo;
 import com.shop.seller.model.SellerProduct;
 import com.shop.seller.service.SellerProductsControlService;
+import com.shop.seller.service.exception.control.AddNewProductException;
 import com.shop.seller.service.exception.control.GetUserInfoApiClientException;
 import com.shop.seller.service.exception.control.GetSellerProductsDetailsException;
 import org.junit.jupiter.api.Assertions;
@@ -27,9 +32,10 @@ import java.util.List;
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = SellerProductsControlServiceTestConfiguration.class)
 public class SellerProductsControlServiceTests {
-
     @Autowired
     private SellerInfoRepository sellerInfoRepository;
+    @Autowired
+    private SellerProductRepository sellerProductRepository;
     @Autowired
     private ProductApiClient productApiClient;
     @Autowired
@@ -116,6 +122,123 @@ public class SellerProductsControlServiceTests {
 
         Assertions.assertThrows(GetUserInfoApiClientException.class,
                 () -> controlService.showSellerProduct(1L, "some_access_token"));
+    }
+
+    @Test
+    public void createNewProductTest() {
+        AccessTokenUserInfoDto userInfo = GenSellerTestData.generateAccessTokenUserData();
+        SellerInfo sellerInfo = GenSellerTestData.generateSellerInfo();
+        sellerInfo.setUserId(userInfo.getUserId());
+        CreateProductForm form = GenSellerTestData.generateCreateProductForm();
+
+        Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
+        Mockito.when(productApiClient.createProduct(Mockito.any(NewProductForm.class)))
+                .thenAnswer(a -> ResponseEntity.ok().body(SellerServiceTestMapper.INSTANCE.mapNewProductFormToDto(a.getArgument(0))));
+        Mockito.when(sellerProductRepository.save(Mockito.any(SellerProduct.class)))
+                .thenAnswer(a -> {
+                    SellerProduct sellerProduct = a.getArgument(0);
+                    sellerProduct.setId(1L);
+                    return sellerProduct;
+                });
+        Mockito.when(sellerInfoRepository.getByUserId(userInfo.getUserId())).thenReturn(sellerInfo);
+
+        SellerProductDetailsDto result = controlService.createNewProduct(form, "some_access_token");
+
+        Assertions.assertEquals(form.getName(), result.getName());
+        Assertions.assertEquals(form.getPrice(), result.getPrice());
+        Assertions.assertEquals(form.getCount(), result.getCount());
+    }
+
+    @Test
+    public void createNewProductSellerNotExistsTest() {
+        AccessTokenUserInfoDto userInfo = GenSellerTestData.generateAccessTokenUserData();
+        SellerInfo sellerInfo = GenSellerTestData.generateSellerInfo();
+        sellerInfo.setUserId(userInfo.getUserId());
+        CreateProductForm form = GenSellerTestData.generateCreateProductForm();
+
+        Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
+        Mockito.when(productApiClient.createProduct(Mockito.any(NewProductForm.class)))
+                .thenAnswer(a -> ResponseEntity.ok().body(SellerServiceTestMapper.INSTANCE.mapNewProductFormToDto(a.getArgument(0))));
+        Mockito.when(sellerProductRepository.save(Mockito.any(SellerProduct.class)))
+                .thenAnswer(a -> {
+                    SellerProduct sellerProduct = a.getArgument(0);
+                    sellerProduct.setId(1L);
+                    return sellerProduct;
+                });
+        Mockito.when(sellerInfoRepository.getByUserId(Mockito.anyLong())).thenThrow(RuntimeException.class);
+
+        Assertions.assertThrows(AddNewProductException.class,
+                () -> controlService.createNewProduct(form, "some_access_token"));
+    }
+
+    @Test
+    public void createNewProductRepositoryExceptionTest() {
+        AccessTokenUserInfoDto userInfo = GenSellerTestData.generateAccessTokenUserData();
+        SellerInfo sellerInfo = GenSellerTestData.generateSellerInfo();
+        sellerInfo.setUserId(userInfo.getUserId());
+        CreateProductForm form = GenSellerTestData.generateCreateProductForm();
+
+        Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
+        Mockito.when(productApiClient.createProduct(Mockito.any(NewProductForm.class)))
+                .thenAnswer(a -> ResponseEntity.ok().body(SellerServiceTestMapper.INSTANCE.mapNewProductFormToDto(a.getArgument(0))));
+        Mockito.when(sellerProductRepository.save(Mockito.any(SellerProduct.class))).thenThrow(RuntimeException.class);
+
+        Assertions.assertThrows(AddNewProductException.class,
+                () -> controlService.createNewProduct(form, "some_access_token"));
+    }
+
+    @Test
+    public void createNewProductProductClientExceptionTest() {
+        AccessTokenUserInfoDto userInfo = GenSellerTestData.generateAccessTokenUserData();
+        SellerInfo sellerInfo = GenSellerTestData.generateSellerInfo();
+        sellerInfo.setUserId(userInfo.getUserId());
+        CreateProductForm form = GenSellerTestData.generateCreateProductForm();
+
+        Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
+        Mockito.when(productApiClient.createProduct(Mockito.any(NewProductForm.class))).thenThrow(RuntimeException.class);
+
+        Assertions.assertThrows(AddNewProductException.class,
+                () -> controlService.createNewProduct(form, "some_access_token"));
+    }
+
+    @Test
+    public void createNewProductUserClientExceptionTest() {
+        AccessTokenUserInfoDto userInfo = GenSellerTestData.generateAccessTokenUserData();
+        SellerInfo sellerInfo = GenSellerTestData.generateSellerInfo();
+        sellerInfo.setUserId(userInfo.getUserId());
+        CreateProductForm form = GenSellerTestData.generateCreateProductForm();
+
+        Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenThrow(RuntimeException.class);
+
+        Assertions.assertThrows(GetUserInfoApiClientException.class,
+                () -> controlService.createNewProduct(form, "some_access_token"));
+    }
+
+    @Test
+    public void createNewProductNullDataTest() {
+        AccessTokenUserInfoDto userInfo = GenSellerTestData.generateAccessTokenUserData();
+        CreateProductForm form = new CreateProductForm();
+
+        Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
+        Mockito.when(productApiClient.createProduct(Mockito.any(NewProductForm.class)))
+                .thenAnswer(a -> ResponseEntity.ok().body(SellerServiceTestMapper.INSTANCE.mapNewProductFormToDto(a.getArgument(0))));
+        Mockito.when(sellerProductRepository.save(Mockito.any(SellerProduct.class))).thenThrow(RuntimeException.class);
+
+        Assertions.assertThrows(AddNewProductException.class,
+                () -> controlService.createNewProduct(form, "some_access_token"));
+    }
+
+    @Test
+    public void createNullNewProductTest() {
+        AccessTokenUserInfoDto userInfo = GenSellerTestData.generateAccessTokenUserData();
+
+        Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
+        Mockito.when(productApiClient.createProduct(Mockito.any(NewProductForm.class)))
+                .thenAnswer(a -> ResponseEntity.ok().body(SellerServiceTestMapper.INSTANCE.mapNewProductFormToDto(a.getArgument(0))));
+        Mockito.when(sellerProductRepository.save(Mockito.any(SellerProduct.class))).thenThrow(RuntimeException.class);
+
+        Assertions.assertThrows(AddNewProductException.class,
+                () -> controlService.createNewProduct(null, "some_access_token"));
     }
 
 }

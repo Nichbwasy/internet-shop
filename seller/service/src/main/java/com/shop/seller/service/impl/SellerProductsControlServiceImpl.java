@@ -4,17 +4,24 @@ import com.shop.authorization.client.TokensApiClient;
 import com.shop.authorization.dto.token.AccessTokenUserInfoDto;
 import com.shop.product.client.ProductApiClient;
 import com.shop.product.dto.ProductDto;
+import com.shop.product.dto.form.product.NewProductForm;
 import com.shop.seller.dao.SellerInfoRepository;
+import com.shop.seller.dao.SellerProductRepository;
+import com.shop.seller.dto.SellerProductDto;
+import com.shop.seller.dto.control.CreateProductForm;
 import com.shop.seller.dto.control.SellerProductDetailsDto;
 import com.shop.seller.model.SellerInfo;
 import com.shop.seller.model.SellerProduct;
 import com.shop.seller.service.SellerProductsControlService;
+import com.shop.seller.service.exception.control.AddNewProductException;
 import com.shop.seller.service.exception.control.GetUserInfoApiClientException;
 import com.shop.seller.service.exception.control.GetSellerProductsDetailsException;
+import com.shop.seller.service.mapper.CreateProductFormMapper;
 import com.shop.seller.service.mapper.SellerProductDetailsMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -26,9 +33,11 @@ import java.util.List;
 public class SellerProductsControlServiceImpl implements SellerProductsControlService {
 
     private final SellerInfoRepository sellerInfoRepository;
+    private final SellerProductRepository sellerProductRepository;
     private final ProductApiClient productApiClient;
     private final TokensApiClient tokensApiClient;
     private final SellerProductDetailsMapper sellerProductDetailsMapper;
+    private final CreateProductFormMapper createProductFormMapper;
 
     @Override
     public List<SellerProductDetailsDto> showAllSellersProducts(Integer page, String accessToken) {
@@ -71,6 +80,32 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
                     "Exception while getting sellers product with id '%s'! %s".formatted(productId, e.getMessage())
             );
         }
+    }
+
+    @Override
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    public SellerProductDetailsDto createNewProduct(CreateProductForm form, String accessToken) {
+        AccessTokenUserInfoDto userInfo = getUserInfoByAccessTokenFromAuthorizationMicroservice(accessToken);
+        try {
+            ProductDto product = productApiClient.createProduct(createProductFormMapper.mapToNewProductForm(form)).getBody();
+            SellerProduct sellerProduct = saveSellerProductInfo(product);
+            SellerInfo sellerInfo = sellerInfoRepository.getByUserId(userInfo.getUserId());
+            sellerInfo.getProducts().add(sellerProduct);
+
+            SellerProductDetailsDto productDetails = sellerProductDetailsMapper.mapToDto(sellerProduct);
+            sellerProductDetailsMapper.mapProductDto(product, productDetails);
+            return productDetails;
+        } catch (Exception e) {
+            log.error("Unable add a new product to the client! {}", e.getMessage());
+            throw new AddNewProductException("Unable add a new product to the client! %s".formatted(e.getMessage()));
+        }
+    }
+
+    private SellerProduct saveSellerProductInfo(ProductDto product) {
+        SellerProduct sellerProduct = new SellerProduct();
+        sellerProduct.setProductId(product.getId());
+        sellerProduct = sellerProductRepository.save(sellerProduct);
+        return sellerProduct;
     }
 
     private List<SellerProductDetailsDto> mapProductsToProductDetails(SellerInfo sellerInfo, List<ProductDto> productDtos) {

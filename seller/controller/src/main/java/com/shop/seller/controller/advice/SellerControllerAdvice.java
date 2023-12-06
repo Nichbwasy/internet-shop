@@ -10,10 +10,7 @@ import com.shop.common.utils.exception.jwt.token.JwtTokenExpiredException;
 import com.shop.common.utils.exception.jwt.token.JwtTokenMalformedException;
 import com.shop.common.utils.exception.jwt.token.JwtTokenUnsupportedException;
 import com.shop.common.utils.exception.jwt.token.JwtTokenWrongSignatureException;
-import com.shop.seller.service.exception.control.GetSellerDataUserApiClientException;
-import com.shop.seller.service.exception.control.GetSellerProductsDetailsException;
-import com.shop.seller.service.exception.control.GetUserInfoApiClientException;
-import com.shop.seller.service.exception.control.SellerRegistrationException;
+import com.shop.seller.service.exception.control.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -155,6 +152,13 @@ public class SellerControllerAdvice {
     protected ResponseEntity<AdviceResponseObject> sellerRegistrationException(Exception e, WebRequest request) {
         log.error("Exception while register a new seller! {}", e.getMessage());
         AdviceResponseObject response = new AdviceResponseObject("Exception while register a new seller!", e, request);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    @ExceptionHandler({AddNewProductException.class})
+    protected ResponseEntity<AdviceResponseObject> addNewProductException(Exception e, WebRequest request) {
+        log.error("Exception while adding a new product! {}", e.getMessage());
+        AdviceResponseObject response = new AdviceResponseObject("Exception while adding a new product!", e, request);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 

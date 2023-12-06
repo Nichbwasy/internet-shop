@@ -25,7 +25,7 @@ import org.springframework.web.context.request.WebRequest;
 
 @Slf4j
 @ControllerAdvice
-public class PaymentControllerAdvice {
+public class ProductControllerAdvice {
 
     /** Common exceptions **/
 

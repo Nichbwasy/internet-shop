@@ -1,5 +1,6 @@
 package com.shop.seller.controller;
 
+import com.shop.seller.dto.control.CreateProductForm;
 import com.shop.seller.dto.control.SellerProductDetailsDto;
 import com.shop.seller.service.SellerProductsControlService;
 import lombok.RequiredArgsConstructor;
@@ -36,5 +37,16 @@ public class SellerProductsControlPanelController {
         String accessToken = authorization.substring(BEARER.length());
         return ResponseEntity.ok().body(sellerProductsControlService.showSellerProduct(id, accessToken));
     }
+
+    @PostMapping
+    public ResponseEntity<SellerProductDetailsDto> addNewProduct(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
+            @RequestBody CreateProductForm form
+    ) {
+        log.info("Trying to create a new product for a seller...");
+        String accessToken = authorization.substring(BEARER.length());
+        return ResponseEntity.ok().body(sellerProductsControlService.createNewProduct(form, accessToken));
+    }
+
 
 }

@@ -3,8 +3,11 @@ package com.shop.product.service.config;
 import com.shop.authorization.client.TokensApiClient;
 import com.shop.product.client.ProductApiClient;
 import com.shop.seller.dao.SellerInfoRepository;
+import com.shop.seller.dao.SellerProductRepository;
 import com.shop.seller.service.SellerProductsControlService;
 import com.shop.seller.service.impl.SellerProductsControlServiceImpl;
+import com.shop.seller.service.mapper.CreateProductFormMapper;
+import com.shop.seller.service.mapper.CreateProductFormMapperImpl;
 import com.shop.seller.service.mapper.SellerProductDetailsMapper;
 import com.shop.seller.service.mapper.SellerProductDetailsMapperImpl;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -19,6 +22,8 @@ public class SellerProductsControlServiceTestConfiguration {
     @MockBean
     public SellerInfoRepository sellerInfoRepository;
     @MockBean
+    public SellerProductRepository sellerProductRepository;
+    @MockBean
     public ProductApiClient productApiClient;
     @MockBean
     public TokensApiClient tokensApiClient;
@@ -27,12 +32,18 @@ public class SellerProductsControlServiceTestConfiguration {
         return new SellerProductDetailsMapperImpl();
     }
     @Bean
+    public CreateProductFormMapper createProductFormMapper() {
+        return new CreateProductFormMapperImpl();
+    }
+    @Bean
     public SellerProductsControlService sellerProductsControlService() {
         return new SellerProductsControlServiceImpl(
                 sellerInfoRepository,
+                sellerProductRepository,
                 productApiClient,
                 tokensApiClient,
-                sellerProductDetailsMapper()
+                sellerProductDetailsMapper(),
+                createProductFormMapper()
         );
     }
 

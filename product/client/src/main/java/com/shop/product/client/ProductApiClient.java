@@ -3,6 +3,7 @@ package com.shop.product.client;
 import com.shop.product.dto.ProductDto;
 import com.shop.product.dto.form.product.ApprovalStatusProductFilterForm;
 import com.shop.product.dto.form.product.ChangeProductDataForm;
+import com.shop.product.dto.form.product.NewProductForm;
 import com.shop.product.dto.form.product.ProductFilterForm;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
@@ -32,4 +33,7 @@ public interface ProductApiClient {
 
     @GetMapping("/ids/{page}")
     ResponseEntity<List<ProductDto>> getProductsByIds(@PathVariable("page") Integer page, @RequestBody List<Long> ids);
+
+    @PostMapping
+    ResponseEntity<ProductDto> createProduct(@RequestBody NewProductForm form);
 }

@@ -3,6 +3,7 @@ package com.shop.product.controller;
 import com.shop.product.dto.ProductDto;
 import com.shop.product.dto.form.product.ApprovalStatusProductFilterForm;
 import com.shop.product.dto.form.product.ChangeProductDataForm;
+import com.shop.product.dto.form.product.NewProductForm;
 import com.shop.product.dto.form.product.ProductFilterForm;
 import com.shop.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -56,6 +57,11 @@ public class ProductApiController {
     public ResponseEntity<List<Long>> removeProducts(@RequestBody List<Long> ids) {
         log.info("Trying to remove products with selected ids '{}'...", ids);
         return ResponseEntity.ok().body(productService.removeProducts(ids));
+    }
+    @PostMapping
+    public ResponseEntity<ProductDto> createProduct(@RequestBody NewProductForm form) {
+        log.info("Trying to create a new product...");
+        return ResponseEntity.ok().body(productService.addProduct(form));
     }
 
 }

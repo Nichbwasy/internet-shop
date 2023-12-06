@@ -5,10 +5,12 @@ import com.shop.authorization.dto.token.AccessTokenUserInfoDto;
 import com.shop.common.utils.all.consts.ApprovalStatuses;
 import com.shop.common.utils.all.generator.StringGenerator;
 import com.shop.product.dto.ProductDto;
+import com.shop.seller.dto.control.CreateProductForm;
 import com.shop.seller.dto.control.RegisterNewSellerForm;
 import com.shop.seller.model.SellerInfo;
 import com.shop.seller.model.SellerProduct;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Random;
@@ -70,6 +72,17 @@ public final class GenSellerTestData {
         userInfoDto.setUserId(random.nextLong(1, 1000));
         userInfoDto.setUserLogin(StringGenerator.generate(random.nextInt(8, 12)));
         return userInfoDto;
+    }
+
+    public static CreateProductForm generateCreateProductForm() {
+        CreateProductForm form = new CreateProductForm();
+        form.setCount(random.nextInt(1, 100));
+        form.setPrice(new BigDecimal(random.nextInt(1, 1000)));
+        form.setName(StringGenerator.generate(random.nextInt(8, 12)));
+        form.setDescription(StringGenerator.generate(random.nextInt(24, 48)));
+        form.setCategoryIds(new ArrayList<>());
+        form.setDiscountIds(new ArrayList<>());
+        return form;
     }
 
 }
