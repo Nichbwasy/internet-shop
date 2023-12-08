@@ -6,16 +6,23 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.shop.authorization.client.TokensApiClient;
 import com.shop.authorization.common.constant.UsersRoles;
 import com.shop.authorization.common.constant.jwt.TokenStatus;
+import com.shop.authorization.common.data.builder.AccessTokenUserInfoBuilder;
+import com.shop.authorization.common.data.builder.JwtAuthenticationTokenDataDtoBuilder;
 import com.shop.authorization.dto.token.AccessTokenUserInfoDto;
 import com.shop.authorization.dto.token.JwtAuthenticationTokenDataDto;
 import com.shop.product.client.ProductApiClient;
+import com.shop.product.common.data.builder.ProductDtoBuilder;
 import com.shop.product.dto.ProductDto;
+import com.shop.product.dto.form.product.NewProductForm;
+import com.shop.seller.common.test.data.builder.CreateProductFormBuilder;
+import com.shop.seller.common.test.data.builder.SellerInfoBuilder;
+import com.shop.seller.common.test.data.builder.SellerProductBuilder;
 import com.shop.seller.controller.RunSellerTestControllerApplication;
 import com.shop.seller.controller.config.CommonSellerControllersTestConfiguration;
-import com.shop.seller.controller.utils.GenTestData;
+import com.shop.seller.controller.utils.mapper.SellerControllerTestMapper;
 import com.shop.seller.dao.SellerInfoRepository;
 import com.shop.seller.dao.SellerProductRepository;
-import com.shop.seller.dto.SellerInfoDto;
+import com.shop.seller.dto.control.CreateProductForm;
 import com.shop.seller.dto.control.SellerProductDetailsDto;
 import com.shop.seller.model.SellerInfo;
 import com.shop.seller.model.SellerProduct;
@@ -78,10 +85,11 @@ public class SellerProductsControlPanelControllerTests {
 
     @BeforeEach
     public void mockSecurityJwtTokenFilter() {
-        JwtAuthenticationTokenDataDto tokenDataDto = new JwtAuthenticationTokenDataDto();
-        tokenDataDto.setUsername("TEST");
-        tokenDataDto.setAuthorities(List.of(UsersRoles.ADMIN));
-        tokenDataDto.setAuthenticated(true);
+        JwtAuthenticationTokenDataDto tokenDataDto = JwtAuthenticationTokenDataDtoBuilder
+                .jwtAuthenticationTokenDataDto()
+                .authenticated(true)
+                .authorities(List.of(UsersRoles.ADMIN))
+                .build();
 
         Mockito.when(tokensApiClient.validateAccessToken(Mockito.anyString()))
                 .thenReturn(ResponseEntity.ok().body(TokenStatus.OK));
@@ -97,16 +105,18 @@ public class SellerProductsControlPanelControllerTests {
 
     @Test
     public void showAllSellersProductsDetailsTest() throws Exception {
-        AccessTokenUserInfoDto userInfo = GenTestData.generateUserInfo();
-        SellerInfo sellerInfo = GenTestData.generateSellerInfo();
-        sellerInfo.setUserId(userInfo.getUserId());
-        List<ProductDto> products = new ArrayList<>();
-        addProductsToSeller(products, sellerInfo);
+        AccessTokenUserInfoDto userInfo = AccessTokenUserInfoBuilder.accessTokenUserInfoDto().build();
+        List<ProductDto> productDtos = buildPageOfProductsDto();
+        SellerInfo sellerInfo = SellerInfoBuilder.sellerInfo()
+                .id(null)
+                .userId(userInfo.getUserId())
+                .build();
+        saveSellerProductsInDatabase(productDtos, sellerInfo);
         sellerInfoRepository.save(sellerInfo);
 
         Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
-        Mockito.when(productApiClient.getProductsByIds(1, products.stream().map(ProductDto::getId).toList()))
-                .thenReturn(ResponseEntity.ok().body(products));
+        Mockito.when(productApiClient.getProductsByIds(1, productDtos.stream().map(ProductDto::getId).toList()))
+                .thenReturn(ResponseEntity.ok().body(productDtos));
 
         String body = mockMvc.perform(MockMvcRequestBuilders.get("/seller/home/products/1")
                         .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
@@ -115,20 +125,26 @@ public class SellerProductsControlPanelControllerTests {
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse().getContentAsString();
-
         List<SellerProductDetailsDto> result = jsonMapper.readValue(body, new TypeReference<>() {});
 
         Assertions.assertEquals(SELLERS_INFO_PAGE_SIZE, result.size());
         Assertions.assertTrue(result.stream().allMatch(prodDet ->
-                products.stream().anyMatch(productDto -> productDto.getId().equals(prodDet.getProductId()))
+                productDtos.stream().anyMatch(productDto -> productDto.getId().equals(prodDet.getProductId()))
         ));
+    }
+
+    private void saveSellerProductsInDatabase(List<ProductDto> productDtos, SellerInfo sellerInfo) {
+        productDtos.forEach(prod -> {
+            SellerProduct product = SellerProductBuilder.sellerProduct().id(null).productId(prod.getId()).build();
+            product = sellerProductRepository.save(product);
+            sellerInfo.getProducts().add(product);
+        });
     }
 
     @Test
     public void showAllSellersProductsDetailsZeroProductsTest() throws Exception {
-        AccessTokenUserInfoDto userInfo = GenTestData.generateUserInfo();
-        SellerInfo sellerInfo = GenTestData.generateSellerInfo();
-        sellerInfo.setUserId(userInfo.getUserId());
+        AccessTokenUserInfoDto userInfo = AccessTokenUserInfoBuilder.accessTokenUserInfoDto().build();
+        SellerInfo sellerInfo = SellerInfoBuilder.sellerInfo().userId(userInfo.getUserId()).build();
         sellerInfoRepository.save(sellerInfo);
 
         Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
@@ -160,27 +176,24 @@ public class SellerProductsControlPanelControllerTests {
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
     }
 
-    private void addProductsToSeller(List<ProductDto> products, SellerInfo sellerInfo) {
-        for (int i = 0; i < SELLERS_INFO_PAGE_SIZE; i++) {
-            SellerProduct sellerProduct = GenTestData.generateSellerProduct();
-            ProductDto productDto = GenTestData.generateProduct();
-            sellerProduct.setProductId(productDto.getId());
-            sellerProductRepository.save(sellerProduct);
-            products.add(productDto);
-            sellerInfo.getProducts().add(sellerProduct);
+    private List<ProductDto> buildPageOfProductsDto() {
+        List<ProductDto> products = new ArrayList<>();
+        for (long i = 1; i < SELLERS_INFO_PAGE_SIZE + 1; i++) {
+            products.add(ProductDtoBuilder.productDto().id(i).build());
         }
+        return products;
     }
 
     @Test
     public void showSellerProductDetailsTest() throws Exception {
-        AccessTokenUserInfoDto userInfo = GenTestData.generateUserInfo();
-        ProductDto productDto = GenTestData.generateProduct();
-        SellerProduct selProd = GenTestData.generateSellerProduct();
-        selProd.setProductId(productDto.getId());
+        AccessTokenUserInfoDto userInfo = AccessTokenUserInfoBuilder.accessTokenUserInfoDto().build();
+        ProductDto productDto = ProductDtoBuilder.productDto().build();
+        SellerProduct selProd = SellerProductBuilder.sellerProduct().productId(productDto.getId()).build();
         selProd = sellerProductRepository.save(selProd);
-        SellerInfo sellerInfo = GenTestData.generateSellerInfo();
-        sellerInfo.setUserId(userInfo.getUserId());
-        sellerInfo.setProducts(List.of(selProd));
+        SellerInfo sellerInfo = SellerInfoBuilder.sellerInfo()
+                .userId(userInfo.getUserId())
+                .products(List.of(selProd))
+                .build();
         sellerInfoRepository.save(sellerInfo);
 
         Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
@@ -203,13 +216,11 @@ public class SellerProductsControlPanelControllerTests {
 
     @Test
     public void showSellerProductDetailsNotBelongToSellerTest() throws Exception {
-        AccessTokenUserInfoDto userInfo = GenTestData.generateUserInfo();
-        ProductDto productDto = GenTestData.generateProduct();
-        SellerProduct selProd = GenTestData.generateSellerProduct();
-        selProd.setProductId(productDto.getId());
+        AccessTokenUserInfoDto userInfo = AccessTokenUserInfoBuilder.accessTokenUserInfoDto().build();
+        ProductDto productDto = ProductDtoBuilder.productDto().build();
+        SellerProduct selProd = SellerProductBuilder.sellerProduct().productId(productDto.getId()).build();
         selProd = sellerProductRepository.save(selProd);
-        SellerInfo sellerInfo = GenTestData.generateSellerInfo();
-        sellerInfo.setUserId(userInfo.getUserId());
+        SellerInfo sellerInfo = SellerInfoBuilder.sellerInfo().userId(userInfo.getUserId()).build();
         sellerInfoRepository.save(sellerInfo);
 
         Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
@@ -234,4 +245,89 @@ public class SellerProductsControlPanelControllerTests {
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
     }
 
+    @Test
+    public void addNewProductTest() throws Exception {
+        AccessTokenUserInfoDto userInfo = AccessTokenUserInfoBuilder.accessTokenUserInfoDto().build();
+        CreateProductForm form = CreateProductFormBuilder.createProductForm().build();
+        SellerInfo sellerInfo = SellerInfoBuilder.sellerInfo().userId(userInfo.getUserId()).build();
+        sellerInfoRepository.save(sellerInfo);
+
+        Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString()))
+                .thenReturn(ResponseEntity.ok().body(userInfo));
+        Mockito.when(productApiClient.createProduct(Mockito.any(NewProductForm.class)))
+                .thenAnswer(a -> {
+                    ProductDto product = SellerControllerTestMapper.INSTANCE.mapNewProductFormToDto(a.getArgument(0));
+                    product.setId(1L);
+                    return ResponseEntity.ok().body(product);
+                });
+
+        String body = mockMvc.perform(MockMvcRequestBuilders.post("/seller/home/products")
+                        .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
+                        .content(jsonMapper.writeValueAsString(form))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse().getContentAsString();
+
+        SellerProductDetailsDto result = jsonMapper.readValue(body, SellerProductDetailsDto.class);
+
+        Assertions.assertNotNull(result.getId());
+        Assertions.assertNotNull(result.getProductId());
+        Assertions.assertEquals(form.getName(), result.getName());
+        Assertions.assertEquals(form.getPrice(), result.getPrice());
+        Assertions.assertEquals(form.getCount(), result.getCount());
+    }
+
+    @Test
+    public void addNewProductToNotExistedSellerTest() throws Exception {
+        AccessTokenUserInfoDto userInfo = AccessTokenUserInfoBuilder.accessTokenUserInfoDto().build();
+        CreateProductForm form = CreateProductFormBuilder.createProductForm().build();
+
+        Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString()))
+                .thenReturn(ResponseEntity.ok().body(userInfo));
+        Mockito.when(productApiClient.createProduct(Mockito.any(NewProductForm.class)))
+                .thenAnswer(a -> {
+                    ProductDto product = SellerControllerTestMapper.INSTANCE.mapNewProductFormToDto(a.getArgument(0));
+                    product.setId(1L);
+                    return ResponseEntity.ok().body(product);
+                });
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/seller/home/products")
+                        .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
+                        .content(jsonMapper.writeValueAsString(form))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isInternalServerError())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse().getContentAsString();
+    }
+
+    @Test
+    public void addNewProductClientTest() throws Exception {
+        CreateProductForm form = CreateProductFormBuilder.createProductForm().build();
+
+        Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenThrow(RuntimeException.class);
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/seller/home/products")
+                        .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
+                        .content(jsonMapper.writeValueAsString(form))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isNotFound())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse().getContentAsString();
+    }
+
 }
+
+
+
+
+
+
+
+
+
+
+

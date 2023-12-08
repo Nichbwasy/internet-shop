@@ -52,7 +52,7 @@ Seller microservice: (Seller's information, seller page, adding a new products, 
         - Show sellers info [Done]
         - Register user as a new seller (admin only) [Done]
         - Remove seller (admin only) [Done]
-            - After removing seller all his product must be removed from system [Done (Testing required)]
+            - After removing seller all his product must be removed from system [Testing required]
         - Product management for a seller [In progress]
             - Show all products details [Done]
             - Show product details [Done]

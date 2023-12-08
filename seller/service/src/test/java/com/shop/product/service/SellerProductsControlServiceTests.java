@@ -1,13 +1,17 @@
 package com.shop.product.service;
 
 import com.shop.authorization.client.TokensApiClient;
+import com.shop.authorization.common.data.builder.AccessTokenUserInfoBuilder;
 import com.shop.authorization.dto.token.AccessTokenUserInfoDto;
 import com.shop.product.client.ProductApiClient;
+import com.shop.product.common.data.builder.ProductDtoBuilder;
 import com.shop.product.dto.ProductDto;
 import com.shop.product.dto.form.product.NewProductForm;
 import com.shop.product.service.config.SellerProductsControlServiceTestConfiguration;
-import com.shop.product.service.utils.GenSellerTestData;
 import com.shop.product.service.utils.mapper.SellerServiceTestMapper;
+import com.shop.seller.common.test.data.builder.CreateProductFormBuilder;
+import com.shop.seller.common.test.data.builder.SellerInfoBuilder;
+import com.shop.seller.common.test.data.builder.SellerProductBuilder;
 import com.shop.seller.dao.SellerInfoRepository;
 import com.shop.seller.dao.SellerProductRepository;
 import com.shop.seller.dto.control.CreateProductForm;
@@ -45,28 +49,27 @@ public class SellerProductsControlServiceTests {
 
     @Test
     public void showAllSellersProductsTest() {
-        AccessTokenUserInfoDto tokenUserInfo = GenSellerTestData.generateAccessTokenUserData();
-        SellerInfo sellerInfo = GenSellerTestData.generateSellerInfo();
-        ProductDto prodDto1 = GenSellerTestData.generateProduct();
-        ProductDto prodDto2 = GenSellerTestData.generateProduct();
-        SellerProduct prod1 = GenSellerTestData.generateSellerProduct();
-        SellerProduct prod2 = GenSellerTestData.generateSellerProduct();
-        prod1.setProductId(prodDto1.getId());
-        prod2.setProductId(prodDto2.getId());
-        sellerInfo.setUserId(tokenUserInfo.getUserId());
-        sellerInfo.setProducts(List.of(prod1, prod2));
+        AccessTokenUserInfoDto tokenUserInfo = AccessTokenUserInfoBuilder.accessTokenUserInfoDto().build();
+        List<ProductDto> products = List.of(ProductDtoBuilder.productDto().build(), ProductDtoBuilder.productDto().build());
+        SellerInfo sellerInfo = SellerInfoBuilder.sellerInfo()
+                .userId(tokenUserInfo.getUserId())
+                .products(List.of(
+                        SellerProductBuilder.sellerProduct().productId(products.get(0).getId()).build(),
+                        SellerProductBuilder.sellerProduct().productId(products.get(1).getId()).build()
+                )).build();
 
         Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString()))
                 .thenReturn(ResponseEntity.ok().body(tokenUserInfo));
         Mockito.when(sellerInfoRepository.getByUserId(tokenUserInfo.getUserId())).thenReturn(sellerInfo);
         Mockito.when(productApiClient.getProductsByIds(Mockito.anyInt(),
-                Mockito.anyList())).thenReturn(ResponseEntity.ok().body(List.of(prodDto1, prodDto2)));
+                Mockito.anyList())).thenReturn(ResponseEntity.ok().body(products));
 
         List<SellerProductDetailsDto> result = controlService.showAllSellersProducts(1, "some_access_token");
 
         Assertions.assertEquals(2, result.size());
-        Assertions.assertTrue(result.stream().anyMatch(p -> p.getProductId().equals(prodDto1.getId())));
-        Assertions.assertTrue(result.stream().anyMatch(p -> p.getProductId().equals(prodDto2.getId())));
+        Assertions.assertTrue(result.stream().allMatch(
+                r -> products.stream().anyMatch(p -> p.getId().equals(r.getProductId()))
+        ));
     }
 
     @Test
@@ -80,15 +83,16 @@ public class SellerProductsControlServiceTests {
 
     @Test
     public void showSellerProductTest() {
-        List<SellerProduct> products = List.of(GenSellerTestData.generateSellerProduct(), GenSellerTestData.generateSellerProduct());
-        Long searchId = products.get(0).getId();
-        Long searchedProductId = products.get(0).getProductId();
-        AccessTokenUserInfoDto tokenUserInfo = GenSellerTestData.generateAccessTokenUserData();
-        SellerInfo sellerInfo = GenSellerTestData.generateSellerInfo();
-        sellerInfo.setId(tokenUserInfo.getUserId());
-        sellerInfo.setProducts(products);
-        ProductDto product = GenSellerTestData.generateProduct();
-        product.setId(searchedProductId);
+        AccessTokenUserInfoDto tokenUserInfo = AccessTokenUserInfoBuilder.accessTokenUserInfoDto().build();
+        SellerInfo sellerInfo = SellerInfoBuilder.sellerInfo()
+                .id(tokenUserInfo.getUserId())
+                .products(List.of(
+                        SellerProductBuilder.sellerProduct().build(),
+                        SellerProductBuilder.sellerProduct().build()
+                )).build();
+        Long searchId = sellerInfo.getProducts().get(0).getId();
+        Long searchedProductId = sellerInfo.getProducts().get(0).getProductId();
+        ProductDto product = ProductDtoBuilder.productDto().id(searchedProductId).build();
 
         Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString()))
                 .thenReturn(ResponseEntity.ok().body(tokenUserInfo));
@@ -102,11 +106,13 @@ public class SellerProductsControlServiceTests {
 
     @Test
     public void showSellerNotExistedProductTest() {
-        List<SellerProduct> products = List.of(GenSellerTestData.generateSellerProduct(), GenSellerTestData.generateSellerProduct());
-        AccessTokenUserInfoDto tokenUserInfo = GenSellerTestData.generateAccessTokenUserData();
-        SellerInfo sellerInfo = GenSellerTestData.generateSellerInfo();
-        sellerInfo.setId(tokenUserInfo.getUserId());
-        sellerInfo.setProducts(products);
+        AccessTokenUserInfoDto tokenUserInfo = AccessTokenUserInfoBuilder.accessTokenUserInfoDto().build();
+        SellerInfo sellerInfo = SellerInfoBuilder.sellerInfo()
+                .id(tokenUserInfo.getUserId())
+                .products(List.of(
+                        SellerProductBuilder.sellerProduct().build(),
+                        SellerProductBuilder.sellerProduct().build()
+                )).build();
 
         Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString()))
                 .thenReturn(ResponseEntity.ok().body(tokenUserInfo));
@@ -126,10 +132,10 @@ public class SellerProductsControlServiceTests {
 
     @Test
     public void createNewProductTest() {
-        AccessTokenUserInfoDto userInfo = GenSellerTestData.generateAccessTokenUserData();
-        SellerInfo sellerInfo = GenSellerTestData.generateSellerInfo();
-        sellerInfo.setUserId(userInfo.getUserId());
-        CreateProductForm form = GenSellerTestData.generateCreateProductForm();
+        AccessTokenUserInfoDto userInfo = AccessTokenUserInfoBuilder.accessTokenUserInfoDto().build();
+        CreateProductForm form = CreateProductFormBuilder.createProductForm().build();
+        SellerInfo sellerInfo = SellerInfoBuilder.sellerInfo()
+                .userId(userInfo.getUserId()).build();
 
         Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
         Mockito.when(productApiClient.createProduct(Mockito.any(NewProductForm.class)))
@@ -151,10 +157,8 @@ public class SellerProductsControlServiceTests {
 
     @Test
     public void createNewProductSellerNotExistsTest() {
-        AccessTokenUserInfoDto userInfo = GenSellerTestData.generateAccessTokenUserData();
-        SellerInfo sellerInfo = GenSellerTestData.generateSellerInfo();
-        sellerInfo.setUserId(userInfo.getUserId());
-        CreateProductForm form = GenSellerTestData.generateCreateProductForm();
+        AccessTokenUserInfoDto userInfo = AccessTokenUserInfoBuilder.accessTokenUserInfoDto().build();
+        CreateProductForm form = CreateProductFormBuilder.createProductForm().build();
 
         Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
         Mockito.when(productApiClient.createProduct(Mockito.any(NewProductForm.class)))
@@ -173,10 +177,8 @@ public class SellerProductsControlServiceTests {
 
     @Test
     public void createNewProductRepositoryExceptionTest() {
-        AccessTokenUserInfoDto userInfo = GenSellerTestData.generateAccessTokenUserData();
-        SellerInfo sellerInfo = GenSellerTestData.generateSellerInfo();
-        sellerInfo.setUserId(userInfo.getUserId());
-        CreateProductForm form = GenSellerTestData.generateCreateProductForm();
+        AccessTokenUserInfoDto userInfo = AccessTokenUserInfoBuilder.accessTokenUserInfoDto().build();
+        CreateProductForm form = CreateProductFormBuilder.createProductForm().build();
 
         Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
         Mockito.when(productApiClient.createProduct(Mockito.any(NewProductForm.class)))
@@ -189,10 +191,8 @@ public class SellerProductsControlServiceTests {
 
     @Test
     public void createNewProductProductClientExceptionTest() {
-        AccessTokenUserInfoDto userInfo = GenSellerTestData.generateAccessTokenUserData();
-        SellerInfo sellerInfo = GenSellerTestData.generateSellerInfo();
-        sellerInfo.setUserId(userInfo.getUserId());
-        CreateProductForm form = GenSellerTestData.generateCreateProductForm();
+        AccessTokenUserInfoDto userInfo = AccessTokenUserInfoBuilder.accessTokenUserInfoDto().build();
+        CreateProductForm form = CreateProductFormBuilder.createProductForm().build();
 
         Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
         Mockito.when(productApiClient.createProduct(Mockito.any(NewProductForm.class))).thenThrow(RuntimeException.class);
@@ -203,10 +203,7 @@ public class SellerProductsControlServiceTests {
 
     @Test
     public void createNewProductUserClientExceptionTest() {
-        AccessTokenUserInfoDto userInfo = GenSellerTestData.generateAccessTokenUserData();
-        SellerInfo sellerInfo = GenSellerTestData.generateSellerInfo();
-        sellerInfo.setUserId(userInfo.getUserId());
-        CreateProductForm form = GenSellerTestData.generateCreateProductForm();
+        CreateProductForm form = CreateProductFormBuilder.createProductForm().build();
 
         Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenThrow(RuntimeException.class);
 
@@ -216,7 +213,7 @@ public class SellerProductsControlServiceTests {
 
     @Test
     public void createNewProductNullDataTest() {
-        AccessTokenUserInfoDto userInfo = GenSellerTestData.generateAccessTokenUserData();
+        AccessTokenUserInfoDto userInfo = AccessTokenUserInfoBuilder.accessTokenUserInfoDto().build();
         CreateProductForm form = new CreateProductForm();
 
         Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
@@ -230,7 +227,7 @@ public class SellerProductsControlServiceTests {
 
     @Test
     public void createNullNewProductTest() {
-        AccessTokenUserInfoDto userInfo = GenSellerTestData.generateAccessTokenUserData();
+        AccessTokenUserInfoDto userInfo = AccessTokenUserInfoBuilder.accessTokenUserInfoDto().build();
 
         Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
         Mockito.when(productApiClient.createProduct(Mockito.any(NewProductForm.class)))

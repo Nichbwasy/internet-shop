@@ -8,12 +8,16 @@ import com.shop.authorization.client.TokensApiClient;
 import com.shop.authorization.client.UserDataApiClient;
 import com.shop.authorization.common.constant.UsersRoles;
 import com.shop.authorization.common.constant.jwt.TokenStatus;
+import com.shop.authorization.common.data.builder.JwtAuthenticationTokenDataDtoBuilder;
+import com.shop.authorization.common.data.builder.SellerUserDataDtoBuilder;
 import com.shop.authorization.dto.api.user.SellerUserDataDto;
 import com.shop.authorization.dto.token.JwtAuthenticationTokenDataDto;
 import com.shop.product.client.ProductApiClient;
+import com.shop.seller.common.test.data.builder.RegisterNewSellerFormBuilder;
+import com.shop.seller.common.test.data.builder.SellerInfoBuilder;
+import com.shop.seller.common.test.data.builder.SellerProductBuilder;
 import com.shop.seller.controller.RunSellerTestControllerApplication;
 import com.shop.seller.controller.config.CommonSellerControllersTestConfiguration;
-import com.shop.seller.controller.utils.GenTestData;
 import com.shop.seller.dao.SellerInfoRepository;
 import com.shop.seller.dao.SellerProductRepository;
 import com.shop.seller.dto.SellerInfoDto;
@@ -39,7 +43,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.shaded.org.hamcrest.Matchers;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -82,10 +85,10 @@ public class AdminSellersControlPageControllerTests {
 
     @BeforeEach
     public void mockSecurityJwtTokenClient() {
-        JwtAuthenticationTokenDataDto tokenDataDto = new JwtAuthenticationTokenDataDto();
-        tokenDataDto.setUsername("TEST");
-        tokenDataDto.setAuthorities(List.of(UsersRoles.ADMIN));
-        tokenDataDto.setAuthenticated(true);
+        JwtAuthenticationTokenDataDto tokenDataDto = JwtAuthenticationTokenDataDtoBuilder.jwtAuthenticationTokenDataDto()
+                .authenticated(true)
+                .authorities(List.of(UsersRoles.ADMIN))
+                .build();
 
         Mockito.when(tokensApiClient.validateAccessToken(Mockito.anyString()))
                 .thenReturn(ResponseEntity.ok().body(TokenStatus.OK));
@@ -103,7 +106,7 @@ public class AdminSellersControlPageControllerTests {
     public void getSellersPageTest() throws Exception{
         List<SellerInfo> sellerInfos = new ArrayList<>();
         for (int i = 0; i < ADMIN_SELLERS_INFO_PAGE_SIZE + 1; i++)
-            sellerInfos.add(sellerInfoRepository.save(GenTestData.generateSellerInfo()));
+            sellerInfos.add(sellerInfoRepository.save(SellerInfoBuilder.sellerInfo().build()));
 
         String body = mockMvc.perform(MockMvcRequestBuilders.get("/admin/control/sellers/1")
                         .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
@@ -140,12 +143,11 @@ public class AdminSellersControlPageControllerTests {
 
     @Test
     public void getSellerInfoTest() throws Exception {
-        SellerUserDataDto sellerUserDataDto = GenTestData.generateSellersUserData();
-        SellerInfo sellerInfo = GenTestData.generateSellerInfo();
-        sellerInfo.setUserId(sellerUserDataDto.getId());
-        sellerInfoRepository.save(sellerInfo);
+        SellerUserDataDto sellerUserDataDto = SellerUserDataDtoBuilder.sellerUserDataDto().build();
+        SellerInfo sellerInfo = SellerInfoBuilder.sellerInfo().userId(sellerUserDataDto.getId()).build();
+        sellerInfo = sellerInfoRepository.save(sellerInfo);
 
-        Mockito.when(userDataApiClient.getSellerInfo(sellerUserDataDto.getId()))
+        Mockito.when(userDataApiClient.getSellerInfo(sellerInfo.getUserId()))
                 .thenReturn(ResponseEntity.ok().body(sellerUserDataDto));
 
         String body = mockMvc.perform(MockMvcRequestBuilders.get("/admin/control/sellers/seller/" + sellerInfo.getId())
@@ -174,9 +176,9 @@ public class AdminSellersControlPageControllerTests {
 
     @Test
     public void registerNewSellerTest() throws Exception {
-        SellerUserDataDto sellerData = GenTestData.generateSellersUserData();
-        RegisterNewSellerForm form = GenTestData.generateNewSellerForm();
-        form.setUserId(sellerData.getId());
+        SellerUserDataDto sellerData = SellerUserDataDtoBuilder.sellerUserDataDto().build();
+        RegisterNewSellerForm form = RegisterNewSellerFormBuilder.registerNewSellerForm()
+                .userId(sellerData.getId()).build();
 
         Mockito.when(userDataApiClient.makeUserSeller(sellerData.getId())).thenReturn(ResponseEntity.ok().body(sellerData));
 
@@ -197,12 +199,12 @@ public class AdminSellersControlPageControllerTests {
 
     @Test
     public void registerAlreadyExistedSellerTest() throws Exception {
-        SellerUserDataDto sellerData = GenTestData.generateSellersUserData();
-        SellerInfo sellerInfo = GenTestData.generateSellerInfo();
-        sellerInfo.setUserId(sellerData.getId());
+        SellerUserDataDto sellerData = SellerUserDataDtoBuilder.sellerUserDataDto().build();
+        SellerInfo sellerInfo = SellerInfoBuilder.sellerInfo().userId(sellerData.getId()).build();
         sellerInfoRepository.save(sellerInfo);
-        RegisterNewSellerForm form = GenTestData.generateNewSellerForm();
-        form.setUserId(sellerData.getId());
+        RegisterNewSellerForm form = RegisterNewSellerFormBuilder.registerNewSellerForm()
+                .userId(sellerData.getId()).build();
+
         Mockito.when(userDataApiClient.makeUserSeller(sellerData.getId())).thenReturn(ResponseEntity.ok().body(sellerData));
 
         mockMvc.perform(MockMvcRequestBuilders.post("/admin/control/sellers/new")
@@ -227,9 +229,9 @@ public class AdminSellersControlPageControllerTests {
 
     @Test
     public void removeSellerFromSystemTest() throws Exception {
-        SellerInfo sellerInfo = GenTestData.generateSellerInfo();
+        SellerInfo sellerInfo = SellerInfoBuilder.sellerInfo().build();
         for (long i = 1; i  < 4; i++) {
-            SellerProduct sellerProduct = GenTestData.generateSellerProduct();
+            SellerProduct sellerProduct = SellerProductBuilder.sellerProduct().build();
             sellerProduct = sellerProductRepository.save(sellerProduct);
             sellerInfo.getProducts().add(sellerProduct);
         }

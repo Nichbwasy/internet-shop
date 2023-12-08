@@ -42,7 +42,7 @@
         </dependency>
         <dependency>
             <groupId>com.shop.seller</groupId>
-            <artifactId>dto-seller</artifactId>
+            <artifactId>common-seller</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>

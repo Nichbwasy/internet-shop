@@ -1,11 +1,14 @@
 package com.shop.product.service;
 
 import com.shop.authorization.client.UserDataApiClient;
+import com.shop.authorization.common.data.builder.SellerUserDataDtoBuilder;
 import com.shop.authorization.dto.api.user.SellerUserDataDto;
 import com.shop.common.utils.all.exception.dao.EntityNotFoundRepositoryException;
 import com.shop.product.client.ProductApiClient;
 import com.shop.product.service.config.AdminSellersControlServiceTestConfiguration;
-import com.shop.product.service.utils.GenSellerTestData;
+import com.shop.seller.common.test.data.builder.RegisterNewSellerFormBuilder;
+import com.shop.seller.common.test.data.builder.SellerInfoBuilder;
+import com.shop.seller.common.test.data.builder.SellerProductBuilder;
 import com.shop.seller.dao.SellerInfoRepository;
 import com.shop.seller.dao.SellerProductRepository;
 import com.shop.seller.dto.SellerInfoDto;
@@ -47,9 +50,8 @@ public class AdminSellersControlServiceTests {
 
     @Test
     public void getSellerInfoTest() {
-        SellerInfo sellerInfo = GenSellerTestData.generateSellerInfo();
-        SellerUserDataDto sellerData = GenSellerTestData.generateSellerData();
-        sellerData.setId(sellerInfo.getUserId());
+        SellerInfo sellerInfo = SellerInfoBuilder.sellerInfo().build();
+        SellerUserDataDto sellerData = SellerUserDataDtoBuilder.sellerUserDataDto().id(sellerInfo.getUserId()).build();
 
         Mockito.when(sellerInfoRepository.existsById(sellerInfo.getId())).thenReturn(true);
         Mockito.when(sellerInfoRepository.getReferenceById(sellerInfo.getId())).thenReturn(sellerInfo);
@@ -73,7 +75,10 @@ public class AdminSellersControlServiceTests {
 
     @Test
     public void getSellersInfoFromPageTest() {
-        List<SellerInfo> sellers = List.of(GenSellerTestData.generateSellerInfo(), GenSellerTestData.generateSellerInfo());
+        List<SellerInfo> sellers = List.of(
+                SellerInfoBuilder.sellerInfo().build(),
+                SellerInfoBuilder.sellerInfo().build()
+        );
         Page<SellerInfo> page = new PageImpl<>(sellers);
 
         Mockito.when(sellerInfoRepository.findAll(Mockito.any(PageRequest.class))).thenReturn(page);
@@ -86,9 +91,8 @@ public class AdminSellersControlServiceTests {
 
     @Test
     public void registerNewSellerTest() {
-        RegisterNewSellerForm form = GenSellerTestData.generateSellerRegisterForm();
-        SellerUserDataDto sellerData = GenSellerTestData.generateSellerData();
-        sellerData.setId(form.getUserId());
+        RegisterNewSellerForm form = RegisterNewSellerFormBuilder.registerNewSellerForm().build();
+        SellerUserDataDto sellerData = SellerUserDataDtoBuilder.sellerUserDataDto().id(form.getUserId()).build();
 
         Mockito.when(sellerInfoRepository.existsByUserId(form.getUserId())).thenReturn(false);
         Mockito.when(userDataApiClient.makeUserSeller(form.getUserId())).thenReturn(ResponseEntity.ok().body(sellerData));
@@ -112,7 +116,7 @@ public class AdminSellersControlServiceTests {
 
     @Test
     public void registerAlreadyExistedSellerTest() {
-        RegisterNewSellerForm form = GenSellerTestData.generateSellerRegisterForm();
+        RegisterNewSellerForm form = RegisterNewSellerFormBuilder.registerNewSellerForm().build();
 
         Mockito.when(sellerInfoRepository.existsByUserId(form.getUserId())).thenReturn(true);
 
@@ -121,8 +125,11 @@ public class AdminSellersControlServiceTests {
 
     @Test
     public void removeSellerFromSystemTest() {
-        SellerInfo sellerInfo = GenSellerTestData.generateSellerInfo();
-        sellerInfo.setProducts(List.of(GenSellerTestData.generateSellerProduct(), GenSellerTestData.generateSellerProduct()));
+        SellerInfo sellerInfo = SellerInfoBuilder.sellerInfo().build();
+        sellerInfo.setProducts(List.of(
+                SellerProductBuilder.sellerProduct().build(),
+                SellerProductBuilder.sellerProduct().build()
+        ));
 
         Mockito.when(sellerInfoRepository.getReferenceById(sellerInfo.getId())).thenReturn(sellerInfo);
         Mockito.when(productApiClient.removeProducts(Mockito.anyList()))
