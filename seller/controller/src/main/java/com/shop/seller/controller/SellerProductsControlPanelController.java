@@ -48,5 +48,15 @@ public class SellerProductsControlPanelController {
         return ResponseEntity.ok().body(sellerProductsControlService.createNewProduct(form, accessToken));
     }
 
+    @DeleteMapping("/product/{id}")
+    public ResponseEntity<Long> removeProduct(
+            @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
+            @PathVariable Long id
+    ) {
+        log.info("Trying to delete product '{}' from seller...", id);
+        String accessToken = authorization.substring(BEARER.length());
+        return ResponseEntity.ok().body(sellerProductsControlService.removeProduct(id, accessToken));
+    }
+
 
 }

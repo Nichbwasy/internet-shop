@@ -64,4 +64,10 @@ public class ProductApiController {
         return ResponseEntity.ok().body(productService.addProduct(form));
     }
 
+    @DeleteMapping("/product/{id}")
+    public ResponseEntity<Long> removeProduct(@PathVariable Long id) {
+        log.info("Trying to remove product with id '{}'...", id);
+        return ResponseEntity.ok().body(productService.removeProduct(id));
+    }
+
 }

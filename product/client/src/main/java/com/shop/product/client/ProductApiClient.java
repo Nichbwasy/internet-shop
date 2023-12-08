@@ -36,4 +36,7 @@ public interface ProductApiClient {
 
     @PostMapping
     ResponseEntity<ProductDto> createProduct(@RequestBody NewProductForm form);
+
+    @DeleteMapping("/product/{id}")
+    ResponseEntity<Long> removeProduct(@PathVariable("id") Long id);
 }

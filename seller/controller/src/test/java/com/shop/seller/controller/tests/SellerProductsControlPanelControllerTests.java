@@ -304,7 +304,7 @@ public class SellerProductsControlPanelControllerTests {
     }
 
     @Test
-    public void addNewProductClientTest() throws Exception {
+    public void addNewProductClientExceptionTest() throws Exception {
         CreateProductForm form = CreateProductFormBuilder.createProductForm().build();
 
         Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenThrow(RuntimeException.class);
@@ -317,6 +317,95 @@ public class SellerProductsControlPanelControllerTests {
                 .andExpect(MockMvcResultMatchers.status().isNotFound())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse().getContentAsString();
+    }
+
+    @Test
+    public void removeProductTest() throws Exception {
+        AccessTokenUserInfoDto userInfo = AccessTokenUserInfoBuilder.accessTokenUserInfoDto().build();
+        SellerInfo sellerInfo = SellerInfoBuilder.sellerInfo()
+                .userId(userInfo.getUserId())
+                .products(List.of(
+                        sellerProductRepository.save(SellerProductBuilder.sellerProduct().build()),
+                        sellerProductRepository.save(SellerProductBuilder.sellerProduct().build())
+                ))
+                .build();
+        Long idToRemove = sellerInfo.getProducts().get(0).getId();
+        sellerInfoRepository.save(sellerInfo);
+
+        Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
+        Mockito.when(productApiClient.removeProduct(Mockito.anyLong()))
+                .thenAnswer(a -> ResponseEntity.ok().body(a.getArgument(0)));
+
+        String body = mockMvc.perform(MockMvcRequestBuilders.delete("/seller/home/products/product/" + idToRemove)
+                        .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse().getContentAsString();
+
+        Long result = jsonMapper.readValue(body, Long.class);
+
+        Assertions.assertEquals(idToRemove, result);
+    }
+
+    @Test
+    public void removeProductNotBelongSellerTest() throws Exception {
+        AccessTokenUserInfoDto userInfo = AccessTokenUserInfoBuilder.accessTokenUserInfoDto().build();
+        SellerInfo sellerInfo = SellerInfoBuilder.sellerInfo()
+                .userId(userInfo.getUserId())
+                .products(List.of(
+                        sellerProductRepository.save(SellerProductBuilder.sellerProduct().build())
+                ))
+                .build();
+        long idToRemove = sellerInfo.getProducts().get(0).getId() + 1;
+        sellerInfoRepository.save(sellerInfo);
+
+        Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
+        Mockito.when(productApiClient.removeProduct(Mockito.anyLong()))
+                .thenAnswer(a -> ResponseEntity.ok().body(a.getArgument(0)));
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/seller/home/products/product/" + idToRemove)
+                        .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isInternalServerError())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    public void removeProductProductClientExceptionTest() throws Exception {
+        AccessTokenUserInfoDto userInfo = AccessTokenUserInfoBuilder.accessTokenUserInfoDto().build();
+        SellerInfo sellerInfo = SellerInfoBuilder.sellerInfo()
+                .userId(userInfo.getUserId())
+                .products(List.of(
+                        sellerProductRepository.save(SellerProductBuilder.sellerProduct().build())
+                ))
+                .build();
+        long idToRemove = sellerInfo.getProducts().get(0).getId() + 1;
+        sellerInfoRepository.save(sellerInfo);
+
+        Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
+        Mockito.when(productApiClient.removeProduct(Mockito.anyLong())).thenThrow(RuntimeException.class);
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/seller/home/products/product/" + idToRemove)
+                        .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isInternalServerError())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    public void removeProductTokenClientExceptionTest() throws Exception {
+        Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenThrow(RuntimeException.class);
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/seller/home/products/product/1")
+                        .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isNotFound())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
     }
 
 }

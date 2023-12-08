@@ -162,4 +162,11 @@ public class SellerControllerAdvice {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
 
+    @ExceptionHandler({RemoveProductFromSellerException.class})
+    protected ResponseEntity<AdviceResponseObject> removeProductFromSellerException(Exception e, WebRequest request) {
+        log.error("Exception while removing product from seller! {}", e.getMessage());
+        AdviceResponseObject response = new AdviceResponseObject("Exception while removing product from seller!", e, request);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
 }

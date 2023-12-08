@@ -22,6 +22,7 @@ import com.shop.seller.service.SellerProductsControlService;
 import com.shop.seller.service.exception.control.AddNewProductException;
 import com.shop.seller.service.exception.control.GetUserInfoApiClientException;
 import com.shop.seller.service.exception.control.GetSellerProductsDetailsException;
+import com.shop.seller.service.exception.control.RemoveProductFromSellerException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -236,6 +237,84 @@ public class SellerProductsControlServiceTests {
 
         Assertions.assertThrows(AddNewProductException.class,
                 () -> controlService.createNewProduct(null, "some_access_token"));
+    }
+
+    @Test
+    public void removeProductTest() {
+        AccessTokenUserInfoDto userInfo = AccessTokenUserInfoBuilder.accessTokenUserInfoDto().build();
+        SellerProduct sellerProduct = SellerProductBuilder.sellerProduct().build();
+        SellerInfo sellerInfo = SellerInfoBuilder.sellerInfo()
+                .userId(userInfo.getUserId())
+                .products(List.of(sellerProduct))
+                .build();
+
+        Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
+        Mockito.when(sellerInfoRepository.getByUserId(userInfo.getUserId())).thenReturn(sellerInfo);
+        Mockito.when(productApiClient.removeProduct(sellerProduct.getProductId()))
+                .thenReturn(ResponseEntity.ok().body(sellerProduct.getProductId()));
+        Mockito.doNothing().when(sellerProductRepository).deleteById(sellerProduct.getId());
+
+        Assertions.assertEquals(sellerProduct.getId(),
+                controlService.removeProduct(sellerProduct.getId(), "some_token_imitation"));
+    }
+
+    @Test
+    public void removeNotExistedProductTest() {
+        AccessTokenUserInfoDto userInfo = AccessTokenUserInfoBuilder.accessTokenUserInfoDto().build();
+        SellerProduct sellerProduct = SellerProductBuilder.sellerProduct().build();
+        SellerInfo sellerInfo = SellerInfoBuilder.sellerInfo()
+                .userId(userInfo.getUserId())
+                .build();
+
+        Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
+        Mockito.when(sellerInfoRepository.getByUserId(userInfo.getUserId())).thenReturn(sellerInfo);
+
+        Assertions.assertThrows(RemoveProductFromSellerException.class,
+                () -> controlService.removeProduct(sellerProduct.getId(), "some_token_imitation"));
+    }
+
+    @Test
+    public void removeProductRepositoryExceptionTest() {
+        AccessTokenUserInfoDto userInfo = AccessTokenUserInfoBuilder.accessTokenUserInfoDto().build();
+
+        Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
+        Mockito.when(sellerInfoRepository.getByUserId(userInfo.getUserId())).thenThrow(RuntimeException.class);
+
+        Assertions.assertThrows(RemoveProductFromSellerException.class,
+                () -> controlService.removeProduct(1L, "some_token_imitation"));
+    }
+
+    @Test
+    public void removeProductProductClientExceptionExceptionTest() {
+        AccessTokenUserInfoDto userInfo = AccessTokenUserInfoBuilder.accessTokenUserInfoDto().build();
+        SellerProduct sellerProduct = SellerProductBuilder.sellerProduct().build();
+        SellerInfo sellerInfo = SellerInfoBuilder.sellerInfo()
+                .userId(userInfo.getUserId())
+                .products(List.of(sellerProduct))
+                .build();
+
+        Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
+        Mockito.when(sellerInfoRepository.getByUserId(userInfo.getUserId())).thenReturn(sellerInfo);
+        Mockito.when(productApiClient.removeProduct(Mockito.anyLong())).thenThrow(RuntimeException.class);
+
+        Assertions.assertThrows(RemoveProductFromSellerException.class,
+                () -> controlService.removeProduct(sellerProduct.getId(), "some_token_imitation"));
+    }
+
+    @Test
+    public void removeProductTokenClientExceptionTest() {
+        Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenThrow(RuntimeException.class);
+
+        Assertions.assertThrows(GetUserInfoApiClientException.class,
+                () -> controlService.removeProduct(1L, "some_token_imitation"));
+    }
+
+    @Test
+    public void removeProductNullDataTest() {
+        Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenThrow(RuntimeException.class);
+
+        Assertions.assertThrows(GetUserInfoApiClientException.class,
+                () -> controlService.removeProduct(null, null));
     }
 
 }

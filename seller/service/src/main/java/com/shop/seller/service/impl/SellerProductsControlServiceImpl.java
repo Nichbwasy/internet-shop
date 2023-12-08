@@ -16,6 +16,7 @@ import com.shop.seller.service.SellerProductsControlService;
 import com.shop.seller.service.exception.control.AddNewProductException;
 import com.shop.seller.service.exception.control.GetUserInfoApiClientException;
 import com.shop.seller.service.exception.control.GetSellerProductsDetailsException;
+import com.shop.seller.service.exception.control.RemoveProductFromSellerException;
 import com.shop.seller.service.mapper.CreateProductFormMapper;
 import com.shop.seller.service.mapper.SellerProductDetailsMapper;
 import lombok.RequiredArgsConstructor;
@@ -98,6 +99,29 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
         } catch (Exception e) {
             log.error("Unable add a new product to the client! {}", e.getMessage());
             throw new AddNewProductException("Unable add a new product to the client! %s".formatted(e.getMessage()));
+        }
+    }
+
+    @Override
+    public Long removeProduct(Long productId, String accessToken) {
+        AccessTokenUserInfoDto userInfo = getUserInfoByAccessTokenFromAuthorizationMicroservice(accessToken);
+        try {
+            SellerInfo sellerInfo = sellerInfoRepository.getByUserId(userInfo.getUserId());
+            SellerProduct sellerProduct = sellerInfo.getProducts().stream()
+                    .filter(product -> product.getId().equals(productId))
+                    .findFirst()
+                    .orElseThrow(() -> {
+                        log.error("Product doesn't belong to seller!");
+                        return new RemoveProductFromSellerException("Product doesn't belong to seller!");
+                    });
+            productApiClient.removeProduct(sellerProduct.getProductId());
+            sellerProductRepository.deleteById(sellerProduct.getId());
+            return productId;
+        } catch (Exception e) {
+            log.error("Exception while removing product from the client! {}", e.getMessage());
+            throw new RemoveProductFromSellerException(
+                    "Exception while removing product from the client! %s".formatted(e.getMessage())
+            );
         }
     }
 
