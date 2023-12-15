@@ -11,5 +11,6 @@ public interface DiscountService {
     DiscountDto addDiscount(DiscountDto discountDto);
     Long removeDiscount(Long id);
     DiscountDto updateDiscount(DiscountDto discountDto);
+    List<DiscountDto> findDiscountsByIds(List<Long> ids);
 
 }

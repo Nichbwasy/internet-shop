@@ -3,7 +3,7 @@ package com.shop.shop.service.impl;
 import com.shop.product.client.ProductApiClient;
 import com.shop.product.dto.ProductDto;
 import com.shop.product.dto.form.product.ApprovalStatusProductFilterForm;
-import com.shop.product.dto.form.product.ChangeProductDataForm;
+import com.shop.product.dto.form.product.ChangeProductApprovalStatusForm;
 import com.shop.shop.dto.shop.ShopPageProductInfoDto;
 import com.shop.shop.service.ShopProductsApprovalService;
 import com.shop.shop.service.exception.shop.*;
@@ -42,16 +42,16 @@ public class ShopProductsApprovalServiceImpl implements ShopProductsApprovalServ
     }
 
     @Override
-    public ShopPageProductInfoDto changeProductInfo(ChangeProductDataForm form) {
+    public ShopPageProductInfoDto changeProductInfo(ChangeProductApprovalStatusForm form) {
         ProductDto productDto = changeProductData(form);
         checkIfFoundProductNotNull(productDto);
 
         return new ShopPageProductInfoDto(productDto);
     }
 
-    private ProductDto changeProductData(ChangeProductDataForm form) {
+    private ProductDto changeProductData(ChangeProductApprovalStatusForm form) {
         try {
-            return productApiClient.updateProductData(form).getBody();
+            return productApiClient.updateProductApprovalStatus(form).getBody();
         } catch (Exception e) {
             log.error("Exception while updating product from the client! {}", e.getMessage());
             throw new ChangeProductDataException(

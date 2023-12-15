@@ -170,6 +170,18 @@ public class CategoryServiceImpl implements CategoryService {
         }
     }
 
+    @Override
+    public List<CategoryDto> findCategoriesByIds(List<Long> ids) {
+        try {
+            return categoryRepository.findByIdIn(ids).stream()
+                    .map(categoryMapper::mapToDto)
+                    .toList();
+        } catch (Exception e) {
+            log.error("Unable get categories! {}", e.getMessage());
+            throw new EntityGetRepositoryException("Unable get categories! %s".formatted(e.getMessage()));
+        }
+    }
+
     private void checkIfCategoryNotExists(Long id) {
         if (!categoryRepository.existsById(id)) {
             log.warn("Unable to find category with id '{}'!", id);

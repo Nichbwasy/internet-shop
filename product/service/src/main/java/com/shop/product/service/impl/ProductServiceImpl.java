@@ -11,7 +11,7 @@ import com.shop.product.dao.specification.ProductSpecificationBuilder;
 import com.shop.product.dto.ProductDto;
 import com.shop.product.dto.form.AddOrRemoveForm;
 import com.shop.product.dto.form.product.ApprovalStatusProductFilterForm;
-import com.shop.product.dto.form.product.ChangeProductDataForm;
+import com.shop.product.dto.form.product.ChangeProductApprovalStatusForm;
 import com.shop.product.dto.form.product.NewProductForm;
 import com.shop.product.dto.form.product.ProductFilterForm;
 import com.shop.product.model.Category;
@@ -236,7 +236,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    public ProductDto changeProductData(ChangeProductDataForm form) {
+    public ProductDto changeProductData(ChangeProductApprovalStatusForm form) {
         try {
             checkIfProductNotExists(form.getProductId());
             Product product = productRepository.getReferenceById(form.getProductId());

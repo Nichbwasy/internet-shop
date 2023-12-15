@@ -2,7 +2,7 @@ package com.shop.product.controller;
 
 import com.shop.product.dto.ProductDto;
 import com.shop.product.dto.form.product.ApprovalStatusProductFilterForm;
-import com.shop.product.dto.form.product.ChangeProductDataForm;
+import com.shop.product.dto.form.product.ChangeProductApprovalStatusForm;
 import com.shop.product.dto.form.product.NewProductForm;
 import com.shop.product.dto.form.product.ProductFilterForm;
 import com.shop.product.service.ProductService;
@@ -33,10 +33,16 @@ public class ProductApiController {
         return ResponseEntity.ok().body(productService.getProduct(id));
     }
 
-    @PutMapping("/product/changes")
-    public ResponseEntity<ProductDto> updateProductApprovalStatus(@RequestBody ChangeProductDataForm form) {
+    @PutMapping("/product/{id}/changes/status")
+    public ResponseEntity<ProductDto> updateProductApprovalStatus(@RequestBody ChangeProductApprovalStatusForm form) {
         log.info("Trying to change the product with id '{}'...", form.getProductId());
         return ResponseEntity.ok().body(productService.changeProductData(form));
+    }
+
+    @PutMapping("/product/{id}")
+    public ResponseEntity<ProductDto> updateProduct(@RequestBody ProductDto productDto) {
+        log.info("Trying to update product '{}'...", productDto.getId());
+        return ResponseEntity.ok().body(productService.updateProduct(productDto));
     }
 
     @PostMapping("/{page}")

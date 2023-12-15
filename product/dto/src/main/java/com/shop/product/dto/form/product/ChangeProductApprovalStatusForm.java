@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChangeProductDataForm {
+public class ChangeProductApprovalStatusForm {
 
     private Long productId;
     private String approvalStatus;

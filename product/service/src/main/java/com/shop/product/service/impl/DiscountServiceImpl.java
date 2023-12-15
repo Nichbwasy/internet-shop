@@ -109,6 +109,18 @@ public class DiscountServiceImpl implements DiscountService {
         }
     }
 
+    @Override
+    public List<DiscountDto> findDiscountsByIds(List<Long> ids) {
+        try {
+            return discountRepository.findByIdIn(ids).stream()
+                    .map(discountMapper::mapToDto)
+                    .toList();
+        } catch (Exception e) {
+            log.error("Unable get discounts! {}", e.getMessage());
+            throw new EntityGetRepositoryException("Unable get discounts! %s".formatted(e.getMessage()));
+        }
+    }
+
     private void checkIfDiscountNotExists(Long id) {
         if (!discountRepository.existsById(id)) {
             log.warn("Unable to find discount with id '{}'!", id);

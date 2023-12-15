@@ -2,6 +2,8 @@ package com.shop.product.service.config;
 
 import com.shop.authorization.client.TokensApiClient;
 import com.shop.product.client.ProductApiClient;
+import com.shop.product.client.ProductCategoryApiClient;
+import com.shop.product.client.ProductDiscountApiClient;
 import com.shop.seller.dao.SellerInfoRepository;
 import com.shop.seller.dao.SellerProductRepository;
 import com.shop.seller.service.SellerProductsControlService;
@@ -27,6 +29,10 @@ public class SellerProductsControlServiceTestConfiguration {
     public ProductApiClient productApiClient;
     @MockBean
     public TokensApiClient tokensApiClient;
+    @MockBean
+    public ProductCategoryApiClient productCategoryApiClient;
+    @MockBean
+    public ProductDiscountApiClient productDiscountApiClient;
     @Bean
     public SellerProductDetailsMapper sellerProductDetailsMapper() {
         return new SellerProductDetailsMapperImpl();
@@ -41,6 +47,8 @@ public class SellerProductsControlServiceTestConfiguration {
                 sellerInfoRepository,
                 sellerProductRepository,
                 productApiClient,
+                productCategoryApiClient,
+                productDiscountApiClient,
                 tokensApiClient,
                 sellerProductDetailsMapper(),
                 createProductFormMapper()

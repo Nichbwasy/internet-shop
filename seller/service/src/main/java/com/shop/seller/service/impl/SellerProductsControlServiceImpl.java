@@ -3,20 +3,20 @@ package com.shop.seller.service.impl;
 import com.shop.authorization.client.TokensApiClient;
 import com.shop.authorization.dto.token.AccessTokenUserInfoDto;
 import com.shop.product.client.ProductApiClient;
+import com.shop.product.client.ProductCategoryApiClient;
+import com.shop.product.client.ProductDiscountApiClient;
+import com.shop.product.dto.CategoryDto;
+import com.shop.product.dto.DiscountDto;
 import com.shop.product.dto.ProductDto;
-import com.shop.product.dto.form.product.NewProductForm;
 import com.shop.seller.dao.SellerInfoRepository;
 import com.shop.seller.dao.SellerProductRepository;
-import com.shop.seller.dto.SellerProductDto;
 import com.shop.seller.dto.control.CreateProductForm;
 import com.shop.seller.dto.control.SellerProductDetailsDto;
+import com.shop.seller.dto.control.UpdateSellerProductForm;
 import com.shop.seller.model.SellerInfo;
 import com.shop.seller.model.SellerProduct;
 import com.shop.seller.service.SellerProductsControlService;
-import com.shop.seller.service.exception.control.AddNewProductException;
-import com.shop.seller.service.exception.control.GetUserInfoApiClientException;
-import com.shop.seller.service.exception.control.GetSellerProductsDetailsException;
-import com.shop.seller.service.exception.control.RemoveProductFromSellerException;
+import com.shop.seller.service.exception.control.*;
 import com.shop.seller.service.mapper.CreateProductFormMapper;
 import com.shop.seller.service.mapper.SellerProductDetailsMapper;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +36,8 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
     private final SellerInfoRepository sellerInfoRepository;
     private final SellerProductRepository sellerProductRepository;
     private final ProductApiClient productApiClient;
+    private final ProductCategoryApiClient productCategoryApiClient;
+    private final ProductDiscountApiClient productDiscountApiClient;
     private final TokensApiClient tokensApiClient;
     private final SellerProductDetailsMapper sellerProductDetailsMapper;
     private final CreateProductFormMapper createProductFormMapper;
@@ -73,7 +75,7 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
             ProductDto productDto = productApiClient.getProduct(sellerProduct.getProductId()).getBody();
 
             SellerProductDetailsDto sellerDetails = sellerProductDetailsMapper.mapToDto(sellerProduct);
-            sellerProductDetailsMapper.mapProductDto(productDto, sellerDetails);
+            sellerProductDetailsMapper.mapSellerProductDetailsDto(productDto, sellerDetails);
             return sellerDetails;
         } catch (Exception e) {
             log.error("Exception while getting sellers product with id '{}'! {}", productId, e.getMessage());
@@ -94,7 +96,7 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
             sellerInfo.getProducts().add(sellerProduct);
 
             SellerProductDetailsDto productDetails = sellerProductDetailsMapper.mapToDto(sellerProduct);
-            sellerProductDetailsMapper.mapProductDto(product, productDetails);
+            sellerProductDetailsMapper.mapSellerProductDetailsDto(product, productDetails);
             return productDetails;
         } catch (Exception e) {
             log.error("Unable add a new product to the client! {}", e.getMessage());
@@ -107,13 +109,7 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
         AccessTokenUserInfoDto userInfo = getUserInfoByAccessTokenFromAuthorizationMicroservice(accessToken);
         try {
             SellerInfo sellerInfo = sellerInfoRepository.getByUserId(userInfo.getUserId());
-            SellerProduct sellerProduct = sellerInfo.getProducts().stream()
-                    .filter(product -> product.getId().equals(productId))
-                    .findFirst()
-                    .orElseThrow(() -> {
-                        log.error("Product doesn't belong to seller!");
-                        return new RemoveProductFromSellerException("Product doesn't belong to seller!");
-                    });
+            SellerProduct sellerProduct = getProductFromSellerById(productId, sellerInfo);
             productApiClient.removeProduct(sellerProduct.getProductId());
             sellerProductRepository.deleteById(sellerProduct.getId());
             return productId;
@@ -123,6 +119,43 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
                     "Exception while removing product from the client! %s".formatted(e.getMessage())
             );
         }
+    }
+
+    @Override
+    public SellerProductDetailsDto updateSellersProductInfo(String accessToken, UpdateSellerProductForm form) {
+        AccessTokenUserInfoDto userInfo = getUserInfoByAccessTokenFromAuthorizationMicroservice(accessToken);
+        try {
+            SellerInfo sellerInfo = sellerInfoRepository.getByUserId(userInfo.getUserId());
+            SellerProduct sellerProduct = getProductFromSellerById(form.getSellerProductId(), sellerInfo);
+
+            ProductDto productDto = productApiClient.getProduct(sellerProduct.getProductId()).getBody();
+            List<CategoryDto> categories = productCategoryApiClient.getCategoriesByIds(form.getCategoryIds()).getBody();
+            List<DiscountDto> discounts = productDiscountApiClient.getDiscountsByIds(form.getDiscountIds()).getBody();
+
+            productDto.setCategories(categories);
+            productDto.setDiscounts(discounts);
+            sellerProductDetailsMapper.mapProductDto(form, productDto);
+            productDto = productApiClient.updateProduct(productDto).getBody();
+
+            SellerProductDetailsDto productDetails = sellerProductDetailsMapper.mapToDto(sellerProduct);
+            sellerProductDetailsMapper.mapSellerProductDetailsDto(productDto, productDetails);
+            return productDetails;
+        } catch (Exception e) {
+            log.error("Unable to update seller's '{}' product!", form.getSellerProductId());
+            throw new UpdateSellerProductException(
+                    "Unable to update seller's '%s' product!".formatted(form.getSellerProductId())
+            );
+        }
+    }
+
+    private static SellerProduct getProductFromSellerById(Long productId, SellerInfo sellerInfo) {
+        return sellerInfo.getProducts().stream()
+                .filter(product -> product.getId().equals(productId))
+                .findFirst()
+                .orElseThrow(() -> {
+                    log.error("Product doesn't belong to seller!");
+                    return new RemoveProductFromSellerException("Product doesn't belong to seller!");
+                });
     }
 
     private SellerProduct saveSellerProductInfo(ProductDto product) {
@@ -140,7 +173,7 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
             productDtos.stream()
                     .filter(prod -> prodDet.getProductId().equals(prod.getId()))
                     .findFirst()
-                    .ifPresent(prod -> sellerProductDetailsMapper.mapProductDto(prod, prodDet))
+                    .ifPresent(prod -> sellerProductDetailsMapper.mapSellerProductDetailsDto(prod, prodDet))
         );
         return productDetails;
     }
