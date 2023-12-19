@@ -88,7 +88,7 @@ public class DiscountApiControllerTests {
     }
 
     @Test
-    public void getDiscountsByIdsTest() throws Exception{
+    public void getDiscountsByIdsTest() throws Exception {
         List<Discount> discounts = new ArrayList<>();
         for (int i = 0; i < 3; i++)
             discounts.add(discountRepository.save(DiscountBuilder.discount().id(null).build()));
@@ -138,6 +138,5 @@ public class DiscountApiControllerTests {
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isInternalServerError())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
-
     }
 }

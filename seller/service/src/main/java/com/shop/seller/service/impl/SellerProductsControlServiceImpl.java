@@ -154,7 +154,7 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
                 .findFirst()
                 .orElseThrow(() -> {
                     log.error("Product doesn't belong to seller!");
-                    return new RemoveProductFromSellerException("Product doesn't belong to seller!");
+                    return new ProductNotBelongToSellerException("Product doesn't belong to seller!");
                 });
     }
 
