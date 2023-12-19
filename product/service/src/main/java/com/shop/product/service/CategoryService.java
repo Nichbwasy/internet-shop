@@ -14,6 +14,7 @@ public interface CategoryService {
     CategoryDto updateCategory(CategoryDto categoryDto);
     CategoryDto addSubCategory(AddOrRemoveForm form);
     CategoryDto removeSubCategory(AddOrRemoveForm form);
+    List<CategoryDto> findCategoriesByIds(List<Long> ids);
 
 
 }

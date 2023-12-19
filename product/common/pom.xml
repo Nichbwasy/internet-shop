@@ -12,4 +12,17 @@
     <artifactId>common-product</artifactId>
     <packaging>jar</packaging>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.shop.product</groupId>
+            <artifactId>model-product</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.shop.product</groupId>
+            <artifactId>dto-product</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
+
 </project>

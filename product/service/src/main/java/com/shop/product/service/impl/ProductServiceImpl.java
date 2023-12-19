@@ -11,7 +11,7 @@ import com.shop.product.dao.specification.ProductSpecificationBuilder;
 import com.shop.product.dto.ProductDto;
 import com.shop.product.dto.form.AddOrRemoveForm;
 import com.shop.product.dto.form.product.ApprovalStatusProductFilterForm;
-import com.shop.product.dto.form.product.ChangeProductDataForm;
+import com.shop.product.dto.form.product.ChangeProductApprovalStatusForm;
 import com.shop.product.dto.form.product.NewProductForm;
 import com.shop.product.dto.form.product.ProductFilterForm;
 import com.shop.product.model.Category;
@@ -50,6 +50,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Value("${products.page.size}")
     private Integer PAGE_SIZE;
+    @Value("${products.page.search.by.id}")
+    private Integer PAGE_PRODUCTS_BY_ID;
 
     @Override
     public ProductDto getProduct(Long id) {
@@ -234,7 +236,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    public ProductDto changeProductData(ChangeProductDataForm form) {
+    public ProductDto changeProductData(ChangeProductApprovalStatusForm form) {
         try {
             checkIfProductNotExists(form.getProductId());
             Product product = productRepository.getReferenceById(form.getProductId());
@@ -293,6 +295,35 @@ public class ProductServiceImpl implements ProductService {
         } catch (Exception e) {
             log.error("Unable get '{}' page of products! {}", page, e.getMessage());
             throw new GetProductsPageException("Unable get '%s' page of products! %s".formatted(page, e.getMessage()));
+        }
+    }
+
+    @Override
+    @Transactional(isolation = Isolation.SERIALIZABLE)
+    public List<Long> removeProducts(List<Long> ids) {
+        try {
+            return ids.stream()
+                    .filter(productRepository::existsById)
+                    .peek(productRepository::deleteById)
+                    .toList();
+        } catch (Exception e) {
+            log.error("Exception while removing products! {}", e.getMessage());
+            throw new EntityDeleteRepositoryException("Exception while removing products! %s".formatted(e.getMessage()));
+        }
+    }
+
+    @Override
+    public List<ProductDto> getProductsPageByIds(Integer page, List<Long> ids) {
+        try {
+            PageRequest pageRequest = PageRequest.of(page - 1, PAGE_PRODUCTS_BY_ID);
+            return productRepository.findAllByIdIn(ids, pageRequest).stream()
+                    .map(productMapper::mapToDto)
+                    .toList();
+        } catch (Exception e) {
+            log.error("Exception while getting a page of products by ids! {}", e.getMessage());
+            throw new EntityGetRepositoryException(
+                    "Exception while getting a page of products by ids! %s".formatted(e.getMessage())
+            );
         }
     }
 

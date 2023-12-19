@@ -1,7 +1,7 @@
 package com.shop.shop.controller;
 
 import com.shop.product.dto.form.product.ApprovalStatusProductFilterForm;
-import com.shop.product.dto.form.product.ChangeProductDataForm;
+import com.shop.product.dto.form.product.ChangeProductApprovalStatusForm;
 import com.shop.shop.dto.shop.ShopPageProductInfoDto;
 import com.shop.shop.service.ShopProductsApprovalService;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +34,7 @@ public class ShowProductsApprovalStatusPageController {
 
     @PutMapping("/product/{id}")
     public ResponseEntity<ShopPageProductInfoDto> changeProductInfo(@PathVariable Long id,
-                                                                  @RequestBody ChangeProductDataForm form) {
+                                                                  @RequestBody ChangeProductApprovalStatusForm form) {
         log.info("Trying to change info of the product with id '{}'...", id);
         form.setProductId(id);
         return ResponseEntity.ok().body(approvalService.changeProductInfo(form));

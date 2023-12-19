@@ -222,3 +222,18 @@ databaseChangeLog:
               ALTER TABLE category_sub_category ADD FOREIGN KEY (sub_category_id) REFERENCES sub_category (id) ON DELETE CASCADE;
               ALTER TABLE product_discount ADD FOREIGN KEY (product_id) REFERENCES product (id) ON DELETE CASCADE;
               ALTER TABLE product_discount ADD FOREIGN KEY (discount_id) REFERENCES discount (id) ON DELETE CASCADE;
+            
+  - changeSet:
+      id: add-approval-status-column-to-product-table
+      author: jvsSEN
+      changes:
+        - addColumn:
+#            schemaName: product
+            tableName: product
+            columns:
+              - column:
+                  name: approval_status
+                  type: varchar(64)
+                  defaultValue: "NONE"
+                  constraints:
+                    nullable: 'false'
