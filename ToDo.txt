@@ -67,9 +67,10 @@ Media microservice: (Contains all media such imgs, videos(idk how to do this) of
         - Add client [Done]
         - Add controller advice [Done]
         - Add web security [Done]
-    - Add tests for base functionality [In progress]
-        - Add unit tests in service [In progress]
-        - Add integration tests in controllers [In progress]
+    - Add tests for base functionality [Done]
+        - Add unit tests in service [Done]
+        - Add integration tests in controllers [Done]
+        - Add tests in dao for resource storage [Canceled] /* No need */
 Global:
     - Create common controller advice configuration with common exceptions
     - Fix tokens refreshing issue
