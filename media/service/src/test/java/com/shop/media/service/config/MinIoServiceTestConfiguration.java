@@ -1,6 +1,6 @@
 package com.shop.media.service.config;
 
-import com.shop.media.dao.MinIoStorage;
+import com.shop.media.dao.storage.MinIoStorage;
 import com.shop.media.service.MinIoService;
 import com.shop.media.service.impl.MinIoServiceImpl;
 import org.springframework.boot.test.context.TestConfiguration;

@@ -1,4 +1,4 @@
-package com.shop.media.dao;
+package com.shop.media.dao.storage;
 
 import java.io.InputStream;
 

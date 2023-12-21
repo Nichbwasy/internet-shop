@@ -1,18 +1,15 @@
 package com.shop.media.service.impl;
 
 import com.shop.common.utils.all.file.FilesUtils;
-import com.shop.media.dao.MinIoStorage;
+import com.shop.media.dao.storage.MinIoStorage;
 import com.shop.media.dto.GetFileForm;
 import com.shop.media.dto.RemoveFileForm;
 import com.shop.media.dto.UploadFileForm;
 import com.shop.media.service.MinIoService;
 import com.shop.media.service.exeption.FileUploadingException;
 import jakarta.validation.Valid;
-import liquibase.util.FilenameUtil;
-import liquibase.util.file.FilenameUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.compress.compressors.FileNameUtil;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;

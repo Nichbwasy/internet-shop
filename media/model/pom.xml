@@ -9,26 +9,27 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>run-media</artifactId>
+    <artifactId>model-media</artifactId>
     <packaging>jar</packaging>
 
     <dependencies>
-        <!-- LIQUIBASE -->
+        <!-- JPA -->
         <dependency>
-            <groupId>org.liquibase</groupId>
-            <artifactId>liquibase-core</artifactId>
-            <version>${liqubase-version}</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+            <version>${spring-boot-version}</version>
         </dependency>
-
+        <!-- JPA MODEL GEN -->
         <dependency>
-            <groupId>com.shop.media</groupId>
-            <artifactId>client-media</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-jpamodelgen</artifactId>
+            <version>${hibernate-version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.shop.media</groupId>
-            <artifactId>controller-media</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>${jakarta-xml-bind-version}</version>
         </dependency>
     </dependencies>
 

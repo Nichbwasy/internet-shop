@@ -1,6 +1,6 @@
-package com.shop.media.dao.impl;
+package com.shop.media.dao.storage.impl;
 
-import com.shop.media.dao.MinIoStorage;
+import com.shop.media.dao.storage.MinIoStorage;
 import com.shop.media.dao.exception.MinIoFileGetException;
 import com.shop.media.dao.exception.MinIoFileRemoveException;
 import com.shop.media.dao.exception.MinIoFileUploadException;

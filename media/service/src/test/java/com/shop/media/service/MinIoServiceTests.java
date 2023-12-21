@@ -2,7 +2,7 @@ package com.shop.media.service;
 
 import com.shop.media.common.data.builder.RemoveFileFormBuilder;
 import com.shop.media.common.data.builder.UploadFileFormBuilder;
-import com.shop.media.dao.MinIoStorage;
+import com.shop.media.dao.storage.MinIoStorage;
 import com.shop.media.dao.exception.MinIoFileRemoveException;
 import com.shop.media.dao.exception.MinIoFileUploadException;
 import com.shop.media.dto.RemoveFileForm;

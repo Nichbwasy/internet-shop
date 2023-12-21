@@ -37,6 +37,7 @@
         <lombok-version>1.18.26</lombok-version>
         <slf4j-version>2.0.7</slf4j-version>
         <jackson-version>2.15.1</jackson-version>
+        <minio-version>8.5.7</minio-version>
     </properties>
 
     <dependencies>
