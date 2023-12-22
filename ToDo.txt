@@ -81,7 +81,7 @@ Media microservice: (Contains all media such imgs, videos(idk how to do this) of
         - Add entities/repositories [Done]
         - Add automatic creation buckets in MinIO [Done]
         - Add saving/removing/updating tables functionality [Testing required]
-    - Add saving/updating/removing file extensions [In progress]
+    - Add saving/updating/removing file extensions [Testing required]
 Global:
     - Saving imgs for products in resource storage [In progress]
     - Create common controller advice configuration with common exceptions
