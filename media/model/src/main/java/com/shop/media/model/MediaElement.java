@@ -8,6 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.LazyToOne;
+import org.hibernate.annotations.LazyToOneOption;
 
 import java.time.LocalDateTime;
 
@@ -36,7 +38,7 @@ public class MediaElement {
     private String path;
 
     @NotNull(message = "File name is mandatory!")
-    @Size(min = 32, max = 32, message = " Bucket name must contains exactly 32 characters!")
+    @Size(max = 32, message = " File name must can't contains more than 32 characters!")
     @Column(name = "file_name", length = 32, nullable = false)
     private String fileName;
 
@@ -46,7 +48,8 @@ public class MediaElement {
     private Long fileSize;
 
     @EqualsAndHashCode.Exclude
-    @OneToOne(targetEntity = FileExtension.class)
+    @LazyToOne(LazyToOneOption.NO_PROXY)
+    @ManyToOne(targetEntity = FileExtension.class, fetch = FetchType.LAZY)
     private FileExtension fileExtension;
 
     @NotNull(message = "Created time is mandatory!")

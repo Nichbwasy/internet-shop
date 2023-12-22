@@ -1,4 +1,4 @@
-package com.shop.media.dto;
+package com.shop.media.dto.form;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

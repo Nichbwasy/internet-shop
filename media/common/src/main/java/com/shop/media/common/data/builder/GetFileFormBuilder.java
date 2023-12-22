@@ -2,7 +2,7 @@ package com.shop.media.common.data.builder;
 
 import com.shop.common.utils.all.generator.StringGenerator;
 import com.shop.common.utils.all.test.data.builder.TestDataBuilder;
-import com.shop.media.dto.GetFileForm;
+import com.shop.media.dto.form.GetFileForm;
 
 import java.util.function.Consumer;
 

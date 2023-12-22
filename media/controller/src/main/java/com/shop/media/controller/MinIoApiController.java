@@ -1,8 +1,8 @@
 package com.shop.media.controller;
 
-import com.shop.media.dto.GetFileForm;
-import com.shop.media.dto.RemoveFileForm;
-import com.shop.media.dto.UploadFileForm;
+import com.shop.media.dto.form.GetFileForm;
+import com.shop.media.dto.form.RemoveFileForm;
+import com.shop.media.dto.form.UploadFileForm;
 import com.shop.media.service.MinIoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,8 +1,8 @@
 package com.shop.media.client;
 
-import com.shop.media.dto.GetFileForm;
-import com.shop.media.dto.RemoveFileForm;
-import com.shop.media.dto.UploadFileForm;
+import com.shop.media.dto.form.GetFileForm;
+import com.shop.media.dto.form.RemoveFileForm;
+import com.shop.media.dto.form.UploadFileForm;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.web.bind.annotation.*;
