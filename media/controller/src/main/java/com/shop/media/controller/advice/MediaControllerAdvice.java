@@ -14,7 +14,12 @@ import com.shop.media.dao.exception.MinIoFileGetException;
 import com.shop.media.dao.exception.MinIoFileRemoveException;
 import com.shop.media.dao.exception.MinIoFileUploadException;
 import com.shop.media.dao.exception.MinIoStorageException;
+import com.shop.media.service.exeption.FileReadingException;
 import com.shop.media.service.exeption.FileUploadingException;
+import com.shop.media.service.exeption.NotSupportedFileExtensionException;
+import com.shop.media.service.exeption.file.extension.FileExtensionNotFoundException;
+import com.shop.media.service.exeption.product.ImageNotBelongToProductException;
+import com.shop.media.service.exeption.product.ProductMediaNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -158,6 +163,49 @@ public class MediaControllerAdvice {
         AdviceResponseObject response =
                 new AdviceResponseObject("Exception while deleting file from minio resource storage!", e, request);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    @ExceptionHandler(FileReadingException.class)
+    protected ResponseEntity<AdviceResponseObject> fileReadingException(Exception e, WebRequest request) {
+        log.error("Exception while reading file! {}", e.getMessage());
+        AdviceResponseObject response = new AdviceResponseObject("Exception while reading file!", e, request);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    @ExceptionHandler(NotSupportedFileExtensionException.class)
+    protected ResponseEntity<AdviceResponseObject> notSupportedFileExtensionException(Exception e, WebRequest request) {
+        log.error("File extension is not supported! {}", e.getMessage());
+        AdviceResponseObject response = new AdviceResponseObject("File extension is not supported!", e, request);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    /** PRODUCT IMGS API EXCEPTIONS **/
+
+    @ExceptionHandler(ImageNotBelongToProductException.class)
+    protected ResponseEntity<AdviceResponseObject> imageNotBelongToProduct(Exception e, WebRequest request) {
+        log.error("Exception while loading image. Image is not belong to the product! {}", e.getMessage());
+        AdviceResponseObject response = new AdviceResponseObject(
+                "Exception while loading image. Image is not belong to the product!",
+                e,
+                request
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(ProductMediaNotFoundException.class)
+    protected ResponseEntity<AdviceResponseObject> productMediaNotFoundException(Exception e, WebRequest request) {
+        log.error("Exception while getting product! {}", e.getMessage());
+        AdviceResponseObject response = new AdviceResponseObject("Exception while getting product!", e, request);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    /** File extension exceptions **/
+
+    @ExceptionHandler(FileExtensionNotFoundException.class)
+    protected ResponseEntity<AdviceResponseObject> fileExtensionNotFoundException(Exception e, WebRequest webRequest) {
+        log.error("Exception while getting file extension! {}", e.getMessage());
+        AdviceResponseObject response = new AdviceResponseObject("Exception while getting file extension!", e, webRequest);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
 }

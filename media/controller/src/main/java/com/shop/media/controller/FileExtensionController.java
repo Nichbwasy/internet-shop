@@ -35,9 +35,10 @@ public class FileExtensionController {
         return ResponseEntity.ok().body(fileExtensionService.addFileExtension(dto));
     }
 
-    @PutMapping
-    public ResponseEntity<FileExtensionDto> updateFileExtension(@RequestBody FileExtensionDto dto) {
+    @PutMapping("/{id}")
+    public ResponseEntity<FileExtensionDto> updateFileExtension(@PathVariable Long id, @RequestBody FileExtensionDto dto) {
         log.info("Trying to update the file extension with id '{}'...", dto.getId());
+        dto.setId(id);
         return ResponseEntity.ok().body(fileExtensionService.updateFileExtension(dto));
     }
 

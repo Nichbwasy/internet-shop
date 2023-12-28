@@ -1,5 +1,6 @@
 package com.shop.media.service.impl;
 
+import com.shop.common.utils.all.exception.dao.EntityAlreadyExistsException;
 import com.shop.common.utils.all.exception.dao.EntityNotFoundRepositoryException;
 import com.shop.media.dao.FileExtensionRepository;
 import com.shop.media.dto.FileExtensionDto;
@@ -38,6 +39,7 @@ public class FileExtensionServiceImpl implements FileExtensionService {
     @Override
     @Transactional
     public FileExtensionDto addFileExtension(FileExtensionDto fileExtensionDto) {
+        checkIfFileExtensionAlreadyExists(fileExtensionDto.getName());
         return fileExtensionMapper.mapToDto(fileExtensionRepository.save(fileExtensionMapper.mapToModel(fileExtensionDto)));
     }
 
@@ -53,6 +55,14 @@ public class FileExtensionServiceImpl implements FileExtensionService {
     public Long removeFileExtension(Long id) {
         fileExtensionRepository.deleteById(id);
         return id;
+    }
+    private void checkIfFileExtensionAlreadyExists(String name) {
+        if (fileExtensionRepository.existsByName(name)) {
+            log.warn("Unable save '{}' file extension! Extension with such name already exists!", name);
+            throw new EntityAlreadyExistsException(
+                    "Unable save '%s' file extension! Extension with such name already exists!".formatted(name)
+            );
+        }
     }
 
     private FileExtension getFileExtensionById(Long id) {

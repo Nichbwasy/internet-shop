@@ -34,7 +34,7 @@ public class FilesUtils {
             int lastBackSlashPosition = fullPathToFile.lastIndexOf("/");
             int lastForwardSlashPosition = fullPathToFile.lastIndexOf("\\");
             int lastSlashPosition = Math.max(lastBackSlashPosition, lastForwardSlashPosition);
-            return fullPathToFile.substring(lastSlashPosition);
+            return fullPathToFile.substring(lastSlashPosition + 1);
         }
         return fullPathToFile;
     }

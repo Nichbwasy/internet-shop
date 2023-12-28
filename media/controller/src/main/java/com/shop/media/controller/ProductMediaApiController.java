@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.InputStream;
 import java.util.List;
 
 @Slf4j
@@ -20,7 +19,7 @@ public class ProductMediaApiController {
     private final ProductMediaApiService productService;
 
     @GetMapping("/{productId}/imgs")
-    public ResponseEntity<List<InputStream>> getAllProductsImages(@PathVariable Long productId) {
+    public ResponseEntity<List<byte[]>> getAllProductsImages(@PathVariable Long productId) {
         log.info("Trying to load all product's '{}' images...", productId );
         return ResponseEntity.ok().body(productService.loadImagesForProduct(productId));
     }

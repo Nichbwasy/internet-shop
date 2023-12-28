@@ -7,7 +7,6 @@ import com.shop.media.dto.form.RemoveFileForm;
 import com.shop.media.dto.form.UploadFileForm;
 import com.shop.media.service.MinIoService;
 import com.shop.media.service.exeption.FileUploadingException;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,7 +22,7 @@ public class MinIoServiceImpl implements MinIoService {
     private final MinIoStorage minIoStorage;
 
     @Override
-    public InputStream getFile(@Valid GetFileForm form) {
+    public InputStream getFile(GetFileForm form) {
         return minIoStorage.getFile(form.getFileName(), form.getBucketName());
     }
 

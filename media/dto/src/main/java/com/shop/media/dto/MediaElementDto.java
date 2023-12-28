@@ -1,8 +1,7 @@
 package com.shop.media.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -12,6 +11,9 @@ import java.time.LocalDateTime;
 public class MediaElementDto {
 
     private Long id;
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @JsonBackReference
     private ProductMediaDto productMedia;
     private String bucketName;
     private String path;

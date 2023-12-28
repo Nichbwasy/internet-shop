@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface FileExtensionRepository extends JpaRepository<FileExtension, Long> {
 
-    FileExtension getFileExtensionByName(String name);
+    FileExtension findFileExtensionByName(String name);
+    Boolean existsByName(String name);
 
 }

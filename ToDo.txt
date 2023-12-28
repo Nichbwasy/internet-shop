@@ -18,10 +18,10 @@ Product microservice: [In progress]
     - Add random code generation to the code of product [Done]
     - Add client to get filtered products page [Done]
     - Add tests for Category/Discount findByIds methods [Done]
-    - Add products media support
-        - Add new column 'media_id' in product table
-        - Add endpoints to get product media
-        - Add service to get product media
+    - Add products media support [In progress]
+        - Add new column 'media_id' in product table [In progress]
+        - Add endpoints to get product media [In progress]
+        - Add service to get product media [In progress]
 Shop microservice: [In progress]
     - Create base database model [Done]
         - Create base yml liquibase script [Done]
@@ -80,8 +80,8 @@ Media microservice: (Contains all media such imgs, videos(idk how to do this) of
         - Create tables (product_media, media_element, file_extension) [Done]
         - Add entities/repositories [Done]
         - Add automatic creation buckets in MinIO [Done]
-        - Add saving/removing/updating tables functionality [Testing required]
-    - Add saving/updating/removing file extensions [Testing required]
+        - Add saving/removing/updating tables functionality [Done] (Except updating, cause it no need)
+    - Add saving/updating/removing file extensions [Done]
 Global:
     - Saving imgs for products in resource storage [In progress]
     - Create common controller advice configuration with common exceptions

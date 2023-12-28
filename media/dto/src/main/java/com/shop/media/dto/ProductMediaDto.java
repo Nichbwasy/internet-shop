@@ -1,8 +1,7 @@
 package com.shop.media.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import lombok.*;
 
 import java.util.List;
 
@@ -13,6 +12,9 @@ public class ProductMediaDto {
 
     private Long id;
     private Long productId;
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @JsonManagedReference
     private List<MediaElementDto> mediaElements;
 
 }

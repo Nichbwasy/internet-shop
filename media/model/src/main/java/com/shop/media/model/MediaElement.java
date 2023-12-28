@@ -4,10 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 
@@ -23,8 +20,10 @@ public class MediaElement {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @ManyToOne(targetEntity = ProductMedia.class, fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_media_id")
     private ProductMedia productMedia;
 
     @NotNull(message = "Bucket name is mandatory!")

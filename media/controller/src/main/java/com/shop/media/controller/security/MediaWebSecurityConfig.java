@@ -54,7 +54,7 @@ public class MediaWebSecurityConfig {
                         .requestMatchers("/api/tokens", "/api/tokens/**",
                                 "/swagger-ui.html", "/swagger-ui/**", "/v3/**", "/error", "/favicon.ico")
                         .permitAll()
-                        .requestMatchers("/api/media/minio/**")
+                        .requestMatchers("/api/media/minio/**", "/api/media/products/**", "/files/extensions/**")
                         .hasAnyAuthority(UsersRoles.MICROSERVICE, UsersRoles.ADMIN)
                 ).build();
     }

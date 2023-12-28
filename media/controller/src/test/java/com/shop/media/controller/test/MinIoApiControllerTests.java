@@ -38,6 +38,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.testcontainers.containers.MinIOContainer;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.io.File;
@@ -63,11 +65,16 @@ public class MinIoApiControllerTests {
 
     private static String TEST_FILE_PATH;
     private final static JsonMapper jsonMapper = new JsonMapper();
+    @Container
+    private final static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer("postgres:14");
+    @Container
     private final static MinIOContainer minIoContainer = new MinIOContainer("minio/minio");
 
     @DynamicPropertySource
     public static void registerProperty(DynamicPropertyRegistry propertyRegistry) {
-        minIoContainer.start();
+        propertyRegistry.add("spring.datasource.url", postgreSQLContainer::getJdbcUrl);
+        propertyRegistry.add("spring.datasource.username", postgreSQLContainer::getUsername);
+        propertyRegistry.add("spring.datasource.password", postgreSQLContainer::getPassword);
 
         propertyRegistry.add("minio.url", minIoContainer::getS3URL);
         propertyRegistry.add("minio.credentials.login", minIoContainer::getUserName);

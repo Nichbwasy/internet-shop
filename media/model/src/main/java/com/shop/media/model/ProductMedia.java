@@ -3,10 +3,7 @@ package com.shop.media.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
@@ -25,8 +22,9 @@ public class ProductMedia {
     @Column(name = "product_id", nullable = false)
     private Long productId;
 
+    @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    @OneToMany(targetEntity = MediaElement.class, fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
+    @OneToMany(mappedBy = "productMedia", targetEntity = MediaElement.class, fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     private List<MediaElement> mediaElements;
 
 }

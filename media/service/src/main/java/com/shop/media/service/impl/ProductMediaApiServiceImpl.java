@@ -2,6 +2,7 @@ package com.shop.media.service.impl;
 
 import com.shop.common.utils.all.file.FilesUtils;
 import com.shop.common.utils.all.generator.StringGenerator;
+import com.shop.common.utils.all.mapping.CommonCyclingAvoidingContext;
 import com.shop.media.common.data.builder.*;
 import com.shop.media.dao.FileExtensionRepository;
 import com.shop.media.dao.MediaElementRepository;
@@ -13,18 +14,20 @@ import com.shop.media.model.MediaElement;
 import com.shop.media.model.ProductMedia;
 import com.shop.media.service.MinIoService;
 import com.shop.media.service.ProductMediaApiService;
+import com.shop.media.service.exeption.FileReadingException;
 import com.shop.media.service.exeption.NotSupportedFileExtensionException;
+import com.shop.media.service.exeption.file.extension.FileExtensionNotFoundException;
 import com.shop.media.service.exeption.product.ImageNotBelongToProductException;
+import com.shop.media.service.exeption.product.ProductMediaNotFoundException;
 import com.shop.media.service.mapper.ProductMediaMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.InputStream;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -36,7 +39,7 @@ public class ProductMediaApiServiceImpl implements ProductMediaApiService {
 
     @Value("${minio.buckets.products-media-bucket-name}")
     private String productsBucketName;
-    @Value("${minio.files.supported.img.extensions}")
+    @Value("#{'${minio.files.supported.img.extensions}'.split(',')}")
     private List<String> supportedImgsExtensions;
 
     private final ProductMediaRepository productMediaRepository;
@@ -46,60 +49,66 @@ public class ProductMediaApiServiceImpl implements ProductMediaApiService {
     private final ProductMediaMapper productMediaMapper;
 
     @Override
-    public List<InputStream> loadImagesForProduct(Long productId) {
-        ProductMedia productMedia = productMediaRepository.getByProductId(productId);
+    public List<byte[]> loadImagesForProduct(Long productId) {
+        ProductMedia productMedia = getProductMediaIfPresent(productId);
         List<MediaElement> mediaElements = productMedia.getMediaElements();
         return mediaElements.stream()
-                .map(element -> minIoService.getFile(
-                        GetFileFormBuilder.getFileForm()
-                                .bucketName(productsBucketName)
-                                .fileName(element.getPath() + "/" + element.getFileName())
-                                .build()
-                ))
+                .map(element -> {
+                    try {
+                        return minIoService.getFile(
+                                GetFileFormBuilder.getFileForm()
+                                        .bucketName(productsBucketName)
+                                        .fileName(element.getPath() + "/" + element.getFileName())
+                                        .build()
+                        ).readAllBytes();
+                    } catch (IOException e) {
+                        log.error("Exception while reading file! {}", e.getMessage());
+                        throw new FileReadingException("Exception while reading file! %s".formatted(e.getMessage()));
+                    }
+                })
                 .toList();
     }
+
 
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public ProductMediaDto saveProductImage(CreateProductMediaForm form) {
+        String fileName = "/" + form.getProductId() + "/imgs/" + StringGenerator.generate(12);
+        FileExtension fileExtension = getExistedFileExtension(form);
+        String createdFileName = saveFileInMinIO(form, fileName);
         if (productMediaRepository.existsByProductId(form.getProductId())) {
-            ProductMedia productMedia = productMediaRepository.getByProductId(form.getProductId());
-            return addNewProductImageToProduct(productMedia, form);
+            return addMediaElementToExistedProduct(form, createdFileName, fileExtension);
         } else {
-            ProductMedia productMedia = createNewProductMedia(form);
-            return addNewProductImageToProduct(productMedia, form);
+            return createProductAndAddMediaElement(form, createdFileName, fileExtension);
         }
     }
 
-
-    private ProductMediaDto addNewProductImageToProduct(ProductMedia productMedia, CreateProductMediaForm form) {
-        String fileName = "/" + form.getProductId() + "/imgs/" + StringGenerator.generate(12);
-        FileExtension fileExtension = getExistedFileExtension(form);
-
-        String createdFileName = saveFileInMinIO(form, fileName);
-
+    private ProductMediaDto createProductAndAddMediaElement(CreateProductMediaForm form, String createdFileName, FileExtension fileExtension) {
+        ProductMedia productMedia = createNewProductMedia(form);
         MediaElement mediaElement = saveMediaElementInDatabase(form, productMedia, createdFileName, fileExtension);
-
         productMedia.getMediaElements().add(mediaElement);
-        return productMediaMapper.mapToDto(productMedia);
+        return productMediaMapper.mapToDto(productMedia, new CommonCyclingAvoidingContext());
     }
 
-    @NotNull
+    private ProductMediaDto addMediaElementToExistedProduct(CreateProductMediaForm form, String createdFileName, FileExtension fileExtension) {
+        ProductMedia productMedia = productMediaRepository.findByProductId(form.getProductId());
+        saveMediaElementInDatabase(form, productMedia, createdFileName, fileExtension);
+        return productMediaMapper.mapToDto(productMedia, new CommonCyclingAvoidingContext());
+    }
+
     private ProductMedia createNewProductMedia(CreateProductMediaForm form) {
-        ProductMedia productMedia = ProductMediaBuilder.productMedia()
+        return productMediaRepository.save(ProductMediaBuilder.productMedia()
                 .id(null)
                 .productId(form.getProductId())
-                .build();
-        productMedia = productMediaRepository.save(productMedia);
-        return productMedia;
+                .build()
+        );
     }
 
-    @NotNull
     private MediaElement saveMediaElementInDatabase(CreateProductMediaForm form,
                                                     ProductMedia productMedia,
                                                     String createdFileName,
                                                     FileExtension fileExtension) {
-        MediaElement mediaElement = MediaElementBuilder.mediaElement()
+        return mediaElementRepository.save(MediaElementBuilder.mediaElement()
                 .id(null)
                 .productMedia(productMedia)
                 .bucketName(productsBucketName)
@@ -109,9 +118,8 @@ public class ProductMediaApiServiceImpl implements ProductMediaApiService {
                 .fileExtension(fileExtension)
                 .creationTime(LocalDateTime.now())
                 .lastTimeUpdate(LocalDateTime.now())
-                .build();
-        mediaElement = mediaElementRepository.save(mediaElement);
-        return mediaElement;
+                .build()
+        );
     }
 
     private String saveFileInMinIO(CreateProductMediaForm form, String fileName) {
@@ -130,12 +138,21 @@ public class ProductMediaApiServiceImpl implements ProductMediaApiService {
                     "Unable save media! Saved file has unsupported '%s' extension!".formatted(extensionName)
             );
         }
-        return fileExtensionRepository.getFileExtensionByName(extensionName);
+        return getFileExtensionIfPresent(extensionName);
+    }
+
+    private FileExtension getFileExtensionIfPresent(String extensionName) {
+        FileExtension fileExtension = fileExtensionRepository.findFileExtensionByName(extensionName);
+        if (fileExtension == null) {
+            log.error("Unable file extension '{}' in repository!", extensionName);
+            throw new FileExtensionNotFoundException("Unable file extension '%s' in repository!".formatted(extensionName));
+        }
+        return fileExtension;
     }
 
     @Override
     public Long removeProductImage(Long productId, Long imageId) {
-        ProductMedia productMedia = productMediaRepository.getByProductId(productId);
+        ProductMedia productMedia = getProductMediaIfPresent(productId);
         MediaElement mediaElement = productMedia.getMediaElements().stream()
                 .filter(element -> element.getId().equals(imageId))
                 .findFirst()
@@ -151,6 +168,14 @@ public class ProductMediaApiServiceImpl implements ProductMediaApiService {
                 .build());
         mediaElementRepository.delete(mediaElement);
         return imageId;
+    }
+    private ProductMedia getProductMediaIfPresent(Long productId) {
+        ProductMedia productMedia = productMediaRepository.findByProductId(productId);
+        if (productMedia == null) {
+            log.warn("Unable find the product media with id '{}'!", productId);
+            throw new ProductMediaNotFoundException("Unable find the product media with id '%s'!".formatted(productId));
+        }
+        return productMedia;
     }
 
 }
