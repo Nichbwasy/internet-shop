@@ -14,6 +14,7 @@ import com.shop.media.common.data.builder.CreateProductMediaFormBuilder;
 import com.shop.media.common.data.builder.FileExtensionBuilder;
 import com.shop.media.common.data.builder.MediaElementBuilder;
 import com.shop.media.common.data.builder.ProductMediaBuilder;
+import com.shop.media.controller.ProductMediaApiController;
 import com.shop.media.controller.RunMediaTestsControllerApplication;
 import com.shop.media.controller.config.CommonMediaMicroserviceTestConfiguration;
 import com.shop.media.dao.FileExtensionRepository;
@@ -34,6 +35,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
@@ -43,7 +45,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.web.multipart.MultipartFile;
 import org.testcontainers.containers.MinIOContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -67,6 +68,8 @@ public class ProductMediaApiControllerTests {
 
     @Autowired
     private MockMvc mockMvc;
+    @Autowired
+    private ProductMediaApiController productMediaApiController;
     @Autowired
     private TokensApiClient tokensApiClient;
     @Autowired
@@ -218,7 +221,7 @@ public class ProductMediaApiControllerTests {
     public void saveImageToExistedProductTest() throws Exception {
         File file = new File(TEST_FILE_PATH);
         FileInputStream fileData = new FileInputStream(file);
-        MultipartFile mFile = new MockMultipartFile("test_img", file.getName(), "image/png", fileData);
+        MockMultipartFile mFile = new MockMultipartFile("file", file.getName(), MediaType.APPLICATION_JSON_VALUE, fileData);
         fileExtensionRepository.save(FileExtensionBuilder.fileExtension()
                 .id(null)
                 .name("png")
@@ -226,12 +229,11 @@ public class ProductMediaApiControllerTests {
                 .build()
         );
         ProductMedia productMedia = productMediaRepository.save(ProductMediaBuilder.productMedia().id(null).build());
-        CreateProductMediaForm form = CreateProductMediaFormBuilder.createProductMediaForm().multipartFile(mFile).build();
 
-        String body = mockMvc.perform(MockMvcRequestBuilders.post("/api/media/products/" + productMedia.getProductId() + "/imgs")
+        String body = mockMvc.perform(MockMvcRequestBuilders.multipart(HttpMethod.POST, "/api/media/products/" + productMedia.getProductId() + "/imgs")
+                        .file(mFile)
                         .header(HttpHeaders.AUTHORIZATION, testAccessToken)
-                        .contentType(MediaType.MULTIPART_FORM_DATA)
-                        .flashAttr("createProductMediaForm", form))
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
@@ -251,19 +253,18 @@ public class ProductMediaApiControllerTests {
     public void saveImageToNotExistedProductTest() throws Exception {
         File file = new File(TEST_FILE_PATH);
         FileInputStream fileData = new FileInputStream(file);
-        MultipartFile mFile = new MockMultipartFile("test_img", file.getName(), "image/png", fileData);
+        MockMultipartFile mFile = new MockMultipartFile("file", file.getName(), "image/png", fileData);
         fileExtensionRepository.save(FileExtensionBuilder.fileExtension()
                 .id(null)
                 .name("png")
                 .mediaTypeName("image/png")
                 .build()
         );
-        CreateProductMediaForm form = CreateProductMediaFormBuilder.createProductMediaForm().multipartFile(mFile).build();
 
-        String body = mockMvc.perform(MockMvcRequestBuilders.post("/api/media/products/" + form.getProductId() + "/imgs")
+        String body = mockMvc.perform(MockMvcRequestBuilders.multipart(HttpMethod.POST,"/api/media/products/1001/imgs")
+                        .file(mFile)
                         .header(HttpHeaders.AUTHORIZATION, testAccessToken)
-                        .contentType(MediaType.MULTIPART_FORM_DATA)
-                        .flashAttr("createProductMediaForm", form))
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
@@ -272,7 +273,7 @@ public class ProductMediaApiControllerTests {
         ProductMediaDto result = jsonMapper.readValue(body, ProductMediaDto.class);
         MediaElementDto savedElement = result.getMediaElements().get(0);
 
-        Assertions.assertEquals("/" + form.getProductId() + "/imgs", savedElement.getPath());
+        Assertions.assertEquals("/1001/imgs", savedElement.getPath());
         Assertions.assertEquals(bucketName, savedElement.getBucketName());
         Assertions.assertEquals(".png", FilesUtils.extractFileExtension(savedElement.getFileName()));
         Assertions.assertEquals("png", savedElement.getFileExtension().getName());

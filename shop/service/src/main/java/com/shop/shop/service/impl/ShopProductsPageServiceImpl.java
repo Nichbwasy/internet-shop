@@ -196,7 +196,7 @@ public class ShopProductsPageServiceImpl implements ShopProductsPageService {
     }
 
     private void checkIfFoundProductsNotNull(List<ProductDto> products) {
-        if (products == null || products.isEmpty()) {
+        if (products == null) {
             log.warn("No one product was found for a such filter request!");
             throw new ProductsNotFoundForFilterException("No one product was found for a such filter request!");
         }

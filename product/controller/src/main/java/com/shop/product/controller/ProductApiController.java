@@ -21,7 +21,7 @@ public class ProductApiController {
 
     private final ProductService productService;
 
-    @GetMapping("/ids/{page}")
+    @PostMapping("/ids/{page}")
     public ResponseEntity<List<ProductDto>> getProductsByIds(@PathVariable Integer page, @RequestBody List<Long> ids) {
         log.info("Trying to get products with ids '{}'...", ids);
         return ResponseEntity.ok().body(productService.getProductsPageByIds(page, ids));

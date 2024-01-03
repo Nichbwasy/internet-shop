@@ -95,7 +95,7 @@ public class AdminSellersControlServiceTests {
         SellerUserDataDto sellerData = SellerUserDataDtoBuilder.sellerUserDataDto().id(form.getUserId()).build();
 
         Mockito.when(sellerInfoRepository.existsByUserId(form.getUserId())).thenReturn(false);
-        Mockito.when(userDataApiClient.makeUserSeller(form.getUserId())).thenReturn(ResponseEntity.ok().body(sellerData));
+        Mockito.when(userDataApiClient.makeUserSeller(Mockito.anyString(), Mockito.eq(form.getUserId()))).thenReturn(ResponseEntity.ok().body(sellerData));
         Mockito.when(sellerInfoRepository.save(Mockito.any(SellerInfo.class))).thenAnswer(a ->
                 {
                     SellerInfo sellerInfo = a.getArgument(0);
@@ -104,7 +104,7 @@ public class AdminSellersControlServiceTests {
                 }
         );
 
-        SellerDetailsDto result = controlService.registerNewSeller(form);
+        SellerDetailsDto result = controlService.registerNewSeller("", form);
 
         Assertions.assertNotNull(result.getId());
         Assertions.assertEquals(sellerData.getId(), result.getUserId());
@@ -120,7 +120,7 @@ public class AdminSellersControlServiceTests {
 
         Mockito.when(sellerInfoRepository.existsByUserId(form.getUserId())).thenReturn(true);
 
-        Assertions.assertThrows(SellerRegistrationException.class, () -> controlService.registerNewSeller(form));
+        Assertions.assertThrows(SellerRegistrationException.class, () -> controlService.registerNewSeller("", form));
     }
 
     @Test

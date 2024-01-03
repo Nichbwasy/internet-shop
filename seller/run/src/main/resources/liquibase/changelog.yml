@@ -56,15 +56,15 @@ databaseChangeLog:
             tableName: seller_info_seller_product
             columns:
               - column:
-                name: seller_info_id
-                type: bigint
-                constraints:
-                  nullable: 'false'
+                  name: seller_info_id
+                  type: bigint
+                  constraints:
+                    nullable: 'false'
               - column:
-                name: seller_product_id
-                type: bigint
-                constraints:
-                  nullable: 'false'
+                  name: seller_product_id
+                  type: bigint
+                  constraints:
+                    nullable: 'false'
 
         - sql:
             dbms: 'postgresql'

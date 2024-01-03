@@ -14,7 +14,6 @@ import com.shop.product.client.ProductApiClient;
 import com.shop.product.client.ProductCategoryApiClient;
 import com.shop.product.client.ProductDiscountApiClient;
 import com.shop.product.common.data.builder.CategoryDtoBuilder;
-import com.shop.product.common.data.builder.DiscountBuilder;
 import com.shop.product.common.data.builder.DiscountDtoBuilder;
 import com.shop.product.common.data.builder.ProductDtoBuilder;
 import com.shop.product.dto.CategoryDto;
@@ -436,7 +435,7 @@ public class SellerProductsControlPanelControllerTests {
         List<DiscountDto> discounts = List.of(DiscountDtoBuilder.discountDto().build(), DiscountDtoBuilder.discountDto().build());
         List<Long> categoryIds = categories.stream().map(CategoryDto::getId).toList();
         List<Long> discountIds = discounts.stream().map(DiscountDto::getId).toList();
-        UpdateSellerProductForm form = UpdateSellerProductForm.builder()
+        UpdateSellerProductForm form = UpdateSellerProductFormBuilder.updateSellerProductForm()
                 .sellerProductId(sellerInfo.getProducts().get(0).getId())
                 .discountIds(discountIds)
                 .categoryIds(categoryIds)
@@ -446,8 +445,8 @@ public class SellerProductsControlPanelControllerTests {
         Mockito.when(productApiClient.getProduct(productDto.getId())).thenReturn(ResponseEntity.ok().body(productDto));
         Mockito.when(productCategoryApiClient.getCategoriesByIds(categoryIds)).thenReturn(ResponseEntity.ok().body(categories));
         Mockito.when(productDiscountApiClient.getDiscountsByIds(discountIds)).thenReturn(ResponseEntity.ok().body(discounts));
-        Mockito.when(productApiClient.updateProduct(Mockito.any(ProductDto.class)))
-                .thenAnswer(a -> ResponseEntity.ok().body(a.getArgument(0)));
+        Mockito.when(productApiClient.updateProduct(Mockito.eq(productDto.getId()), Mockito.any(ProductDto.class)))
+                .thenAnswer(a -> ResponseEntity.ok().body(a.getArgument(1)));
 
         String body = mockMvc.perform(MockMvcRequestBuilders.patch("/seller/home/products/product/"
                                                                             + sellerInfo.getProducts().get(0).getId())
@@ -479,7 +478,7 @@ public class SellerProductsControlPanelControllerTests {
                 .products(List.of(product1, product2))
                 .build();
         sellerInfo = sellerInfoRepository.save(sellerInfo);
-        UpdateSellerProductForm form = UpdateSellerProductForm.builder()
+        UpdateSellerProductForm form = UpdateSellerProductFormBuilder.updateSellerProductForm()
                 .sellerProductId(sellerInfo.getProducts().get(0).getId())
                 .build();
 
@@ -506,7 +505,7 @@ public class SellerProductsControlPanelControllerTests {
                 .products(List.of(product1, product2))
                 .build();
         sellerInfoRepository.save(sellerInfo);
-        UpdateSellerProductForm form = UpdateSellerProductForm.builder().build();
+        UpdateSellerProductForm form = UpdateSellerProductFormBuilder.updateSellerProductForm().build();
 
         Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
         Mockito.when(productApiClient.getProduct(Mockito.anyLong())).thenThrow(RuntimeException.class);

@@ -32,7 +32,7 @@ public class ShowProductsApprovalStatusPageController {
         return ResponseEntity.ok().body(approvalService.showProductInfo(id));
     }
 
-    @PutMapping("/product/{id}")
+    @PutMapping("/product/{id}/status")
     public ResponseEntity<ShopPageProductInfoDto> changeProductInfo(@PathVariable Long id,
                                                                   @RequestBody ChangeProductApprovalStatusForm form) {
         log.info("Trying to change info of the product with id '{}'...", id);

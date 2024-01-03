@@ -2,6 +2,7 @@ package com.shop.seller.controller.config;
 
 import com.shop.authorization.client.TokensApiClient;
 import com.shop.authorization.client.UserDataApiClient;
+import com.shop.media.client.ProductMediaApiClient;
 import com.shop.product.client.ProductApiClient;
 import com.shop.product.client.ProductCategoryApiClient;
 import com.shop.product.client.ProductDiscountApiClient;
@@ -27,6 +28,8 @@ public class CommonSellerControllersTestConfiguration {
     public ProductCategoryApiClient productCategoryApiClient;
     @MockBean
     public ProductDiscountApiClient productDiscountApiClient;
+    @MockBean
+    public ProductMediaApiClient productMediaApiClient;
     @MockBean
     public UserDataApiClient userDataApiClient;
 

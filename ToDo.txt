@@ -39,7 +39,8 @@ Shop microservice: [Done]
     - Adding products to user's cart [Done]
     - Removing products from user's cart [Done]
     - Show product info for a user (only approved) [Done]
-    - Known bugs to fix [Done]
+    - Change api for adding items to cart
+    - Known bugs to fix
         - Removing products from cart doesn't work [Done]
         - After adding the same product several times it adds in cart like a new item instead of increasing count [Done]
         - Fix add new product to cart (ERROR: relation \"user_cart_cart_items\" does not exist\n  Position: 13]
@@ -47,6 +48,7 @@ Shop microservice: [Done]
         - When gets filtered shop products it can return lesser than page size.
           (It happens when product not approved in shop) (move approve field from the ShopProduct
           to the Product) [Done]
+        - Products can be added to cart even if it not approved
 Seller microservice: (Seller's information, seller page, adding a new products, and so on...) [In progress]
     - Create base microservice architecture [Done]
     - Created base database schema [Done]
@@ -62,7 +64,11 @@ Seller microservice: (Seller's information, seller page, adding a new products, 
             - Add new product [Done]
             - Remove a product (if it belong to seller) [Done]
             - Edit a product (if it belong to seller) [Done]
-            - Add media (img) to the product [In progress]
+            - Get all media (img) of product [Done]
+            - Add media (img) to the product [Done]
+            - Delete media from product [Done]
+            - Get all images metadata
+        - Change getting images by product id in product microservice on seller product id ???
 Media microservice: (Contains all media such imgs, videos(idk how to do this) of products (MinIO)) [In progress]
     - Create base microservice structure [Done]
     - Add MinIO to the service [Done]
@@ -82,7 +88,8 @@ Media microservice: (Contains all media such imgs, videos(idk how to do this) of
         - Add saving/removing/updating tables functionality [Done] (Except updating, cause it no need)
     - Add saving/updating/removing file extensions [Done]
 Global:
-    - Saving imgs for products in resource storage [In progress]
+    - Write deployment scripts
+    - Saving imgs for products in resource storage [Done]
     - Create common controller advice configuration with common exceptions
     - Fix tokens refreshing issue
     - Fix advice (security advice doesn't catch Jwt tokens exceptions, for some reason)

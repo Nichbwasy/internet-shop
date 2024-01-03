@@ -151,6 +151,7 @@ public class ProductMediaApiServiceImpl implements ProductMediaApiService {
     }
 
     @Override
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public Long removeProductImage(Long productId, Long imageId) {
         ProductMedia productMedia = getProductMediaIfPresent(productId);
         MediaElement mediaElement = productMedia.getMediaElements().stream()

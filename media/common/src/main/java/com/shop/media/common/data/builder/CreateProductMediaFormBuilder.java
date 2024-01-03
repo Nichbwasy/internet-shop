@@ -11,7 +11,7 @@ public class CreateProductMediaFormBuilder extends TestDataBuilder<CreateProduct
     private Long productId = random.nextLong(1, 1000);
     private MultipartFile multipartFile;
 
-    public CreateProductMediaFormBuilder() {}
+    private CreateProductMediaFormBuilder() {}
 
     private CreateProductMediaFormBuilder(CreateProductMediaFormBuilder builder) {
         this.productId = builder.productId;
@@ -39,7 +39,7 @@ public class CreateProductMediaFormBuilder extends TestDataBuilder<CreateProduct
     }
 
     private CreateProductMediaFormBuilder copyWith(Consumer<CreateProductMediaFormBuilder> consumer) {
-        CreateProductMediaFormBuilder createProductMediaFormBuilder = new CreateProductMediaFormBuilder();
+        CreateProductMediaFormBuilder createProductMediaFormBuilder = new CreateProductMediaFormBuilder(this);
         consumer.accept(createProductMediaFormBuilder);
         return createProductMediaFormBuilder;
     }

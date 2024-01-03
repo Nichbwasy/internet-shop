@@ -18,9 +18,11 @@ public interface ProductApiClient {
     ResponseEntity<ProductDto> getProduct(@PathVariable("id") Long id);
 
     @PutMapping("/product/{id}/changes/status")
-    ResponseEntity<ProductDto> updateProductApprovalStatus(@RequestBody ChangeProductApprovalStatusForm form);
+    ResponseEntity<ProductDto> updateProductApprovalStatus(@PathVariable("id") Long id,
+                                                           @RequestBody ChangeProductApprovalStatusForm form);
     @PutMapping("/product/{id}")
-    ResponseEntity<ProductDto> updateProduct(@RequestBody ProductDto productDto);
+    ResponseEntity<ProductDto> updateProduct(@PathVariable("id") Long id,
+                                             @RequestBody ProductDto productDto);
     @DeleteMapping("/product/{id}")
     ResponseEntity<Long> removeProduct(@PathVariable("id") Long id);
     @PostMapping("/{page}")
@@ -31,7 +33,7 @@ public interface ProductApiClient {
                                                                  @RequestBody ApprovalStatusProductFilterForm form);
     @DeleteMapping("/removing")
     ResponseEntity<List<Long>> removeProducts(@RequestBody List<Long> ids);
-    @GetMapping("/ids/{page}")
+    @PostMapping("/ids/{page}")
     ResponseEntity<List<ProductDto>> getProductsByIds(@PathVariable("page") Integer page, @RequestBody List<Long> ids);
     @PostMapping
     ResponseEntity<ProductDto> createProduct(@RequestBody NewProductForm form);

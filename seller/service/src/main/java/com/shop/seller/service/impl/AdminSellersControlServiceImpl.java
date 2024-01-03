@@ -72,12 +72,12 @@ public class AdminSellersControlServiceImpl implements AdminSellersControlServic
 
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    public SellerDetailsDto registerNewSeller(RegisterNewSellerForm form) {
+    public SellerDetailsDto registerNewSeller(String accessToken, RegisterNewSellerForm form) {
         if (sellerInfoRepository.existsByUserId(form.getUserId())) {
             log.warn("User '{}' already the seller!", form.getUserId());
             throw new SellerRegistrationException("User '%s' already the seller!".formatted(form.getUserId()));
         }
-        SellerUserDataDto sellerData = makeUserAsSellerAndGetData(form);
+        SellerUserDataDto sellerData = makeUserAsSellerAndGetData(accessToken, form);
         SellerInfo sellerInfo = createNewSellerInfo(sellerData);
 
         SellerDetailsDto sellerDetails = sellerDetailsMapper.mapToDto(sellerInfo);
@@ -98,9 +98,9 @@ public class AdminSellersControlServiceImpl implements AdminSellersControlServic
         return id;
     }
 
-    private SellerUserDataDto makeUserAsSellerAndGetData(RegisterNewSellerForm form) {
+    private SellerUserDataDto makeUserAsSellerAndGetData(String accessToken, RegisterNewSellerForm form) {
         try {
-            SellerUserDataDto sellerData = userDataApiClient.makeUserSeller(form.getUserId()).getBody();
+            SellerUserDataDto sellerData = userDataApiClient.makeUserSeller(accessToken, form.getUserId()).getBody();
             if (sellerData == null) {
                 log.error("Return's created seller user '{}' data is null!", form.getUserId());
                 throw new GetSellerDataUserApiClientException(

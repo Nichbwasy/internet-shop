@@ -1,5 +1,6 @@
 package com.shop.media.controller;
 
+import com.shop.media.common.data.builder.CreateProductMediaFormBuilder;
 import com.shop.media.dto.ProductMediaDto;
 import com.shop.media.dto.form.CreateProductMediaForm;
 import com.shop.media.service.ProductMediaApiService;
@@ -7,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -26,9 +28,12 @@ public class ProductMediaApiController {
 
     @PostMapping("/{productId}/imgs")
     public ResponseEntity<ProductMediaDto> createProductMedia(@PathVariable Long productId,
-                                                              @ModelAttribute CreateProductMediaForm form) {
-        log.info("Trying to add image to product '{}'...", form.getProductId());
-        form.setProductId(productId);
+                                                              @RequestParam("file") MultipartFile file) {
+        log.info("Trying to add image to product '{}'...", productId);
+        CreateProductMediaForm form = CreateProductMediaFormBuilder.createProductMediaForm()
+                .productId(productId)
+                .multipartFile(file)
+                .build();
         return ResponseEntity.ok().body(productService.saveProductImage(form));
     }
 

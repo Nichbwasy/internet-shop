@@ -1,5 +1,7 @@
 package com.shop.seller.controller;
 
+import com.shop.media.dto.ProductMediaDto;
+import com.shop.media.dto.form.CreateProductMediaForm;
 import com.shop.seller.dto.control.CreateProductForm;
 import com.shop.seller.dto.control.SellerProductDetailsDto;
 import com.shop.seller.dto.control.UpdateSellerProductForm;
@@ -10,9 +12,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -73,5 +73,27 @@ public class SellerProductsControlPanelController {
         return ResponseEntity.ok().body(sellerProductsControlService.removeProduct(sellerProductId, accessToken));
     }
 
+    @GetMapping("/product/{sellerProductId}/imgs")
+    public ResponseEntity<List<byte[]>> getAllProductImgs(@RequestHeader(HttpHeaders.AUTHORIZATION) String accessToken,
+                                                          @PathVariable Long sellerProductId) {
+        log.info("Trying to load all images of the '{}' product...", sellerProductId);
+        return ResponseEntity.ok().body(sellerProductsControlService.loadProductImgs(accessToken, sellerProductId));
+    }
+
+    @PostMapping("/product/{sellerProductId}/imgs")
+    public ResponseEntity<ProductMediaDto> getAllProductImgs(@RequestHeader(HttpHeaders.AUTHORIZATION) String accessToken,
+                                                             @PathVariable Long sellerProductId,
+                                                             @ModelAttribute CreateProductMediaForm form) {
+        log.info("Trying to add a new image to the '{}' product...", sellerProductId);
+        return ResponseEntity.ok().body(sellerProductsControlService.saveImgToProductMedia(accessToken, sellerProductId, form));
+    }
+
+    @DeleteMapping("/product/{sellerProductId}/imgs/{imageId}")
+    public ResponseEntity<Long> deleteProductImage(@RequestHeader(HttpHeaders.AUTHORIZATION) String accessToken,
+                                                   @PathVariable Long sellerProductId,
+                                                   @PathVariable Long imageId) {
+        log.info("Trying to remove the image '{}' from the product '{}'...", imageId, sellerProductId);
+        return ResponseEntity.ok().body(sellerProductsControlService.removeProductImage(accessToken, sellerProductId, imageId));
+    }
 
 }

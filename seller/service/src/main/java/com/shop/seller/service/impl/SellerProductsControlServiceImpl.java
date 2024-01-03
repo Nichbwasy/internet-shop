@@ -2,6 +2,10 @@ package com.shop.seller.service.impl;
 
 import com.shop.authorization.client.TokensApiClient;
 import com.shop.authorization.dto.token.AccessTokenUserInfoDto;
+import com.shop.common.utils.all.exception.dao.EntityNotFoundRepositoryException;
+import com.shop.media.client.ProductMediaApiClient;
+import com.shop.media.dto.ProductMediaDto;
+import com.shop.media.dto.form.CreateProductMediaForm;
 import com.shop.product.client.ProductApiClient;
 import com.shop.product.client.ProductCategoryApiClient;
 import com.shop.product.client.ProductDiscountApiClient;
@@ -41,6 +45,7 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
     private final TokensApiClient tokensApiClient;
     private final SellerProductDetailsMapper sellerProductDetailsMapper;
     private final CreateProductFormMapper createProductFormMapper;
+    private final ProductMediaApiClient productMediaApiClient;
 
     @Override
     public List<SellerProductDetailsDto> showAllSellersProducts(Integer page, String accessToken) {
@@ -135,17 +140,47 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
             productDto.setCategories(categories);
             productDto.setDiscounts(discounts);
             sellerProductDetailsMapper.mapProductDto(form, productDto);
-            productDto = productApiClient.updateProduct(productDto).getBody();
+            productDto = productApiClient.updateProduct(productDto.getId(), productDto).getBody();
 
             SellerProductDetailsDto productDetails = sellerProductDetailsMapper.mapToDto(sellerProduct);
             sellerProductDetailsMapper.mapSellerProductDetailsDto(productDto, productDetails);
             return productDetails;
         } catch (Exception e) {
-            log.error("Unable to update seller's '{}' product!", form.getSellerProductId());
+            log.error("Unable to update seller's '{}' product! {}", form.getSellerProductId(), e.getMessage());
             throw new UpdateSellerProductException(
-                    "Unable to update seller's '%s' product!".formatted(form.getSellerProductId())
+                    "Unable to update seller's '%s' product! %s".formatted(form.getSellerProductId(), e.getMessage())
             );
         }
+    }
+
+    @Override
+    public List<byte[]> loadProductImgs(String accessToken, Long sellerProductId) {
+        return productMediaApiClient.getAllProductsImages(accessToken, sellerProductId).getBody();
+    }
+
+    @Override
+    public ProductMediaDto saveImgToProductMedia(String accessToken, Long sellerProductId, CreateProductMediaForm form) {
+        SellerProduct sellerProduct = getSellerProductIfPresent(sellerProductId);
+        ProductDto product = productApiClient.getProduct(sellerProduct.getProductId()).getBody();
+        ProductMediaDto productMedia = productMediaApiClient.createProductMedia(accessToken, product.getId(), form.getMultipartFile()).getBody();
+        product.setMediaId(productMedia.getId());
+        productApiClient.updateProduct(product.getId(), product);
+        return productMedia;
+    }
+
+    @Override
+    public Long removeProductImage(String accessToken, Long sellerProductId, Long imageId) {
+        SellerProduct sellerProduct = getSellerProductIfPresent(sellerProductId);
+        return productMediaApiClient.removeImageFromProduct(accessToken, sellerProduct.getProductId(), imageId).getBody();
+    }
+    private SellerProduct getSellerProductIfPresent(Long sellerProductId) {
+        return sellerProductRepository.findById(sellerProductId)
+                .orElseThrow(() -> {
+                    log.warn("Unable find seller's product '{}'! ", sellerProductId);
+                    return new EntityNotFoundRepositoryException(
+                            "Unable find seller's product '%s'! ".formatted(sellerProductId)
+                    );
+                });
     }
 
     private static SellerProduct getProductFromSellerById(Long productId, SellerInfo sellerInfo) {

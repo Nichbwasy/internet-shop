@@ -52,6 +52,7 @@ public class FileExtensionServiceImpl implements FileExtensionService {
     }
 
     @Override
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public Long removeFileExtension(Long id) {
         fileExtensionRepository.deleteById(id);
         return id;
