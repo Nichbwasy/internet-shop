@@ -14,8 +14,8 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/shop/approval")
-public class ShowProductsApprovalStatusPageController {
+@RequestMapping("/control/shop/")
+public class ProductsAdminControlPageController {
 
     private final ShopProductsApprovalService approvalService;
 
@@ -26,14 +26,14 @@ public class ShowProductsApprovalStatusPageController {
         return ResponseEntity.ok().body(approvalService.showProductsPage(page, form));
     }
 
-    @GetMapping("/product/{id}")
+    @GetMapping("/products/{id}")
     public ResponseEntity<ShopPageProductInfoDto> showProductInfo(@PathVariable Long id) {
         log.info("Trying to show info of the product with id '{}'...", id);
         return ResponseEntity.ok().body(approvalService.showProductInfo(id));
     }
 
-    @PutMapping("/product/{id}/status")
-    public ResponseEntity<ShopPageProductInfoDto> changeProductInfo(@PathVariable Long id,
+    @PutMapping("/products/{id}/status")
+    public ResponseEntity<ShopPageProductInfoDto> changeProductStatus(@PathVariable Long id,
                                                                   @RequestBody ChangeProductApprovalStatusForm form) {
         log.info("Trying to change info of the product with id '{}'...", id);
         form.setProductId(id);

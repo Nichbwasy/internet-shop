@@ -54,7 +54,7 @@ public class ShopWebSecurity {
                         .requestMatchers("/api/tokens", "/api/tokens/**",
                                 "/swagger-ui.html", "/swagger-ui/**", "/v3/**", "/error", "/favicon.ico", "/shop/**")
                         .permitAll()
-                        .requestMatchers("/shop/approval/**")
+                        .requestMatchers("/control/shop/**")
                         .hasAnyAuthority(UsersRoles.ADMIN, UsersRoles.WORKER)
                 ).build();
     }

@@ -63,7 +63,7 @@ public class ShopProductsPageServiceImpl implements ShopProductsPageService {
 
         ProductDto productDto = productApiClient.getProduct(form.getProductId()).getBody();
         checkIfProductIsNull(productDto);
-
+        checkProductApprovalStatus(productDto);
         checkProductCount(form, productDto);
 
         if (userCart.getCartItems() == null) userCart.setCartItems(new ArrayList<>());
@@ -71,6 +71,15 @@ public class ShopProductsPageServiceImpl implements ShopProductsPageService {
         addProductToCart(form, userCart, productDto);
 
         return userCartMapper.mapToDto(userCart);
+    }
+
+    private static void checkProductApprovalStatus(ProductDto productDto) {
+        if (!productDto.getApprovalStatus().equals(ApprovalStatuses.APPROVED)) {
+            log.warn("Unable add product to cart! Product '{}' not approved!", productDto.getId());
+            throw new ProductNotApprovedException(
+                    "Unable add product to cart! Product '%s' not approved!".formatted(productDto.getId())
+            );
+        }
     }
 
     @Override

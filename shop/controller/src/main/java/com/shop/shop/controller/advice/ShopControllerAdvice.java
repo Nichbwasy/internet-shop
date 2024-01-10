@@ -10,10 +10,7 @@ import com.shop.common.utils.exception.jwt.token.JwtTokenExpiredException;
 import com.shop.common.utils.exception.jwt.token.JwtTokenMalformedException;
 import com.shop.common.utils.exception.jwt.token.JwtTokenUnsupportedException;
 import com.shop.common.utils.exception.jwt.token.JwtTokenWrongSignatureException;
-import com.shop.shop.service.exception.shop.GetProductsClientException;
-import com.shop.shop.service.exception.shop.NullProductClientException;
-import com.shop.shop.service.exception.shop.ProductNotFoundException;
-import com.shop.shop.service.exception.shop.ProductsNotFoundForFilterException;
+import com.shop.shop.service.exception.shop.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -151,6 +148,13 @@ public class ShopControllerAdvice {
                 "Nothing was found for such filtering request!", e, request
         );
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    @ExceptionHandler({ProductNotApprovedException.class})
+    protected ResponseEntity<AdviceResponseObject> productNotApprovedException(Exception e, WebRequest request) {
+        log.error("Can't add a product to cart! {}", e.getMessage());
+        AdviceResponseObject response = new AdviceResponseObject("Can't add a product to cart!", e, request);
+        return ResponseEntity.badRequest().body(response);
     }
 
 }
