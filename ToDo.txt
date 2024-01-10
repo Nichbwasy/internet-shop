@@ -67,8 +67,7 @@ Seller microservice: (Seller's information, seller page, adding a new products, 
             - Get all media (img) of product [Done]
             - Add media (img) to the product [Done]
             - Delete media from product [Done]
-            - Get all images metadata
-        - Change getting images by product id in product microservice on seller product id ???
+            - Get all images metadata [In progress]
     - Add product's documents(certificates) uploading
 Media microservice: (Contains all media such imgs, videos(idk how to do this) of products (MinIO)) [In progress]
     - Create base microservice structure [Done]
@@ -88,7 +87,9 @@ Media microservice: (Contains all media such imgs, videos(idk how to do this) of
         - Add automatic creation buckets in MinIO [Done]
         - Add saving/removing/updating tables functionality [Done] (Except updating, cause it no need)
     - Add saving/updating/removing file extensions [Done]
+    - Remove access token checking from media microservice (move it to seller microservice or something) [Done]
 Global:
+    - Make test share common application context (Tests should not restart spring context for each class)
     - Add email microservice
     - Add payment microservice
     - Add order microservice

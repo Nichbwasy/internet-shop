@@ -17,6 +17,7 @@ public class CreateProductForm {
     private String description;
     private Integer count;
     private BigDecimal price;
+    private Long mediaId;
     private List<Long> categoryIds = new ArrayList<>();
     private List<Long> discountIds = new ArrayList<>();
 

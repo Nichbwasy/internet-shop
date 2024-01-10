@@ -1,7 +1,5 @@
 package com.shop.seller.controller;
 
-import com.shop.media.dto.ProductMediaDto;
-import com.shop.media.dto.form.CreateProductMediaForm;
 import com.shop.seller.dto.control.CreateProductForm;
 import com.shop.seller.dto.control.SellerProductDetailsDto;
 import com.shop.seller.dto.control.UpdateSellerProductForm;
@@ -32,7 +30,7 @@ public class SellerProductsControlPanelController {
         return ResponseEntity.ok().body(sellerProductsControlService.showAllSellersProducts(page, accessToken));
     }
 
-    @GetMapping("/product/{sellerProductId}")
+    @GetMapping("/products/{sellerProductId}")
     public ResponseEntity<SellerProductDetailsDto> showSellerProductDetails(
             @PathVariable Long sellerProductId,
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) {
@@ -51,7 +49,7 @@ public class SellerProductsControlPanelController {
         return ResponseEntity.ok().body(sellerProductsControlService.createNewProduct(form, accessToken));
     }
 
-    @PatchMapping("/product/{sellerProductId}")
+    @PatchMapping("/{sellerProductId}")
     public ResponseEntity<SellerProductDetailsDto> updateProduct(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
             @PathVariable Long sellerProductId,
@@ -63,7 +61,7 @@ public class SellerProductsControlPanelController {
         return ResponseEntity.ok().body(sellerProductsControlService.updateSellersProductInfo(accessToken, form));
     }
 
-    @DeleteMapping("/product/{sellerProductId}")
+    @DeleteMapping("/{sellerProductId}")
     public ResponseEntity<Long> removeProduct(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
             @PathVariable Long sellerProductId
@@ -73,27 +71,5 @@ public class SellerProductsControlPanelController {
         return ResponseEntity.ok().body(sellerProductsControlService.removeProduct(sellerProductId, accessToken));
     }
 
-    @GetMapping("/product/{sellerProductId}/imgs")
-    public ResponseEntity<List<byte[]>> getAllProductImgs(@RequestHeader(HttpHeaders.AUTHORIZATION) String accessToken,
-                                                          @PathVariable Long sellerProductId) {
-        log.info("Trying to load all images of the '{}' product...", sellerProductId);
-        return ResponseEntity.ok().body(sellerProductsControlService.loadProductImgs(accessToken, sellerProductId));
-    }
-
-    @PostMapping("/product/{sellerProductId}/imgs")
-    public ResponseEntity<ProductMediaDto> getAllProductImgs(@RequestHeader(HttpHeaders.AUTHORIZATION) String accessToken,
-                                                             @PathVariable Long sellerProductId,
-                                                             @ModelAttribute CreateProductMediaForm form) {
-        log.info("Trying to add a new image to the '{}' product...", sellerProductId);
-        return ResponseEntity.ok().body(sellerProductsControlService.saveImgToProductMedia(accessToken, sellerProductId, form));
-    }
-
-    @DeleteMapping("/product/{sellerProductId}/imgs/{imageId}")
-    public ResponseEntity<Long> deleteProductImage(@RequestHeader(HttpHeaders.AUTHORIZATION) String accessToken,
-                                                   @PathVariable Long sellerProductId,
-                                                   @PathVariable Long imageId) {
-        log.info("Trying to remove the image '{}' from the product '{}'...", imageId, sellerProductId);
-        return ResponseEntity.ok().body(sellerProductsControlService.removeProductImage(accessToken, sellerProductId, imageId));
-    }
 
 }

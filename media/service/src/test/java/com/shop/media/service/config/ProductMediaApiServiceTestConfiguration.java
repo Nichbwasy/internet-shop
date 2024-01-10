@@ -6,6 +6,8 @@ import com.shop.media.dao.ProductMediaRepository;
 import com.shop.media.service.MinIoService;
 import com.shop.media.service.ProductMediaApiService;
 import com.shop.media.service.impl.ProductMediaApiServiceImpl;
+import com.shop.media.service.mapper.ImgMetadataMapper;
+import com.shop.media.service.mapper.ImgMetadataMapperImpl;
 import com.shop.media.service.mapper.ProductMediaMapper;
 import com.shop.media.service.mapper.ProductMediaMapperImpl;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -30,13 +32,18 @@ public class ProductMediaApiServiceTestConfiguration {
         return new ProductMediaMapperImpl();
     }
     @Bean
+    public ImgMetadataMapper imgMetadataMapper() {
+        return new ImgMetadataMapperImpl();
+    }
+    @Bean
     public ProductMediaApiService productMediaApiService() {
         return new ProductMediaApiServiceImpl(
                 productMediaRepository,
                 mediaElementRepository,
                 fileExtensionRepository,
                 minIoService,
-                productMediaMapper()
+                productMediaMapper(),
+                imgMetadataMapper()
         );
     }
 

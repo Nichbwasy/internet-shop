@@ -8,7 +8,9 @@ import com.shop.media.dao.FileExtensionRepository;
 import com.shop.media.dao.MediaElementRepository;
 import com.shop.media.dao.ProductMediaRepository;
 import com.shop.media.dto.ProductMediaDto;
-import com.shop.media.dto.form.CreateProductMediaForm;
+import com.shop.media.dto.form.AddMediaToProductForm;
+import com.shop.media.dto.form.CreateMediaForProductForm;
+import com.shop.media.dto.metadata.ImgMetadataDto;
 import com.shop.media.model.FileExtension;
 import com.shop.media.model.MediaElement;
 import com.shop.media.model.ProductMedia;
@@ -18,7 +20,9 @@ import com.shop.media.service.exeption.FileReadingException;
 import com.shop.media.service.exeption.NotSupportedFileExtensionException;
 import com.shop.media.service.exeption.file.extension.FileExtensionNotFoundException;
 import com.shop.media.service.exeption.product.ImageNotBelongToProductException;
+import com.shop.media.service.exeption.product.ProductMediaAlreadyExistsException;
 import com.shop.media.service.exeption.product.ProductMediaNotFoundException;
+import com.shop.media.service.mapper.ImgMetadataMapper;
 import com.shop.media.service.mapper.ProductMediaMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,10 +51,30 @@ public class ProductMediaApiServiceImpl implements ProductMediaApiService {
     private final FileExtensionRepository fileExtensionRepository;
     private final MinIoService minIoService;
     private final ProductMediaMapper productMediaMapper;
+    private final ImgMetadataMapper imgMetadataMapper;
 
     @Override
-    public List<byte[]> loadImagesForProduct(Long productId) {
-        ProductMedia productMedia = getProductMediaIfPresent(productId);
+    public ProductMediaDto createNewMediaForProduct(CreateMediaForProductForm form) {
+        checkIfMediaForProductAlreadyExists(form.getProductId());
+        return productMediaMapper.mapToDto(productMediaRepository.save(ProductMediaBuilder.productMedia()
+                .id(null)
+                .productId(form.getProductId())
+                .build()
+        ), new CommonCyclingAvoidingContext());
+    }
+
+    private void checkIfMediaForProductAlreadyExists(Long productId) {
+        if (productMediaRepository.existsByProductId(productId)) {
+            log.error("Media for the product '{}' already exists!", productId);
+            throw new ProductMediaAlreadyExistsException(
+                    "Media for the product '%s' already exists!".formatted(productId)
+            );
+        }
+    }
+
+    @Override
+    public List<byte[]> loadImagesForProduct(Long productMediaId) {
+        ProductMedia productMedia = getProductMediaIfPresent(productMediaId);
         List<MediaElement> mediaElements = productMedia.getMediaElements();
         return mediaElements.stream()
                 .map(element -> {
@@ -72,39 +96,62 @@ public class ProductMediaApiServiceImpl implements ProductMediaApiService {
 
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
-    public ProductMediaDto saveProductImage(CreateProductMediaForm form) {
-        String fileName = "/" + form.getProductId() + "/imgs/" + StringGenerator.generate(12);
+    public ProductMediaDto saveProductImage(AddMediaToProductForm form) {
+        ProductMedia productMedia = getProductMediaIfPresent(form.getProductMediaId());
+
+        String fileName = "/" + productMedia.getId() + "/imgs/" + StringGenerator.generate(12);
         FileExtension fileExtension = getExistedFileExtension(form);
         String createdFileName = saveFileInMinIO(form, fileName);
-        if (productMediaRepository.existsByProductId(form.getProductId())) {
-            return addMediaElementToExistedProduct(form, createdFileName, fileExtension);
-        } else {
-            return createProductAndAddMediaElement(form, createdFileName, fileExtension);
-        }
-    }
 
-    private ProductMediaDto createProductAndAddMediaElement(CreateProductMediaForm form, String createdFileName, FileExtension fileExtension) {
-        ProductMedia productMedia = createNewProductMedia(form);
         MediaElement mediaElement = saveMediaElementInDatabase(form, productMedia, createdFileName, fileExtension);
         productMedia.getMediaElements().add(mediaElement);
+
         return productMediaMapper.mapToDto(productMedia, new CommonCyclingAvoidingContext());
     }
-
-    private ProductMediaDto addMediaElementToExistedProduct(CreateProductMediaForm form, String createdFileName, FileExtension fileExtension) {
-        ProductMedia productMedia = productMediaRepository.findByProductId(form.getProductId());
-        saveMediaElementInDatabase(form, productMedia, createdFileName, fileExtension);
-        return productMediaMapper.mapToDto(productMedia, new CommonCyclingAvoidingContext());
+    @Override
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    public Long removeProductImage(Long productId, Long imageId) {
+        ProductMedia productMedia = getProductMediaIfPresent(productId);
+        MediaElement mediaElement = findMediaElementInProduct(productMedia, imageId);
+        minIoService.removeFile(RemoveFileFormBuilder.removeFileForm()
+                .bucketName(productsBucketName)
+                .fileName(mediaElement.getPath() + "/" + mediaElement.getFileName())
+                .build());
+        mediaElementRepository.delete(mediaElement);
+        return imageId;
     }
 
-    private ProductMedia createNewProductMedia(CreateProductMediaForm form) {
-        return productMediaRepository.save(ProductMediaBuilder.productMedia()
-                .id(null)
-                .productId(form.getProductId())
-                .build()
-        );
+    @Override
+    public List<ImgMetadataDto> getProductImagesMetadata(Long productId) {
+        ProductMedia productMedia = getProductMediaIfPresent(productId);
+        return productMedia.getMediaElements().stream()
+                .map(imgMetadataMapper::mapToDto)
+                .toList();
     }
 
-    private MediaElement saveMediaElementInDatabase(CreateProductMediaForm form,
+    @Override
+    public ImgMetadataDto getProductImageMetadata(Long productId, Long imageId) {
+        ProductMedia productMedia = getProductMediaIfPresent(productId);
+        MediaElement mediaElement = findMediaElementInProduct(productMedia, imageId);
+
+        return imgMetadataMapper.mapToDto(mediaElement);
+    }
+
+    private MediaElement findMediaElementInProduct(ProductMedia productMedia, Long elementId) {
+        return productMedia.getMediaElements().stream()
+                .filter(pm -> pm.getId().equals(elementId))
+                .findFirst()
+                .orElseThrow(() -> {
+                    log.warn("Element with id '{}' doesn't belong to the product media '{}'!", elementId, productMedia.getId());
+                    return new ImageNotBelongToProductException(
+                            "Element with id '%s' doesn't belong to the product media '%s'!"
+                                    .formatted(elementId, productMedia.getId())
+                    );
+                });
+    }
+
+
+    private MediaElement saveMediaElementInDatabase(AddMediaToProductForm form,
                                                     ProductMedia productMedia,
                                                     String createdFileName,
                                                     FileExtension fileExtension) {
@@ -122,7 +169,7 @@ public class ProductMediaApiServiceImpl implements ProductMediaApiService {
         );
     }
 
-    private String saveFileInMinIO(CreateProductMediaForm form, String fileName) {
+    private String saveFileInMinIO(AddMediaToProductForm form, String fileName) {
         return minIoService.uploadFile(UploadFileFormBuilder.uploadFileForm()
                 .bucketName(productsBucketName)
                 .fileName(fileName)
@@ -130,7 +177,7 @@ public class ProductMediaApiServiceImpl implements ProductMediaApiService {
                 .build());
     }
 
-    private FileExtension getExistedFileExtension(CreateProductMediaForm form) {
+    private FileExtension getExistedFileExtension(AddMediaToProductForm form) {
         String extensionName = FilesUtils.extractFileExtensionName(form.getMultipartFile().getOriginalFilename());
         if (supportedImgsExtensions.stream().noneMatch(extensionName::equals)) {
             log.warn("Unable save media! Saved file has unsupported '{}' extension!", extensionName);
@@ -150,33 +197,14 @@ public class ProductMediaApiServiceImpl implements ProductMediaApiService {
         return fileExtension;
     }
 
-    @Override
-    @Transactional(isolation = Isolation.REPEATABLE_READ)
-    public Long removeProductImage(Long productId, Long imageId) {
-        ProductMedia productMedia = getProductMediaIfPresent(productId);
-        MediaElement mediaElement = productMedia.getMediaElements().stream()
-                .filter(element -> element.getId().equals(imageId))
-                .findFirst()
+    private ProductMedia getProductMediaIfPresent(Long id) {
+        return productMediaRepository.findById(id)
                 .orElseThrow(() -> {
-                    log.error("Image with id '{}' not belong to the product '{}'!", imageId, productId);
-                    return new ImageNotBelongToProductException(
-                            "Image with id '%s' not belong to the product '%s'!".formatted(imageId, productId)
+                    log.warn("Unable find the product media with id '{}'!", id);
+                    return new ProductMediaNotFoundException(
+                            "Unable find the product media with id '%s'!".formatted(id)
                     );
                 });
-        minIoService.removeFile(RemoveFileFormBuilder.removeFileForm()
-                .bucketName(productsBucketName)
-                .fileName(mediaElement.getPath() + "/" + mediaElement.getFileName())
-                .build());
-        mediaElementRepository.delete(mediaElement);
-        return imageId;
-    }
-    private ProductMedia getProductMediaIfPresent(Long productId) {
-        ProductMedia productMedia = productMediaRepository.findByProductId(productId);
-        if (productMedia == null) {
-            log.warn("Unable find the product media with id '{}'!", productId);
-            throw new ProductMediaNotFoundException("Unable find the product media with id '%s'!".formatted(productId));
-        }
-        return productMedia;
     }
 
 }

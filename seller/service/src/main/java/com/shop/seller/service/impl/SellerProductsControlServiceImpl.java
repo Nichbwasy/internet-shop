@@ -4,8 +4,10 @@ import com.shop.authorization.client.TokensApiClient;
 import com.shop.authorization.dto.token.AccessTokenUserInfoDto;
 import com.shop.common.utils.all.exception.dao.EntityNotFoundRepositoryException;
 import com.shop.media.client.ProductMediaApiClient;
+import com.shop.media.common.data.builder.CreateMediaForProductFormBuilder;
 import com.shop.media.dto.ProductMediaDto;
-import com.shop.media.dto.form.CreateProductMediaForm;
+import com.shop.media.dto.form.AddMediaToProductForm;
+import com.shop.media.dto.metadata.ImgMetadataDto;
 import com.shop.product.client.ProductApiClient;
 import com.shop.product.client.ProductCategoryApiClient;
 import com.shop.product.client.ProductDiscountApiClient;
@@ -49,7 +51,7 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
 
     @Override
     public List<SellerProductDetailsDto> showAllSellersProducts(Integer page, String accessToken) {
-        AccessTokenUserInfoDto userInfo = getUserInfoByAccessTokenFromAuthorizationMicroservice(accessToken);
+        AccessTokenUserInfoDto userInfo = getUserInfoByAccessToken(accessToken);
         try {
             SellerInfo sellerInfo = sellerInfoRepository.getByUserId(userInfo.getUserId());
             List<Long> ids = sellerInfo.getProducts().stream().map(SellerProduct::getProductId).toList();
@@ -66,7 +68,7 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
 
     @Override
     public SellerProductDetailsDto showSellerProduct(Long productId, String accessToken) {
-        AccessTokenUserInfoDto userInfo = getUserInfoByAccessTokenFromAuthorizationMicroservice(accessToken);
+        AccessTokenUserInfoDto userInfo = getUserInfoByAccessToken(accessToken);
         try {
             SellerInfo sellerInfo = sellerInfoRepository.getByUserId(userInfo.getUserId());
             SellerProduct sellerProduct = sellerInfo.getProducts().stream()
@@ -93,9 +95,9 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
     @Override
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public SellerProductDetailsDto createNewProduct(CreateProductForm form, String accessToken) {
-        AccessTokenUserInfoDto userInfo = getUserInfoByAccessTokenFromAuthorizationMicroservice(accessToken);
+        AccessTokenUserInfoDto userInfo = getUserInfoByAccessToken(accessToken);
         try {
-            ProductDto product = productApiClient.createProduct(createProductFormMapper.mapToNewProductForm(form)).getBody();
+            ProductDto product = createProductAndMedia(form);
             SellerProduct sellerProduct = saveSellerProductInfo(product);
             SellerInfo sellerInfo = sellerInfoRepository.getByUserId(userInfo.getUserId());
             sellerInfo.getProducts().add(sellerProduct);
@@ -109,9 +111,19 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
         }
     }
 
+    private ProductDto createProductAndMedia(CreateProductForm form) {
+        ProductDto product = productApiClient.createProduct(createProductFormMapper.mapToNewProductForm(form)).getBody();
+        ProductMediaDto productMedia = productMediaApiClient.createProductMedia(CreateMediaForProductFormBuilder.createMediaForProductForm()
+                .productId(product.getId())
+                .build()
+        ).getBody();
+        product.setMediaId(productMedia.getId());
+        return productApiClient.updateProduct(product.getId(), product).getBody();
+    }
+
     @Override
     public Long removeProduct(Long productId, String accessToken) {
-        AccessTokenUserInfoDto userInfo = getUserInfoByAccessTokenFromAuthorizationMicroservice(accessToken);
+        AccessTokenUserInfoDto userInfo = getUserInfoByAccessToken(accessToken);
         try {
             SellerInfo sellerInfo = sellerInfoRepository.getByUserId(userInfo.getUserId());
             SellerProduct sellerProduct = getProductFromSellerById(productId, sellerInfo);
@@ -128,7 +140,7 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
 
     @Override
     public SellerProductDetailsDto updateSellersProductInfo(String accessToken, UpdateSellerProductForm form) {
-        AccessTokenUserInfoDto userInfo = getUserInfoByAccessTokenFromAuthorizationMicroservice(accessToken);
+        AccessTokenUserInfoDto userInfo = getUserInfoByAccessToken(accessToken);
         try {
             SellerInfo sellerInfo = sellerInfoRepository.getByUserId(userInfo.getUserId());
             SellerProduct sellerProduct = getProductFromSellerById(form.getSellerProductId(), sellerInfo);
@@ -155,32 +167,61 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
 
     @Override
     public List<byte[]> loadProductImgs(String accessToken, Long sellerProductId) {
-        return productMediaApiClient.getAllProductsImages(accessToken, sellerProductId).getBody();
+        AccessTokenUserInfoDto userInfo = getUserInfoByAccessToken(accessToken);
+        SellerInfo sellerInfo = findSellerByUserId(userInfo.getUserId());
+        checkIfProductBelongsToSeller(sellerInfo, sellerProductId);
+        return productMediaApiClient.getAllProductsImages(sellerProductId).getBody();
     }
 
+
     @Override
-    public ProductMediaDto saveImgToProductMedia(String accessToken, Long sellerProductId, CreateProductMediaForm form) {
-        SellerProduct sellerProduct = getSellerProductIfPresent(sellerProductId);
+    public ProductMediaDto saveImgToProductMedia(String accessToken, Long sellerProductId, AddMediaToProductForm form) {
+        AccessTokenUserInfoDto userInfo = getUserInfoByAccessToken(accessToken);
+        SellerInfo sellerInfo = findSellerByUserId(userInfo.getUserId());
+        SellerProduct sellerProduct = findProductFromSellerInfo(sellerInfo, sellerProductId);
         ProductDto product = productApiClient.getProduct(sellerProduct.getProductId()).getBody();
-        ProductMediaDto productMedia = productMediaApiClient.createProductMedia(accessToken, product.getId(), form.getMultipartFile()).getBody();
+        ProductMediaDto productMedia = productMediaApiClient.addImageToProduct(product.getId(), form.getMultipartFile()).getBody();
         product.setMediaId(productMedia.getId());
         productApiClient.updateProduct(product.getId(), product);
         return productMedia;
     }
 
-    @Override
-    public Long removeProductImage(String accessToken, Long sellerProductId, Long imageId) {
-        SellerProduct sellerProduct = getSellerProductIfPresent(sellerProductId);
-        return productMediaApiClient.removeImageFromProduct(accessToken, sellerProduct.getProductId(), imageId).getBody();
-    }
-    private SellerProduct getSellerProductIfPresent(Long sellerProductId) {
-        return sellerProductRepository.findById(sellerProductId)
+    private SellerProduct findProductFromSellerInfo(SellerInfo sellerInfo, Long sellerProductId) {
+        return sellerInfo.getProducts().stream()
+                .filter(p -> p.getProductId().equals(sellerProductId))
+                .findFirst()
                 .orElseThrow(() -> {
-                    log.warn("Unable find seller's product '{}'! ", sellerProductId);
-                    return new EntityNotFoundRepositoryException(
-                            "Unable find seller's product '%s'! ".formatted(sellerProductId)
+                    log.warn("Product '{}' not belong to the seller '{}'! ", sellerProductId, sellerInfo.getProducts());
+                    return new ProductNotBelongToSellerException(
+                            "Product '%s' not belong to the seller '%s'! ".formatted(sellerProductId, sellerInfo.getProducts())
                     );
                 });
+    }
+
+    @Override
+    public Long removeProductImage(String accessToken, Long sellerProductId, Long imageId) {
+        AccessTokenUserInfoDto userInfo = getUserInfoByAccessToken(accessToken);
+        SellerInfo sellerInfo = findSellerByUserId(userInfo.getUserId());
+        SellerProduct sellerProduct = findProductFromSellerInfo(sellerInfo, sellerProductId);
+        return productMediaApiClient.removeImageFromProduct(sellerProduct.getProductId(), imageId).getBody();
+    }
+
+    @Override
+    public List<ImgMetadataDto> getProductImagesMetadata(String accessToken, Long sellerProductId) {
+        AccessTokenUserInfoDto userInfo = getUserInfoByAccessToken(accessToken);
+        SellerInfo sellerInfo = findSellerByUserId(userInfo.getUserId());
+        SellerProduct sellerProduct = findProductFromSellerInfo(sellerInfo, sellerProductId);
+
+        return productMediaApiClient.getProductImagesMetadata(sellerProduct.getProductId()).getBody();
+    }
+
+    @Override
+    public ImgMetadataDto getProductImageMetadata(String accessToken, Long sellerProductId, Long imageId) {
+        AccessTokenUserInfoDto userInfo = getUserInfoByAccessToken(accessToken);
+        SellerInfo sellerInfo = findSellerByUserId(userInfo.getUserId());
+        SellerProduct sellerProduct = findProductFromSellerInfo(sellerInfo, sellerProductId);
+
+        return productMediaApiClient.getProductImageMetadata(sellerProduct.getProductId(), imageId).getBody();
     }
 
     private static SellerProduct getProductFromSellerById(Long productId, SellerInfo sellerInfo) {
@@ -200,6 +241,7 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
         return sellerProduct;
     }
 
+
     private List<SellerProductDetailsDto> mapProductsToProductDetails(SellerInfo sellerInfo, List<ProductDto> productDtos) {
         List<SellerProductDetailsDto> productDetails = sellerInfo.getProducts().stream()
                 .map(sellerProductDetailsMapper::mapToDto)
@@ -213,7 +255,7 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
         return productDetails;
     }
 
-    private AccessTokenUserInfoDto getUserInfoByAccessTokenFromAuthorizationMicroservice(String accessToken) {
+    private AccessTokenUserInfoDto getUserInfoByAccessToken(String accessToken) {
         try {
             AccessTokenUserInfoDto userInfo = tokensApiClient.getTokenUserInfo(accessToken).getBody();
             if (userInfo == null) {
@@ -228,4 +270,21 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
             );
         }
     }
+    private void checkIfProductBelongsToSeller(SellerInfo sellerInfo, Long sellerProductId) {
+        if (sellerInfo.getProducts().stream().noneMatch(p -> p.getProductId().equals(sellerProductId))) {
+            log.warn("Product '{}' doesn't belong to the seller '{}'!", sellerProductId, sellerInfo.getId());
+            throw new ProductNotBelongToSellerException(
+                    "Product '%s' doesn't belong to the seller '%s'!".formatted(sellerProductId, sellerInfo.getId())
+            );
+        }
+    }
+    private SellerInfo findSellerByUserId(Long userId) {
+        return sellerInfoRepository.findByUserId(userId).orElseThrow(() -> {
+            log.warn("Unable find seller with id '{}'!", userId);
+            return new EntityNotFoundRepositoryException("Unable find seller with id '%s'!".formatted(userId));
+        });
+    }
+
+
+
 }

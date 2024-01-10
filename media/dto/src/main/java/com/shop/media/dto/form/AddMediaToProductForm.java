@@ -8,9 +8,9 @@ import org.springframework.web.multipart.MultipartFile;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateProductMediaForm {
+public class AddMediaToProductForm {
 
-    private Long productId;
+    private Long productMediaId;
     private MultipartFile multipartFile;
 
 }

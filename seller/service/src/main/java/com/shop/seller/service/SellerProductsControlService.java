@@ -1,7 +1,8 @@
 package com.shop.seller.service;
 
 import com.shop.media.dto.ProductMediaDto;
-import com.shop.media.dto.form.CreateProductMediaForm;
+import com.shop.media.dto.form.AddMediaToProductForm;
+import com.shop.media.dto.metadata.ImgMetadataDto;
 import com.shop.seller.dto.control.CreateProductForm;
 import com.shop.seller.dto.control.SellerProductDetailsDto;
 import com.shop.seller.dto.control.UpdateSellerProductForm;
@@ -15,6 +16,8 @@ public interface SellerProductsControlService {
     Long removeProduct(Long productId, String accessToken);
     SellerProductDetailsDto updateSellersProductInfo(String accessToken, UpdateSellerProductForm form);
     List<byte[]> loadProductImgs(String accessToken, Long sellerProductId);
-    ProductMediaDto saveImgToProductMedia(String accessToken, Long sellerProductId, CreateProductMediaForm form);
+    ProductMediaDto saveImgToProductMedia(String accessToken, Long sellerProductId, AddMediaToProductForm form);
     Long removeProductImage(String accessToken, Long sellerProductId, Long imageId);
+    List<ImgMetadataDto> getProductImagesMetadata(String accessToken, Long sellerProductId);
+    ImgMetadataDto getProductImageMetadata(String accessToken, Long sellerProductId, Long imageId);
 }
