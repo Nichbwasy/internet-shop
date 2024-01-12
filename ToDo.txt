@@ -68,7 +68,12 @@ Seller microservice: (Seller's information, seller page, adding a new products, 
             - Add media (img) to the product [Done]
             - Delete media from product [Done]
             - Get all images metadata [In progress]
-    - Add product's documents(certificates) uploading
+    - Add product's documents(certificates) uploading [Testing required]
+        - Add tests for it [In progress]
+            - Media's services [Done]
+            - Media's controllers [In progress]
+            - Seller's services [In progress]
+            - Seller's controllers [In progress]
 Media microservice: (Contains all media such imgs, videos(idk how to do this) of products (MinIO)) [In progress]
     - Create base microservice structure [Done]
     - Add MinIO to the service [Done]

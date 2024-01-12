@@ -10,6 +10,7 @@ import com.shop.media.dao.ProductMediaRepository;
 import com.shop.media.dto.ProductMediaDto;
 import com.shop.media.dto.form.AddMediaToProductForm;
 import com.shop.media.dto.form.CreateMediaForProductForm;
+import com.shop.media.dto.metadata.DockMetadataDto;
 import com.shop.media.dto.metadata.ImgMetadataDto;
 import com.shop.media.model.FileExtension;
 import com.shop.media.model.MediaElement;
@@ -19,9 +20,10 @@ import com.shop.media.service.ProductMediaApiService;
 import com.shop.media.service.exeption.FileReadingException;
 import com.shop.media.service.exeption.NotSupportedFileExtensionException;
 import com.shop.media.service.exeption.file.extension.FileExtensionNotFoundException;
-import com.shop.media.service.exeption.product.ImageNotBelongToProductException;
+import com.shop.media.service.exeption.product.MediaElementNotBelongToProductException;
 import com.shop.media.service.exeption.product.ProductMediaAlreadyExistsException;
 import com.shop.media.service.exeption.product.ProductMediaNotFoundException;
+import com.shop.media.service.mapper.DockMetadataMapper;
 import com.shop.media.service.mapper.ImgMetadataMapper;
 import com.shop.media.service.mapper.ProductMediaMapper;
 import lombok.RequiredArgsConstructor;
@@ -52,6 +54,7 @@ public class ProductMediaApiServiceImpl implements ProductMediaApiService {
     private final MinIoService minIoService;
     private final ProductMediaMapper productMediaMapper;
     private final ImgMetadataMapper imgMetadataMapper;
+    private final DockMetadataMapper dockMetadataMapper;
 
     @Override
     public ProductMediaDto createNewMediaForProduct(CreateMediaForProductForm form) {
@@ -73,15 +76,14 @@ public class ProductMediaApiServiceImpl implements ProductMediaApiService {
     }
 
     @Override
-    public List<byte[]> loadImagesForProduct(Long productMediaId) {
+    public List<byte[]> loadProductImages(Long productMediaId) {
         ProductMedia productMedia = getProductMediaIfPresent(productMediaId);
-        List<MediaElement> mediaElements = productMedia.getMediaElements();
-        return mediaElements.stream()
+        return productMedia.getMediaElements().stream()
                 .map(element -> {
                     try {
                         return minIoService.getFile(
                                 GetFileFormBuilder.getFileForm()
-                                        .bucketName(productsBucketName)
+                                        .bucketName(element.getBucketName())
                                         .fileName(element.getPath() + "/" + element.getFileName())
                                         .build()
                         ).readAllBytes();
@@ -98,10 +100,9 @@ public class ProductMediaApiServiceImpl implements ProductMediaApiService {
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public ProductMediaDto saveProductImage(AddMediaToProductForm form) {
         ProductMedia productMedia = getProductMediaIfPresent(form.getProductMediaId());
-
-        String fileName = "/" + productMedia.getId() + "/imgs/" + StringGenerator.generate(12);
         FileExtension fileExtension = getExistedFileExtension(form);
-        String createdFileName = saveFileInMinIO(form, fileName);
+
+        String createdFileName = saveFileInMinIO(form, productMedia, "imgs");
 
         MediaElement mediaElement = saveMediaElementInDatabase(form, productMedia, createdFileName, fileExtension);
         productMedia.getMediaElements().add(mediaElement);
@@ -113,10 +114,7 @@ public class ProductMediaApiServiceImpl implements ProductMediaApiService {
     public Long removeProductImage(Long productId, Long imageId) {
         ProductMedia productMedia = getProductMediaIfPresent(productId);
         MediaElement mediaElement = findMediaElementInProduct(productMedia, imageId);
-        minIoService.removeFile(RemoveFileFormBuilder.removeFileForm()
-                .bucketName(productsBucketName)
-                .fileName(mediaElement.getPath() + "/" + mediaElement.getFileName())
-                .build());
+        removeMediaElementFromMinIO(mediaElement);
         mediaElementRepository.delete(mediaElement);
         return imageId;
     }
@@ -137,19 +135,72 @@ public class ProductMediaApiServiceImpl implements ProductMediaApiService {
         return imgMetadataMapper.mapToDto(mediaElement);
     }
 
+    @Override
+    public byte[] loadProductDock(Long productId, Long dockId) {
+        ProductMedia productMedia = getProductMediaIfPresent(productId);
+        MediaElement mediaElement = findMediaElementInProduct(productMedia, dockId);
+        try {
+            return minIoService.getFile(GetFileFormBuilder.getFileForm()
+                    .bucketName(mediaElement.getBucketName())
+                    .fileName(mediaElement.getPath() + "/" + mediaElement.getFileName())
+                    .build()
+            ).readAllBytes();
+        } catch (IOException e) {
+            log.error("Exception while reading product document file! {}", e.getMessage());
+            throw new FileReadingException("Exception while reading product document file! %s".formatted(e.getMessage()));
+        }
+    }
+
+    @Override
+    public List<DockMetadataDto> getProductDocksMetadata(Long productId) {
+        ProductMedia productMedia = getProductMediaIfPresent(productId);
+        return productMedia.getMediaElements().stream()
+                .map(dockMetadataMapper::mapToDto)
+                .toList();
+    }
+
+    @Override
+    public DockMetadataDto getProductDockMetadata(Long productId, Long dockId) {
+        ProductMedia productMedia = getProductMediaIfPresent(productId);
+        MediaElement mediaElement = findMediaElementInProduct(productMedia, dockId);
+        return dockMetadataMapper.mapToDto(mediaElement);
+    }
+
+    @Override
+    public ProductMediaDto saveProductDock(AddMediaToProductForm form) {
+        ProductMedia productMedia = getProductMediaIfPresent(form.getProductMediaId());
+        FileExtension fileExtension = getExistedFileExtension(form);
+
+        String createdFileName = saveFileInMinIO(form, productMedia, "docks");
+
+        MediaElement mediaElement = saveMediaElementInDatabase(form, productMedia, createdFileName, fileExtension);
+        productMedia.getMediaElements().add(mediaElement);
+
+        return productMediaMapper.mapToDto(productMedia, new CommonCyclingAvoidingContext());
+    }
+
+
+    @Override
+    public Long removeProductDock(Long productId, Long dockId) {
+        ProductMedia productMedia = getProductMediaIfPresent(productId);
+        MediaElement mediaElement = findMediaElementInProduct(productMedia, dockId);
+        removeMediaElementFromMinIO(mediaElement);
+        mediaElementRepository.delete(mediaElement);
+        return dockId;
+    }
+
     private MediaElement findMediaElementInProduct(ProductMedia productMedia, Long elementId) {
         return productMedia.getMediaElements().stream()
                 .filter(pm -> pm.getId().equals(elementId))
                 .findFirst()
                 .orElseThrow(() -> {
                     log.warn("Element with id '{}' doesn't belong to the product media '{}'!", elementId, productMedia.getId());
-                    return new ImageNotBelongToProductException(
+                    return new MediaElementNotBelongToProductException(
                             "Element with id '%s' doesn't belong to the product media '%s'!"
                                     .formatted(elementId, productMedia.getId())
                     );
                 });
     }
-
 
     private MediaElement saveMediaElementInDatabase(AddMediaToProductForm form,
                                                     ProductMedia productMedia,
@@ -169,11 +220,19 @@ public class ProductMediaApiServiceImpl implements ProductMediaApiService {
         );
     }
 
-    private String saveFileInMinIO(AddMediaToProductForm form, String fileName) {
+    private String saveFileInMinIO(AddMediaToProductForm form, ProductMedia media, String folder) {
+        String fileName = "/" + media.getId() + "/" + folder + "/" + StringGenerator.generate(12);
         return minIoService.uploadFile(UploadFileFormBuilder.uploadFileForm()
                 .bucketName(productsBucketName)
                 .fileName(fileName)
                 .multipartFile(form.getMultipartFile())
+                .build());
+    }
+
+    private void removeMediaElementFromMinIO(MediaElement mediaElement) {
+        minIoService.removeFile(RemoveFileFormBuilder.removeFileForm()
+                .bucketName(mediaElement.getBucketName())
+                .fileName(mediaElement.getPath() + "/" + mediaElement.getFileName())
                 .build());
     }
 
@@ -189,12 +248,13 @@ public class ProductMediaApiServiceImpl implements ProductMediaApiService {
     }
 
     private FileExtension getFileExtensionIfPresent(String extensionName) {
-        FileExtension fileExtension = fileExtensionRepository.findFileExtensionByName(extensionName);
-        if (fileExtension == null) {
-            log.error("Unable file extension '{}' in repository!", extensionName);
-            throw new FileExtensionNotFoundException("Unable file extension '%s' in repository!".formatted(extensionName));
-        }
-        return fileExtension;
+        return fileExtensionRepository.findFileExtensionByName(extensionName)
+                .orElseThrow(() -> {
+                    log.error("Unable file extension '{}' in repository!", extensionName);
+                    return new FileExtensionNotFoundException(
+                            "Unable file extension '%s' in repository!".formatted(extensionName)
+                    );
+                });
     }
 
     private ProductMedia getProductMediaIfPresent(Long id) {

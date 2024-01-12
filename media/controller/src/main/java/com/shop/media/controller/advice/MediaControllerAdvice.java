@@ -18,7 +18,7 @@ import com.shop.media.service.exeption.FileReadingException;
 import com.shop.media.service.exeption.FileUploadingException;
 import com.shop.media.service.exeption.NotSupportedFileExtensionException;
 import com.shop.media.service.exeption.file.extension.FileExtensionNotFoundException;
-import com.shop.media.service.exeption.product.ImageNotBelongToProductException;
+import com.shop.media.service.exeption.product.MediaElementNotBelongToProductException;
 import com.shop.media.service.exeption.product.ProductMediaAlreadyExistsException;
 import com.shop.media.service.exeption.product.ProductMediaNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -188,7 +188,7 @@ public class MediaControllerAdvice {
         AdviceResponseObject response = new AdviceResponseObject("Product media already exists!", e, request);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
-    @ExceptionHandler(ImageNotBelongToProductException.class)
+    @ExceptionHandler(MediaElementNotBelongToProductException.class)
     protected ResponseEntity<AdviceResponseObject> imageNotBelongToProduct(Exception e, WebRequest request) {
         log.error("Exception while loading image. Image is not belong to the product! {}", e.getMessage());
         AdviceResponseObject response = new AdviceResponseObject(

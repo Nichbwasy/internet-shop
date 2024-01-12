@@ -7,6 +7,7 @@ import com.shop.media.client.ProductMediaApiClient;
 import com.shop.media.common.data.builder.CreateMediaForProductFormBuilder;
 import com.shop.media.dto.ProductMediaDto;
 import com.shop.media.dto.form.AddMediaToProductForm;
+import com.shop.media.dto.metadata.DockMetadataDto;
 import com.shop.media.dto.metadata.ImgMetadataDto;
 import com.shop.product.client.ProductApiClient;
 import com.shop.product.client.ProductCategoryApiClient;
@@ -170,7 +171,7 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
         AccessTokenUserInfoDto userInfo = getUserInfoByAccessToken(accessToken);
         SellerInfo sellerInfo = findSellerByUserId(userInfo.getUserId());
         checkIfProductBelongsToSeller(sellerInfo, sellerProductId);
-        return productMediaApiClient.getAllProductsImages(sellerProductId).getBody();
+        return productMediaApiClient.loadAllProductsImages(sellerProductId).getBody();
     }
 
 
@@ -184,18 +185,6 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
         product.setMediaId(productMedia.getId());
         productApiClient.updateProduct(product.getId(), product);
         return productMedia;
-    }
-
-    private SellerProduct findProductFromSellerInfo(SellerInfo sellerInfo, Long sellerProductId) {
-        return sellerInfo.getProducts().stream()
-                .filter(p -> p.getProductId().equals(sellerProductId))
-                .findFirst()
-                .orElseThrow(() -> {
-                    log.warn("Product '{}' not belong to the seller '{}'! ", sellerProductId, sellerInfo.getProducts());
-                    return new ProductNotBelongToSellerException(
-                            "Product '%s' not belong to the seller '%s'! ".formatted(sellerProductId, sellerInfo.getProducts())
-                    );
-                });
     }
 
     @Override
@@ -222,6 +211,63 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
         SellerProduct sellerProduct = findProductFromSellerInfo(sellerInfo, sellerProductId);
 
         return productMediaApiClient.getProductImageMetadata(sellerProduct.getProductId(), imageId).getBody();
+    }
+    @Override
+    public byte[] loadProductDock(String accessToken, Long sellerProductId, Long dockId) {
+        AccessTokenUserInfoDto userInfo = getUserInfoByAccessToken(accessToken);
+        SellerInfo sellerInfo = findSellerByUserId(userInfo.getUserId());
+        SellerProduct sellerProduct = findProductFromSellerInfo(sellerInfo, sellerProductId);
+
+        return productMediaApiClient.loadProductDock(sellerProduct.getProductId(), dockId).getBody();
+    }
+
+    @Override
+    public List<DockMetadataDto> getProductDocksMetadata(String accessToken, Long sellerProductId) {
+        AccessTokenUserInfoDto userInfo = getUserInfoByAccessToken(accessToken);
+        SellerInfo sellerInfo = findSellerByUserId(userInfo.getUserId());
+        SellerProduct sellerProduct = findProductFromSellerInfo(sellerInfo, sellerProductId);
+
+        return productMediaApiClient.getProductDocksMetadata(sellerProduct.getProductId()).getBody();
+    }
+
+
+    @Override
+    public DockMetadataDto getProductDockMetadata(String accessToken, Long sellerProductId, Long dockId) {
+        AccessTokenUserInfoDto userInfo = getUserInfoByAccessToken(accessToken);
+        SellerInfo sellerInfo = findSellerByUserId(userInfo.getUserId());
+        SellerProduct sellerProduct = findProductFromSellerInfo(sellerInfo, sellerProductId);
+
+        return productMediaApiClient.getProductDockMetadata(sellerProduct.getProductId(), dockId).getBody();
+    }
+
+    @Override
+    public ProductMediaDto saveDockToProductMedia(String accessToken, Long sellerProductId, AddMediaToProductForm form) {
+        AccessTokenUserInfoDto userInfo = getUserInfoByAccessToken(accessToken);
+        SellerInfo sellerInfo = findSellerByUserId(userInfo.getUserId());
+        SellerProduct sellerProduct = findProductFromSellerInfo(sellerInfo, sellerProductId);
+
+        return productMediaApiClient.addDockToProduct(sellerProduct.getProductId(), form.getMultipartFile()).getBody();
+    }
+
+    @Override
+    public Long removeProductDock(String accessToken, Long sellerProductId, Long dockId) {
+        AccessTokenUserInfoDto userInfoDto = getUserInfoByAccessToken(accessToken);
+        SellerInfo sellerInfo = findSellerByUserId(userInfoDto.getUserId());
+        SellerProduct sellerProduct = findProductFromSellerInfo(sellerInfo, sellerProductId);
+
+        return productMediaApiClient.removeDockFormProduct(sellerProduct.getProductId(), dockId).getBody();
+    }
+
+    private SellerProduct findProductFromSellerInfo(SellerInfo sellerInfo, Long sellerProductId) {
+        return sellerInfo.getProducts().stream()
+                .filter(p -> p.getProductId().equals(sellerProductId))
+                .findFirst()
+                .orElseThrow(() -> {
+                    log.warn("Product '{}' not belong to the seller '{}'! ", sellerProductId, sellerInfo.getProducts());
+                    return new ProductNotBelongToSellerException(
+                            "Product '%s' not belong to the seller '%s'! ".formatted(sellerProductId, sellerInfo.getProducts())
+                    );
+                });
     }
 
     private static SellerProduct getProductFromSellerById(Long productId, SellerInfo sellerInfo) {
