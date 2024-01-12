@@ -1,12 +1,12 @@
 package com.shop.media.common.data.builder;
 
 import com.shop.common.utils.all.generator.StringGenerator;
-import com.shop.common.utils.all.test.data.builder.TestDataBuilder;
+import com.shop.common.utils.all.test.data.builder.CommonObjectBuilder;
 import com.shop.media.dto.FileExtensionDto;
 
 import java.util.function.Consumer;
 
-public class FileExtensionDtoBuilder extends TestDataBuilder<FileExtensionDto> {
+public class FileExtensionDtoBuilder extends CommonObjectBuilder<FileExtensionDto> {
 
     private Long id = random.nextLong(1, 1000);
     private String name = StringGenerator.generate(random.nextInt(3, 6));

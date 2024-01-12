@@ -2,7 +2,6 @@ package com.shop.product.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.shop.authorization.client.TokensApiClient;
 import com.shop.authorization.common.constant.UsersRoles;
 import com.shop.authorization.common.constant.jwt.TokenStatus;
@@ -13,7 +12,10 @@ import com.shop.product.controller.run.ProductControllerTestsRun;
 import com.shop.product.dao.CategoryRepository;
 import com.shop.product.dto.CategoryDto;
 import com.shop.product.model.Category;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -90,7 +92,7 @@ public class CategoryApiControllerTests {
         List<Long> ids = categories.stream().map(Category::getId).limit(2).collect(Collectors.toList());
         ids.add(1001L);
 
-        String body = mockMvc.perform(MockMvcRequestBuilders.get("/api/products/categories/selected")
+        String body = mockMvc.perform(MockMvcRequestBuilders.post("/api/products/categories/selected")
                         .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(ids)))
@@ -109,7 +111,7 @@ public class CategoryApiControllerTests {
 
     @Test
     public void getCategoriesByNotExistedIdsTest() throws Exception {
-        String body = mockMvc.perform(MockMvcRequestBuilders.get("/api/products/categories/selected")
+        String body = mockMvc.perform(MockMvcRequestBuilders.post("/api/products/categories/selected")
                         .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(List.of(1L, 2L))))
@@ -125,7 +127,7 @@ public class CategoryApiControllerTests {
 
     @Test
     public void getCategoriesByIdsNullDataTest() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/products/categories/selected")
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/products/categories/selected")
                         .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(null)))

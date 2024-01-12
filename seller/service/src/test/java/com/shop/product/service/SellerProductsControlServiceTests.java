@@ -3,6 +3,10 @@ package com.shop.product.service;
 import com.shop.authorization.client.TokensApiClient;
 import com.shop.authorization.common.data.builder.AccessTokenUserInfoBuilder;
 import com.shop.authorization.dto.token.AccessTokenUserInfoDto;
+import com.shop.media.client.ProductMediaApiClient;
+import com.shop.media.common.data.builder.ProductMediaDtoBuilder;
+import com.shop.media.dto.ProductMediaDto;
+import com.shop.media.dto.form.CreateMediaForProductForm;
 import com.shop.product.client.ProductApiClient;
 import com.shop.product.common.data.builder.ProductDtoBuilder;
 import com.shop.product.dto.ProductDto;
@@ -20,8 +24,8 @@ import com.shop.seller.model.SellerInfo;
 import com.shop.seller.model.SellerProduct;
 import com.shop.seller.service.SellerProductsControlService;
 import com.shop.seller.service.exception.control.AddNewProductException;
-import com.shop.seller.service.exception.control.GetUserInfoApiClientException;
 import com.shop.seller.service.exception.control.GetSellerProductsDetailsException;
+import com.shop.seller.service.exception.control.GetUserInfoApiClientException;
 import com.shop.seller.service.exception.control.RemoveProductFromSellerException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -45,6 +49,8 @@ public class SellerProductsControlServiceTests {
     private ProductApiClient productApiClient;
     @Autowired
     private TokensApiClient tokensApiClient;
+    @Autowired
+    private ProductMediaApiClient productMediaApiClient;
     @Autowired
     private SellerProductsControlService controlService;
 
@@ -135,12 +141,23 @@ public class SellerProductsControlServiceTests {
     public void createNewProductTest() {
         AccessTokenUserInfoDto userInfo = AccessTokenUserInfoBuilder.accessTokenUserInfoDto().build();
         CreateProductForm form = CreateProductFormBuilder.createProductForm().build();
+        ProductDto product = ProductDtoBuilder.productDto()
+                .name(form.getName())
+                .description(form.getDescription())
+                .price(form.getPrice())
+                .count(form.getCount())
+                .build();
+        ProductMediaDto productMedia = ProductMediaDtoBuilder.productMediaDto().productId(product.getId()).build();
         SellerInfo sellerInfo = SellerInfoBuilder.sellerInfo()
                 .userId(userInfo.getUserId()).build();
 
         Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
         Mockito.when(productApiClient.createProduct(Mockito.any(NewProductForm.class)))
-                .thenAnswer(a -> ResponseEntity.ok().body(SellerServiceTestMapper.INSTANCE.mapNewProductFormToDto(a.getArgument(0))));
+                .thenReturn(ResponseEntity.ok().body(product));
+        Mockito.when(productMediaApiClient.createProductMedia(Mockito.any(CreateMediaForProductForm.class)))
+                        .thenReturn(ResponseEntity.ok().body(productMedia));
+        Mockito.when(productApiClient.updateProduct(Mockito.anyLong(), Mockito.any(ProductDto.class)))
+                        .thenAnswer(a -> ResponseEntity.ok().body(a.getArgument(1)));
         Mockito.when(sellerProductRepository.save(Mockito.any(SellerProduct.class)))
                 .thenAnswer(a -> {
                     SellerProduct sellerProduct = a.getArgument(0);

@@ -1,11 +1,11 @@
 package com.shop.seller.common.test.data.builder;
 
-import com.shop.common.utils.all.test.data.builder.TestDataBuilder;
+import com.shop.common.utils.all.test.data.builder.CommonObjectBuilder;
 import com.shop.seller.dto.control.RegisterNewSellerForm;
 
 import java.util.function.Consumer;
 
-public class RegisterNewSellerFormBuilder extends TestDataBuilder<RegisterNewSellerForm> {
+public class RegisterNewSellerFormBuilder extends CommonObjectBuilder<RegisterNewSellerForm> {
 
     private Long userId = random.nextLong(1, 1000);
 

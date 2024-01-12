@@ -1,13 +1,13 @@
 package com.shop.media.common.data.builder;
 
 import com.shop.common.utils.all.generator.StringGenerator;
-import com.shop.common.utils.all.test.data.builder.TestDataBuilder;
+import com.shop.common.utils.all.test.data.builder.CommonObjectBuilder;
 import com.shop.media.dto.form.UploadFileForm;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.function.Consumer;
 
-public class UploadFileFormBuilder extends TestDataBuilder<UploadFileForm> {
+public class UploadFileFormBuilder extends CommonObjectBuilder<UploadFileForm> {
 
     private String fileName = StringGenerator.generate(random.nextInt(8, 16));
     private String bucketName = StringGenerator.generate(random.nextInt(4, 12));

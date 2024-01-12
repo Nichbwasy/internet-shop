@@ -1,13 +1,13 @@
 package com.shop.product.common.data.builder;
 
 import com.shop.common.utils.all.generator.StringGenerator;
-import com.shop.common.utils.all.test.data.builder.TestDataBuilder;
+import com.shop.common.utils.all.test.data.builder.CommonObjectBuilder;
 import com.shop.product.dto.DiscountDto;
 
 import java.time.LocalDateTime;
 import java.util.function.Consumer;
 
-public class DiscountDtoBuilder extends TestDataBuilder<DiscountDto> {
+public class DiscountDtoBuilder extends CommonObjectBuilder<DiscountDto> {
 
     private Long id = random.nextLong(1, 1000);
     private String name = StringGenerator.generate(random.nextInt(12, 24));

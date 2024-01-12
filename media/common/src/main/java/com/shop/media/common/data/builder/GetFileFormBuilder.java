@@ -1,12 +1,12 @@
 package com.shop.media.common.data.builder;
 
 import com.shop.common.utils.all.generator.StringGenerator;
-import com.shop.common.utils.all.test.data.builder.TestDataBuilder;
+import com.shop.common.utils.all.test.data.builder.CommonObjectBuilder;
 import com.shop.media.dto.form.GetFileForm;
 
 import java.util.function.Consumer;
 
-public class GetFileFormBuilder extends TestDataBuilder<GetFileForm> {
+public class GetFileFormBuilder extends CommonObjectBuilder<GetFileForm> {
 
     private String fileName = StringGenerator.generate(random.nextInt(4, 8));
     private String bucketName = StringGenerator.generate(random.nextInt(4, 8));

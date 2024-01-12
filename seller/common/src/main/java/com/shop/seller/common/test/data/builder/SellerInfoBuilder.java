@@ -1,7 +1,7 @@
 package com.shop.seller.common.test.data.builder;
 
 import com.shop.common.utils.all.generator.StringGenerator;
-import com.shop.common.utils.all.test.data.builder.TestDataBuilder;
+import com.shop.common.utils.all.test.data.builder.CommonObjectBuilder;
 import com.shop.seller.model.SellerInfo;
 import com.shop.seller.model.SellerProduct;
 
@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class SellerInfoBuilder extends TestDataBuilder<SellerInfo> {
+public class SellerInfoBuilder extends CommonObjectBuilder<SellerInfo> {
     private Long id = random.nextLong(1, 1000);
     private Long userId = random.nextLong(1, 1000);
     private LocalDateTime registrationDate = LocalDateTime.now().minusHours(random.nextInt(1, 1000));

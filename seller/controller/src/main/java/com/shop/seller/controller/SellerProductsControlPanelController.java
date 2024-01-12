@@ -21,7 +21,7 @@ public class SellerProductsControlPanelController {
 
     private final SellerProductsControlService sellerProductsControlService;
 
-    @GetMapping("/{page}")
+    @GetMapping("/list/{page}")
     public ResponseEntity<List<SellerProductDetailsDto>> showAllSellersProductsDetails(
             @PathVariable Integer page,
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) {
@@ -30,7 +30,7 @@ public class SellerProductsControlPanelController {
         return ResponseEntity.ok().body(sellerProductsControlService.showAllSellersProducts(page, accessToken));
     }
 
-    @GetMapping("/products/{sellerProductId}")
+    @GetMapping("/{sellerProductId}")
     public ResponseEntity<SellerProductDetailsDto> showSellerProductDetails(
             @PathVariable Long sellerProductId,
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) {

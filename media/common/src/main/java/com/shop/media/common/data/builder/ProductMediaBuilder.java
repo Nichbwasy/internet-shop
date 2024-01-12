@@ -1,6 +1,6 @@
 package com.shop.media.common.data.builder;
 
-import com.shop.common.utils.all.test.data.builder.TestDataBuilder;
+import com.shop.common.utils.all.test.data.builder.CommonObjectBuilder;
 import com.shop.media.model.MediaElement;
 import com.shop.media.model.ProductMedia;
 
@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class ProductMediaBuilder extends TestDataBuilder<ProductMedia> {
+public class ProductMediaBuilder extends CommonObjectBuilder<ProductMedia> {
 
     private Long id = random.nextLong(1, 1000);
     private Long productId = random.nextLong(1, 1000);

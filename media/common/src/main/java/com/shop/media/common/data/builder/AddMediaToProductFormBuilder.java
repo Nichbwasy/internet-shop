@@ -1,12 +1,12 @@
 package com.shop.media.common.data.builder;
 
-import com.shop.common.utils.all.test.data.builder.TestDataBuilder;
+import com.shop.common.utils.all.test.data.builder.CommonObjectBuilder;
 import com.shop.media.dto.form.AddMediaToProductForm;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.function.Consumer;
 
-public class AddMediaToProductFormBuilder extends TestDataBuilder<AddMediaToProductForm> {
+public class AddMediaToProductFormBuilder extends CommonObjectBuilder<AddMediaToProductForm> {
 
     private Long productMediaId = random.nextLong(1, 1000);
     private MultipartFile multipartFile;

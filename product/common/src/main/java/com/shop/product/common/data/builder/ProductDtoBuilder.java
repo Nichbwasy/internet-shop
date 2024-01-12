@@ -2,7 +2,7 @@ package com.shop.product.common.data.builder;
 
 import com.shop.common.utils.all.consts.ApprovalStatuses;
 import com.shop.common.utils.all.generator.StringGenerator;
-import com.shop.common.utils.all.test.data.builder.TestDataBuilder;
+import com.shop.common.utils.all.test.data.builder.CommonObjectBuilder;
 import com.shop.product.dto.CategoryDto;
 import com.shop.product.dto.DiscountDto;
 import com.shop.product.dto.ProductDto;
@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class ProductDtoBuilder extends TestDataBuilder<ProductDto> {
+public class ProductDtoBuilder extends CommonObjectBuilder<ProductDto> {
 
     private Long id = random.nextLong(1, 1000);
     private String code = StringGenerator.generate(64);

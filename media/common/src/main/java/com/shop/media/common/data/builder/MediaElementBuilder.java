@@ -1,7 +1,7 @@
 package com.shop.media.common.data.builder;
 
 import com.shop.common.utils.all.generator.StringGenerator;
-import com.shop.common.utils.all.test.data.builder.TestDataBuilder;
+import com.shop.common.utils.all.test.data.builder.CommonObjectBuilder;
 import com.shop.media.model.FileExtension;
 import com.shop.media.model.MediaElement;
 import com.shop.media.model.ProductMedia;
@@ -9,7 +9,7 @@ import com.shop.media.model.ProductMedia;
 import java.time.LocalDateTime;
 import java.util.function.Consumer;
 
-public class MediaElementBuilder extends TestDataBuilder<MediaElement> {
+public class MediaElementBuilder extends CommonObjectBuilder<MediaElement> {
 
     private Long id = random.nextLong(1, 1000);
     private ProductMedia productMedia = new ProductMedia();
