@@ -23,6 +23,7 @@ import com.shop.media.dao.ProductMediaRepository;
 import com.shop.media.dto.MediaElementDto;
 import com.shop.media.dto.ProductMediaDto;
 import com.shop.media.dto.form.AddMediaToProductForm;
+import com.shop.media.dto.metadata.DockMetadataDto;
 import com.shop.media.dto.metadata.ImgMetadataDto;
 import com.shop.media.model.FileExtension;
 import com.shop.media.model.MediaElement;
@@ -83,7 +84,8 @@ public class ProductMediaApiControllerTests {
     @Autowired
     private FileExtensionRepository fileExtensionRepository;
 
-    private static String TEST_FILE_PATH;
+    private static String TEST_IMG_FILE_PATH;
+    private static String TEST_DOC_FILE_PATH;
     private final static JsonMapper jsonMapper = new JsonMapper();
     @Container
     private final static MinIOContainer minIoContainer = new MinIOContainer("minio/minio");
@@ -104,9 +106,13 @@ public class ProductMediaApiControllerTests {
     @BeforeAll
     public static void init() {
         jsonMapper.registerModule(new JavaTimeModule());
-        TEST_FILE_PATH = new File(Objects.requireNonNull(MinIoApiControllerTests.class
+        TEST_IMG_FILE_PATH = new File(Objects.requireNonNull(MinIoApiControllerTests.class
                         .getClassLoader()
                         .getResource("test_img.png"))
+                .getFile()).getAbsolutePath();
+        TEST_DOC_FILE_PATH = new File(Objects.requireNonNull(MinIoApiControllerTests.class
+                        .getClassLoader()
+                        .getResource("test_doc.docx"))
                 .getFile()).getAbsolutePath();
     }
 
@@ -152,7 +158,7 @@ public class ProductMediaApiControllerTests {
 
     @Test
     public void loadImagesForProductTest() throws Exception {
-        Long id = saveProductMediaWithRandomDataInRepository(List.of("FILE1", "FILE2"), "png", "image/png");
+        Long id = saveProductMediaWithRandomDataInRepository(List.of("FILE1", "FILE2"), "png", "image/png", TEST_IMG_FILE_PATH);
 
         String body = mockMvc.perform(MockMvcRequestBuilders.get("/api/media/products/" + id + "/imgs")
                         .header(HttpHeaders.AUTHORIZATION, testAccessToken)
@@ -196,15 +202,10 @@ public class ProductMediaApiControllerTests {
 
     @Test
     public void saveImageToExistedProductTest() throws Exception {
-        File file = new File(TEST_FILE_PATH);
+        File file = new File(TEST_IMG_FILE_PATH);
         FileInputStream fileData = new FileInputStream(file);
         MockMultipartFile mFile = new MockMultipartFile("file", file.getName(), MediaType.APPLICATION_JSON_VALUE, fileData);
-        fileExtensionRepository.save(FileExtensionBuilder.fileExtension()
-                .id(null)
-                .name("png")
-                .mediaTypeName("image/png")
-                .build()
-        );
+        saveFileExtension("png", "image/png");
         ProductMedia productMedia = productMediaRepository.save(ProductMediaBuilder.productMedia().id(null).build());
 
         String body = mockMvc.perform(MockMvcRequestBuilders.multipart(HttpMethod.POST, "/api/media/products/" + productMedia.getId() + "/imgs")
@@ -219,6 +220,7 @@ public class ProductMediaApiControllerTests {
         ProductMediaDto result = jsonMapper.readValue(body, ProductMediaDto.class);
         MediaElementDto savedElement = result.getMediaElements().get(0);
 
+        Assertions.assertEquals(1, result.getMediaElements().size());
         Assertions.assertEquals("/" + productMedia.getId() + "/imgs", savedElement.getPath());
         Assertions.assertEquals(bucketName, savedElement.getBucketName());
         Assertions.assertEquals(".png", FilesUtils.extractFileExtension(savedElement.getFileName()));
@@ -254,32 +256,10 @@ public class ProductMediaApiControllerTests {
 
     @Test
     public void removeProductImageTest() throws Exception {
-        FileExtension fileExtension = fileExtensionRepository.save(FileExtensionBuilder.fileExtension()
-                .id(null)
-                .name("png")
-                .mediaTypeName("image/png")
-                .build()
-        );
+        FileExtension fileExtension = saveFileExtension("png", "image/png");
         ProductMedia productMedia = productMediaRepository.save(ProductMediaBuilder.productMedia().id(null).build());
-        ObjectWriteResponse response = minioClient.uploadObject(UploadObjectArgs.builder()
-                .bucket(bucketName)
-                .object(productMedia.getProductId() + "/imgs/" + StringGenerator.generate(8) + ".png")
-                .filename(TEST_FILE_PATH)
-                .contentType("image/png")
-                .build());
-        MediaElement mediaElement = mediaElementRepository.save(MediaElementBuilder.mediaElement()
-                .id(null)
-                .productMedia(productMedia)
-                .path("/" + productMedia.getProductId() + "/imgs")
-                .bucketName(response.bucket())
-                .path(FilesUtils.cropFileName(response.object()))
-                .fileName(FilesUtils.cropFilePath(response.object()))
-                .fileExtension(fileExtension)
-                .fileSize(1L)
-                .creationTime(LocalDateTime.now())
-                .lastTimeUpdate(LocalDateTime.now())
-                .build()
-        );
+        ObjectWriteResponse response = saveFileInMinIo(productMedia.getId(), "imgs", ".png", "image/png");
+        MediaElement mediaElement = saveMediaElement(productMedia, response, fileExtension, "imgs");
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/media/products/" + productMedia.getId() +
                                                                  "/imgs/" + mediaElement.getId())
@@ -307,7 +287,7 @@ public class ProductMediaApiControllerTests {
     @Test
     public void getProductImagesMetadataTest() throws Exception {
         List<String> fileNames = List.of("FILE1", "FILE2");
-        Long id = saveProductMediaWithRandomDataInRepository(fileNames, "png", "image/png");
+        Long id = saveProductMediaWithRandomDataInRepository(fileNames, "png", "image/png", TEST_IMG_FILE_PATH);
 
         String body = mockMvc.perform(MockMvcRequestBuilders.get("/api/media/products/" + id + "/imgs/data")
                         .header(HttpHeaders.AUTHORIZATION, testAccessToken)
@@ -328,19 +308,234 @@ public class ProductMediaApiControllerTests {
         });
     }
 
+    @Test
+    public void loadProductDockTest() throws Exception {
+        FileExtension fileExtension = saveFileExtension("docx", "document/docx");
+        ProductMedia productMedia = productMediaRepository.save(ProductMediaBuilder.productMedia().id(null).build());
+        ObjectWriteResponse response = saveFileInMinIo(productMedia.getId(), "docs", ".docx", "document/docx");
+        MediaElement mediaElement = saveMediaElement(productMedia, response, fileExtension, "docs");
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/media/products/" + productMedia.getId() + "/docks/" + mediaElement.getId())
+                        .header(HttpHeaders.AUTHORIZATION, testAccessToken)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$").isNotEmpty());
+    }
+
+    @Test
+    public void loadProductDockNotExistsTest() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/media/products/1001/docks/1001")
+                        .header(HttpHeaders.AUTHORIZATION, testAccessToken)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
+
+    @Test
+    public void getProductDocksMetadataTest() throws Exception {
+        List<String> filesNames = List.of("FILE1", "FILE2");
+        Long id = saveProductMediaWithRandomDataInRepository(
+                filesNames, "docx", "document/docx", TEST_DOC_FILE_PATH);
+
+        String body = mockMvc.perform(MockMvcRequestBuilders.get("/api/media/products/" + id + "/docks/data")
+                        .header(HttpHeaders.AUTHORIZATION, testAccessToken)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse().getContentAsString();
+        List<DockMetadataDto> result = jsonMapper.readValue(body, new TypeReference<>() {});
+
+        Assertions.assertEquals(filesNames.size(), result.size());
+        result.forEach(m -> {
+            Assertions.assertTrue(filesNames.stream().anyMatch(n -> m.getFileName().equals(n + ".docx")));
+            Assertions.assertEquals("document/docx", m.getFileExtension());
+            Assertions.assertTrue(m.getCreationTime().isBefore(LocalDateTime.now()));
+            Assertions.assertTrue(m.getLastTimeUpdate().isBefore(LocalDateTime.now()));
+        });
+    }
+
+    @Test
+    public void getProductDocksMetadataNotExistsTest() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/media/products/1001/docks/data")
+                        .header(HttpHeaders.AUTHORIZATION, testAccessToken)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isNotFound())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    public void getProductDockMetadataTest() throws Exception {
+        FileExtension fileExtension = saveFileExtension("docx", "document/docx");
+        ProductMedia productMedia = productMediaRepository.save(ProductMediaBuilder.productMedia().id(null).build());
+        ObjectWriteResponse response = saveFileInMinIo(productMedia.getId(), "docs", ".docx", "document/docx");
+        MediaElement mediaElement = saveMediaElement(productMedia, response, fileExtension, "docs");
+
+        String body = mockMvc.perform(MockMvcRequestBuilders.get("/api/media/products/" + productMedia.getId() + "/docks/data/" + mediaElement.getId())
+                        .header(HttpHeaders.AUTHORIZATION, testAccessToken)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse().getContentAsString();
+        DockMetadataDto result = jsonMapper.readValue(body, DockMetadataDto.class);
+
+        Assertions.assertTrue(result.getFileName().contains(".docx"));
+        Assertions.assertEquals("document/docx", result.getFileExtension());
+        Assertions.assertTrue(result.getCreationTime().isBefore(LocalDateTime.now()));
+        Assertions.assertTrue(result.getLastTimeUpdate().isBefore(LocalDateTime.now()));
+    }
+
+    @Test
+    public void getProductDockMetadataNoElementExistsTest() throws Exception {
+        ProductMedia productMedia = productMediaRepository.save(ProductMediaBuilder.productMedia().id(null).build());
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/media/products/" + productMedia.getId() + "/docks/data/1001")
+                        .header(HttpHeaders.AUTHORIZATION, testAccessToken)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    public void getProductDockMetadataNotExistsTest() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/media/products/1001/docks/data/1001")
+                        .header(HttpHeaders.AUTHORIZATION, testAccessToken)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isNotFound())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    public void addDockToProductTest() throws Exception {
+        File file = new File(TEST_DOC_FILE_PATH);
+        FileInputStream fileData = new FileInputStream(file);
+        MockMultipartFile mFile = new MockMultipartFile("file", file.getName(), MediaType.APPLICATION_JSON_VALUE, fileData);
+        saveFileExtension("docx", "document/docx");
+        Long id = productMediaRepository.save(ProductMediaBuilder.productMedia().id(null).build()).getId();
+
+
+        String body = mockMvc.perform(MockMvcRequestBuilders.multipart(HttpMethod.POST, "/api/media/products/" + id + "/docks")
+                        .file(mFile)
+                        .header(HttpHeaders.AUTHORIZATION, testAccessToken)
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse().getContentAsString();
+        ProductMediaDto result = jsonMapper.readValue(body, ProductMediaDto.class);
+        MediaElementDto savedElement = result.getMediaElements().get(0);
+
+        Assertions.assertEquals(1, result.getMediaElements().size());
+        Assertions.assertEquals("/" + id + "/docks", savedElement.getPath());
+        Assertions.assertEquals(bucketName, savedElement.getBucketName());
+        Assertions.assertEquals(".docx", FilesUtils.extractFileExtension(savedElement.getFileName()));
+        Assertions.assertEquals("docx", savedElement.getFileExtension().getName());
+        Assertions.assertEquals("document/docx", savedElement.getFileExtension().getMediaTypeName());
+    }
+
+    @Test
+    public void addDockToNotExistedProductTest() throws Exception {
+        File file = new File(TEST_DOC_FILE_PATH);
+        FileInputStream fileData = new FileInputStream(file);
+        MockMultipartFile mFile = new MockMultipartFile("file", file.getName(), MediaType.APPLICATION_JSON_VALUE, fileData);
+
+        mockMvc.perform(MockMvcRequestBuilders.multipart(HttpMethod.POST, "/api/media/products/1001/docks")
+                        .file(mFile)
+                        .header(HttpHeaders.AUTHORIZATION, testAccessToken)
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isNotFound())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    public void removeDockFormProductTest() throws Exception {
+        FileExtension fileExtension = saveFileExtension("docx", "document/docx");
+        ProductMedia productMedia = productMediaRepository.save(ProductMediaBuilder.productMedia().id(null).build());
+        ObjectWriteResponse response = saveFileInMinIo(productMedia.getId(), "docs", ".docx", "document/docx");
+        MediaElement mediaElement = saveMediaElement(productMedia, response, fileExtension, "docs");
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/media/products/" + productMedia.getId() + "/docks/" + mediaElement.getId())
+                .header(HttpHeaders.AUTHORIZATION, testAccessToken)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.jsonPath("$").value(mediaElement.getId()));
+    }
+
+    @Test
+    public void removeDockFormProductElementNotExistsTest() throws Exception {
+        ProductMedia productMedia = productMediaRepository.save(ProductMediaBuilder.productMedia().id(null).build());
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/media/products/" + productMedia.getId() + "/docks/1001")
+                        .header(HttpHeaders.AUTHORIZATION, testAccessToken)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    public void removeDockFormProductNotExistsTest() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/media/products/1001/docks/1001")
+                        .header(HttpHeaders.AUTHORIZATION, testAccessToken)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(MockMvcResultMatchers.status().isNotFound())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    @NotNull
+    private FileExtension saveFileExtension(String name, String mediaTypeName) {
+        return fileExtensionRepository.save(FileExtensionBuilder.fileExtension()
+                .name(name)
+                .mediaTypeName(mediaTypeName)
+                .build()
+        );
+    }
+
+    private ObjectWriteResponse saveFileInMinIo(Long productMediaId, String folder, String extension, String contentType) throws Exception {
+        return minioClient.uploadObject(UploadObjectArgs.builder()
+                .bucket(bucketName)
+                .object(productMediaId + "/" + folder + "/" + StringGenerator.generate(8) + extension)
+                .filename(TEST_DOC_FILE_PATH)
+                .contentType(contentType)
+                .build()
+        );
+    }
+
+    @NotNull
+    private MediaElement saveMediaElement(ProductMedia productMedia, ObjectWriteResponse response, FileExtension fileExtension, String folder) {
+        return mediaElementRepository.save(MediaElementBuilder.mediaElement()
+                .id(null)
+                .productMedia(productMedia)
+                .path("/" + productMedia.getProductId() + "/" + folder)
+                .bucketName(response.bucket())
+                .path(FilesUtils.cropFileName(response.object()))
+                .fileName(FilesUtils.cropFilePath(response.object()))
+                .fileExtension(fileExtension)
+                .fileSize(1L)
+                .creationTime(LocalDateTime.now())
+                .lastTimeUpdate(LocalDateTime.now())
+                .build()
+        );
+    }
+
     @NotNull
     private Long saveProductMediaWithRandomDataInRepository(List<String> fileNames,
                                                             String extensionName,
-                                                            String mediaTypeName) throws Exception {
+                                                            String mediaTypeName,
+                                                            String fileAbsolutePath) throws Exception {
         ProductMedia productMedia = productMediaRepository.save(ProductMediaBuilder.productMedia().id(null).build());
-        FileExtension fileExtension = fileExtensionRepository.save(
-                FileExtensionBuilder.fileExtension()
-                        .name(extensionName)
-                        .mediaTypeName(mediaTypeName)
-                        .build()
-        );
+        FileExtension fileExtension = saveFileExtension(extensionName, mediaTypeName);
         for (String fileName: fileNames) {
-            ObjectWriteResponse response = saveFileInMinIoForProduct(productMedia, fileName, extensionName, mediaTypeName);
+            ObjectWriteResponse response = saveFileInMinIoForProduct(productMedia, fileName, extensionName, mediaTypeName, fileAbsolutePath);
             MediaElement mediaElement = saveMediaElementForFileInMinIo(response, fileExtension);
             mediaElement.setProductMedia(productMedia);
             productMedia.getMediaElements().add(mediaElementRepository.save(mediaElement));
@@ -361,11 +556,12 @@ public class ProductMediaApiControllerTests {
     private ObjectWriteResponse saveFileInMinIoForProduct(ProductMedia productMedia,
                                                           String fileName,
                                                           String extension,
-                                                          String contentType) throws Exception {
+                                                          String contentType,
+                                                          String fileAbsolutePath) throws Exception {
         return minioClient.uploadObject(UploadObjectArgs.builder()
                 .bucket(bucketName)
                 .object(productMedia.getId() + "/imgs/" + fileName + "." + extension)
-                .filename(TEST_FILE_PATH)
+                .filename(fileAbsolutePath)
                 .contentType(contentType)
                 .build());
     }

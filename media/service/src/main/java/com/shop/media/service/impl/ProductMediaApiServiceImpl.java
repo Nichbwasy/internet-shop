@@ -104,8 +104,7 @@ public class ProductMediaApiServiceImpl implements ProductMediaApiService {
 
         String createdFileName = saveFileInMinIO(form, productMedia, "imgs");
 
-        MediaElement mediaElement = saveMediaElementInDatabase(form, productMedia, createdFileName, fileExtension);
-        productMedia.getMediaElements().add(mediaElement);
+        saveMediaElementInDatabase(form, productMedia, createdFileName, fileExtension);
 
         return productMediaMapper.mapToDto(productMedia, new CommonCyclingAvoidingContext());
     }
@@ -167,20 +166,21 @@ public class ProductMediaApiServiceImpl implements ProductMediaApiService {
     }
 
     @Override
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public ProductMediaDto saveProductDock(AddMediaToProductForm form) {
         ProductMedia productMedia = getProductMediaIfPresent(form.getProductMediaId());
         FileExtension fileExtension = getExistedFileExtension(form);
 
         String createdFileName = saveFileInMinIO(form, productMedia, "docks");
 
-        MediaElement mediaElement = saveMediaElementInDatabase(form, productMedia, createdFileName, fileExtension);
-        productMedia.getMediaElements().add(mediaElement);
+        saveMediaElementInDatabase(form, productMedia, createdFileName, fileExtension);
 
         return productMediaMapper.mapToDto(productMedia, new CommonCyclingAvoidingContext());
     }
 
 
     @Override
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public Long removeProductDock(Long productId, Long dockId) {
         ProductMedia productMedia = getProductMediaIfPresent(productId);
         MediaElement mediaElement = findMediaElementInProduct(productMedia, dockId);

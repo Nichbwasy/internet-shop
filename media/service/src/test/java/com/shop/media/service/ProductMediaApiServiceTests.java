@@ -147,7 +147,12 @@ public class ProductMediaApiServiceTests {
         Mockito.when(productMediaRepository.findById(form.getProductMediaId())).thenReturn(Optional.of(productMedia));
         Mockito.when(fileExtensionRepository.findFileExtensionByName(fileExtension.getName()))
                 .thenReturn(Optional.of(fileExtension));
-        Mockito.when(mediaElementRepository.save(Mockito.any(MediaElement.class))).thenAnswer(a -> a.getArgument(0));
+        Mockito.when(mediaElementRepository.save(Mockito.any(MediaElement.class))).thenAnswer(a -> {
+            MediaElement mediaElement = a.getArgument(0);
+            mediaElement.setId(1L);
+            productMedia.getMediaElements().add(mediaElement);
+            return mediaElement;
+        });
 
         ProductMediaDto result = productMediaApiService.saveProductImage(form);
 
@@ -528,6 +533,7 @@ public class ProductMediaApiServiceTests {
         Mockito.when(mediaElementRepository.save(Mockito.any(MediaElement.class))).thenAnswer(a -> {
             MediaElement mediaElement = a.getArgument(0);
             mediaElement.setId(1L);
+            productMedia.getMediaElements().add(mediaElement);
             return mediaElement;
         });
 

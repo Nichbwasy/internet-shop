@@ -46,7 +46,7 @@ public class SellerProductDocumentsControlPageController {
     @PostMapping
     public ResponseEntity<ProductMediaDto> uploadProductDock(@RequestHeader(HttpHeaders.AUTHORIZATION) String accessToken,
                                                              @PathVariable Long sellerProductId,
-                                                             @ModelAttribute AddMediaToProductForm form) {
+                                                             @ModelAttribute("form") AddMediaToProductForm form) {
         log.info("Trying to upload a new document to the product '{}'...", sellerProductId);
         return ResponseEntity.ok().body(productsControlService.saveDockToProductMedia(accessToken, sellerProductId, form));
     }

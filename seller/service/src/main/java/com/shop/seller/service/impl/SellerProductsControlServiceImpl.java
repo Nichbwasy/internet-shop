@@ -170,8 +170,9 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
     public List<byte[]> loadProductImgs(String accessToken, Long sellerProductId) {
         AccessTokenUserInfoDto userInfo = getUserInfoByAccessToken(accessToken);
         SellerInfo sellerInfo = findSellerByUserId(userInfo.getUserId());
-        checkIfProductBelongsToSeller(sellerInfo, sellerProductId);
-        return productMediaApiClient.loadAllProductsImages(sellerProductId).getBody();
+        SellerProduct sellerProduct = findProductFromSellerInfo(sellerInfo, sellerProductId);
+
+        return productMediaApiClient.loadAllProductsImages(sellerProduct.getProductId()).getBody();
     }
 
 
@@ -180,11 +181,8 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
         AccessTokenUserInfoDto userInfo = getUserInfoByAccessToken(accessToken);
         SellerInfo sellerInfo = findSellerByUserId(userInfo.getUserId());
         SellerProduct sellerProduct = findProductFromSellerInfo(sellerInfo, sellerProductId);
-        ProductDto product = productApiClient.getProduct(sellerProduct.getProductId()).getBody();
-        ProductMediaDto productMedia = productMediaApiClient.addImageToProduct(product.getId(), form.getMultipartFile()).getBody();
-        product.setMediaId(productMedia.getId());
-        productApiClient.updateProduct(product.getId(), product);
-        return productMedia;
+
+        return productMediaApiClient.addImageToProduct(sellerProduct.getProductId(), form.getMultipartFile()).getBody();
     }
 
     @Override
@@ -192,6 +190,7 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
         AccessTokenUserInfoDto userInfo = getUserInfoByAccessToken(accessToken);
         SellerInfo sellerInfo = findSellerByUserId(userInfo.getUserId());
         SellerProduct sellerProduct = findProductFromSellerInfo(sellerInfo, sellerProductId);
+
         return productMediaApiClient.removeImageFromProduct(sellerProduct.getProductId(), imageId).getBody();
     }
 
@@ -260,7 +259,7 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
 
     private SellerProduct findProductFromSellerInfo(SellerInfo sellerInfo, Long sellerProductId) {
         return sellerInfo.getProducts().stream()
-                .filter(p -> p.getProductId().equals(sellerProductId))
+                .filter(p -> p.getId().equals(sellerProductId))
                 .findFirst()
                 .orElseThrow(() -> {
                     log.warn("Product '{}' not belong to the seller '{}'! ", sellerProductId, sellerInfo.getProducts());
@@ -316,14 +315,7 @@ public class SellerProductsControlServiceImpl implements SellerProductsControlSe
             );
         }
     }
-    private void checkIfProductBelongsToSeller(SellerInfo sellerInfo, Long sellerProductId) {
-        if (sellerInfo.getProducts().stream().noneMatch(p -> p.getProductId().equals(sellerProductId))) {
-            log.warn("Product '{}' doesn't belong to the seller '{}'!", sellerProductId, sellerInfo.getId());
-            throw new ProductNotBelongToSellerException(
-                    "Product '%s' doesn't belong to the seller '%s'!".formatted(sellerProductId, sellerInfo.getId())
-            );
-        }
-    }
+
     private SellerInfo findSellerByUserId(Long userId) {
         return sellerInfoRepository.findByUserId(userId).orElseThrow(() -> {
             log.warn("Unable find seller with id '{}'!", userId);

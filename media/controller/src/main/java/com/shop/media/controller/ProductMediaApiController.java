@@ -59,8 +59,7 @@ public class ProductMediaApiController {
     }
 
     @GetMapping("/{productId}/imgs/data/{imageId}")
-    public ResponseEntity<ImgMetadataDto> getProductImageMetadata(@PathVariable Long productId,
-                                                           @PathVariable Long imageId) {
+    public ResponseEntity<ImgMetadataDto> getProductImageMetadata(@PathVariable Long productId, @PathVariable Long imageId) {
         log.info("Trying to get image {} metadata of the product {}...", imageId, productId);
         return ResponseEntity.ok().body(productService.getProductImageMetadata(productId, imageId));
     }
@@ -78,15 +77,14 @@ public class ProductMediaApiController {
     }
 
     @GetMapping("/{productId}/docks/data/{dockId}")
-    public ResponseEntity<DockMetadataDto> getProductDockMetadata(@PathVariable Long productId,
-                                                           @PathVariable Long dockId) {
+    public ResponseEntity<DockMetadataDto> getProductDockMetadata(@PathVariable Long productId, @PathVariable Long dockId) {
         log.info("Trying to get document metadata of the product '{}'...", productId);
         return ResponseEntity.ok().body(productService.getProductDockMetadata(productId, dockId));
     }
 
     @PostMapping(value = "/{productId}/docks", consumes = "multipart/form-data")
     public ResponseEntity<ProductMediaDto> addDockToProduct(@PathVariable Long productId,
-                                                     @RequestPart() MultipartFile file) {
+                                                            @RequestPart() MultipartFile file) {
         log.info("Trying to add a new document for the product '{}'...", productId);
         AddMediaToProductForm form = AddMediaToProductFormBuilder.createProductMediaForm()
                 .productId(productId)
@@ -96,8 +94,7 @@ public class ProductMediaApiController {
     }
 
     @DeleteMapping("/{productId}/docks/{dockId}")
-    public ResponseEntity<Long> removeDockFormProduct(@PathVariable Long productId,
-                                                          @PathVariable Long dockId) {
+    public ResponseEntity<Long> removeDockFormProduct(@PathVariable Long productId, @PathVariable Long dockId) {
         log.info("Trying to remove the document '{}' from the product '{}'...", dockId, productId);
         return ResponseEntity.ok().body(productService.removeProductDock(productId, dockId));
     }

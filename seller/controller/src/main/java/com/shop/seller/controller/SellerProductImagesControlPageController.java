@@ -30,7 +30,7 @@ public class SellerProductImagesControlPageController {
     @PostMapping
     public ResponseEntity<ProductMediaDto> uploadImage(@RequestHeader(HttpHeaders.AUTHORIZATION) String accessToken,
                                                              @PathVariable Long sellerProductId,
-                                                             @ModelAttribute AddMediaToProductForm form) {
+                                                             @ModelAttribute("form") AddMediaToProductForm form) {
         log.info("Trying to add a new image to the '{}' product...", sellerProductId);
         return ResponseEntity.ok().body(productsControlService.saveImgToProductMedia(accessToken, sellerProductId, form));
     }
