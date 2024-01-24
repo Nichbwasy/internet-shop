@@ -180,7 +180,7 @@ public class AdminSellersControlPageControllerTests {
         RegisterNewSellerForm form = RegisterNewSellerFormBuilder.registerNewSellerForm()
                 .userId(sellerData.getId()).build();
 
-        Mockito.when(userDataApiClient.makeUserSeller(sellerData.getId())).thenReturn(ResponseEntity.ok().body(sellerData));
+        Mockito.when(userDataApiClient.makeUserSeller(TEST_ACCESS_TOKEN, sellerData.getId())).thenReturn(ResponseEntity.ok().body(sellerData));
 
         String body = mockMvc.perform(MockMvcRequestBuilders.post("/admin/control/sellers/new")
                         .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
@@ -205,7 +205,7 @@ public class AdminSellersControlPageControllerTests {
         RegisterNewSellerForm form = RegisterNewSellerFormBuilder.registerNewSellerForm()
                 .userId(sellerData.getId()).build();
 
-        Mockito.when(userDataApiClient.makeUserSeller(sellerData.getId())).thenReturn(ResponseEntity.ok().body(sellerData));
+        Mockito.when(userDataApiClient.makeUserSeller(TEST_ACCESS_TOKEN, sellerData.getId())).thenReturn(ResponseEntity.ok().body(sellerData));
 
         mockMvc.perform(MockMvcRequestBuilders.post("/admin/control/sellers/new")
                         .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)

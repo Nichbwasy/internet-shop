@@ -10,7 +10,7 @@ public interface AdminSellersControlService {
 
     SellerDetailsDto getSellerInfo(Long sellerId);
     List<SellerInfoDto> getSellersInfoFromPage(Integer page);
-    SellerDetailsDto registerNewSeller(RegisterNewSellerForm form);
+    SellerDetailsDto registerNewSeller(String accessToken, RegisterNewSellerForm form);
     Long removeSellerFromSystem(Long id);
 
 }

@@ -227,3 +227,14 @@ databaseChangeLog:
                   defaultValue: "NONE"
                   constraints:
                     nullable: 'false'
+  - changeSet:
+      id: add-media-id-column-to-product-table
+      author: jvsSEN
+      changes:
+        - addColumn:
+            tableName: product
+            columns:
+              - column:
+                  name: media_id
+                  type: bigint
+                  defaultValue: null

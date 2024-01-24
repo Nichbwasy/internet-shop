@@ -10,11 +10,13 @@ import com.shop.authorization.common.data.builder.AccessTokenUserInfoBuilder;
 import com.shop.authorization.common.data.builder.JwtAuthenticationTokenDataDtoBuilder;
 import com.shop.authorization.dto.token.AccessTokenUserInfoDto;
 import com.shop.authorization.dto.token.JwtAuthenticationTokenDataDto;
+import com.shop.media.client.ProductMediaApiClient;
+import com.shop.media.common.data.builder.ProductMediaDtoBuilder;
+import com.shop.media.dto.form.CreateMediaForProductForm;
 import com.shop.product.client.ProductApiClient;
 import com.shop.product.client.ProductCategoryApiClient;
 import com.shop.product.client.ProductDiscountApiClient;
 import com.shop.product.common.data.builder.CategoryDtoBuilder;
-import com.shop.product.common.data.builder.DiscountBuilder;
 import com.shop.product.common.data.builder.DiscountDtoBuilder;
 import com.shop.product.common.data.builder.ProductDtoBuilder;
 import com.shop.product.dto.CategoryDto;
@@ -78,6 +80,8 @@ public class SellerProductsControlPanelControllerTests {
     @Autowired
     private TokensApiClient tokensApiClient;
     @Autowired
+    private ProductMediaApiClient productMediaApiClient;
+    @Autowired
     private ProductCategoryApiClient productCategoryApiClient;
     @Autowired
     private ProductDiscountApiClient productDiscountApiClient;
@@ -131,7 +135,7 @@ public class SellerProductsControlPanelControllerTests {
         Mockito.when(productApiClient.getProductsByIds(1, productDtos.stream().map(ProductDto::getId).toList()))
                 .thenReturn(ResponseEntity.ok().body(productDtos));
 
-        String body = mockMvc.perform(MockMvcRequestBuilders.get("/seller/home/products/1")
+        String body = mockMvc.perform(MockMvcRequestBuilders.get("/seller/home/products/list/1")
                         .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -164,7 +168,7 @@ public class SellerProductsControlPanelControllerTests {
         Mockito.when(productApiClient.getProductsByIds(1, new ArrayList<>()))
                 .thenReturn(ResponseEntity.ok().body(new ArrayList<>()));
 
-        String body = mockMvc.perform(MockMvcRequestBuilders.get("/seller/home/products/1")
+        String body = mockMvc.perform(MockMvcRequestBuilders.get("/seller/home/products/list/1")
                         .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -181,7 +185,7 @@ public class SellerProductsControlPanelControllerTests {
     public void showAllSellersProductsDetailsClientExceptionTest() throws Exception {
         Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenThrow(RuntimeException.class);
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/seller/home/products/1")
+        mockMvc.perform(MockMvcRequestBuilders.get("/seller/home/products/list/1")
                         .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -212,7 +216,7 @@ public class SellerProductsControlPanelControllerTests {
         Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
         Mockito.when(productApiClient.getProduct(productDto.getId())).thenReturn(ResponseEntity.ok().body(productDto));
 
-        String body = mockMvc.perform(MockMvcRequestBuilders.get("/seller/home/products/product/" + selProd.getId())
+        String body = mockMvc.perform(MockMvcRequestBuilders.get("/seller/home/products/" + selProd.getId())
                         .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -238,7 +242,7 @@ public class SellerProductsControlPanelControllerTests {
 
         Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/seller/home/products/product/" + selProd.getId())
+        mockMvc.perform(MockMvcRequestBuilders.get("/seller/home/products/" + selProd.getId())
                         .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -250,7 +254,7 @@ public class SellerProductsControlPanelControllerTests {
     public void showSellerProductDetailsSellerNotFoundTest() throws Exception {
         Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenThrow(RuntimeException.class);
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/seller/home/products/product/1")
+        mockMvc.perform(MockMvcRequestBuilders.get("/seller/home/products/1")
                         .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -273,6 +277,15 @@ public class SellerProductsControlPanelControllerTests {
                     product.setId(1L);
                     return ResponseEntity.ok().body(product);
                 });
+        Mockito.when(productMediaApiClient.createProductMedia(Mockito.any(CreateMediaForProductForm.class)))
+                        .thenAnswer(a -> {
+                            CreateMediaForProductForm mediaForm = a.getArgument(0);
+                            return ResponseEntity.ok().body(ProductMediaDtoBuilder.productMediaDto()
+                                    .productId(mediaForm.getProductId())
+                                    .build());
+                        });
+        Mockito.when(productApiClient.updateProduct(Mockito.anyLong(), Mockito.any(ProductDto.class)))
+                .thenAnswer(a -> ResponseEntity.ok().body(a.getArgument(1)));
 
         String body = mockMvc.perform(MockMvcRequestBuilders.post("/seller/home/products")
                         .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
@@ -349,7 +362,7 @@ public class SellerProductsControlPanelControllerTests {
         Mockito.when(productApiClient.removeProduct(Mockito.anyLong()))
                 .thenAnswer(a -> ResponseEntity.ok().body(a.getArgument(0)));
 
-        String body = mockMvc.perform(MockMvcRequestBuilders.delete("/seller/home/products/product/" + idToRemove)
+        String body = mockMvc.perform(MockMvcRequestBuilders.delete("/seller/home/products/" + idToRemove)
                         .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -378,7 +391,7 @@ public class SellerProductsControlPanelControllerTests {
         Mockito.when(productApiClient.removeProduct(Mockito.anyLong()))
                 .thenAnswer(a -> ResponseEntity.ok().body(a.getArgument(0)));
 
-        mockMvc.perform(MockMvcRequestBuilders.delete("/seller/home/products/product/" + idToRemove)
+        mockMvc.perform(MockMvcRequestBuilders.delete("/seller/home/products/" + idToRemove)
                         .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -401,7 +414,7 @@ public class SellerProductsControlPanelControllerTests {
         Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
         Mockito.when(productApiClient.removeProduct(Mockito.anyLong())).thenThrow(RuntimeException.class);
 
-        mockMvc.perform(MockMvcRequestBuilders.delete("/seller/home/products/product/" + idToRemove)
+        mockMvc.perform(MockMvcRequestBuilders.delete("/seller/home/products/" + idToRemove)
                         .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -413,7 +426,7 @@ public class SellerProductsControlPanelControllerTests {
     public void removeProductTokenClientExceptionTest() throws Exception {
         Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenThrow(RuntimeException.class);
 
-        mockMvc.perform(MockMvcRequestBuilders.delete("/seller/home/products/product/1")
+        mockMvc.perform(MockMvcRequestBuilders.delete("/seller/home/products/1")
                         .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
@@ -436,7 +449,7 @@ public class SellerProductsControlPanelControllerTests {
         List<DiscountDto> discounts = List.of(DiscountDtoBuilder.discountDto().build(), DiscountDtoBuilder.discountDto().build());
         List<Long> categoryIds = categories.stream().map(CategoryDto::getId).toList();
         List<Long> discountIds = discounts.stream().map(DiscountDto::getId).toList();
-        UpdateSellerProductForm form = UpdateSellerProductForm.builder()
+        UpdateSellerProductForm form = UpdateSellerProductFormBuilder.updateSellerProductForm()
                 .sellerProductId(sellerInfo.getProducts().get(0).getId())
                 .discountIds(discountIds)
                 .categoryIds(categoryIds)
@@ -446,10 +459,10 @@ public class SellerProductsControlPanelControllerTests {
         Mockito.when(productApiClient.getProduct(productDto.getId())).thenReturn(ResponseEntity.ok().body(productDto));
         Mockito.when(productCategoryApiClient.getCategoriesByIds(categoryIds)).thenReturn(ResponseEntity.ok().body(categories));
         Mockito.when(productDiscountApiClient.getDiscountsByIds(discountIds)).thenReturn(ResponseEntity.ok().body(discounts));
-        Mockito.when(productApiClient.updateProduct(Mockito.any(ProductDto.class)))
-                .thenAnswer(a -> ResponseEntity.ok().body(a.getArgument(0)));
+        Mockito.when(productApiClient.updateProduct(Mockito.eq(productDto.getId()), Mockito.any(ProductDto.class)))
+                .thenAnswer(a -> ResponseEntity.ok().body(a.getArgument(1)));
 
-        String body = mockMvc.perform(MockMvcRequestBuilders.patch("/seller/home/products/product/"
+        String body = mockMvc.perform(MockMvcRequestBuilders.patch("/seller/home/products/"
                                                                             + sellerInfo.getProducts().get(0).getId())
                         .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -479,14 +492,14 @@ public class SellerProductsControlPanelControllerTests {
                 .products(List.of(product1, product2))
                 .build();
         sellerInfo = sellerInfoRepository.save(sellerInfo);
-        UpdateSellerProductForm form = UpdateSellerProductForm.builder()
+        UpdateSellerProductForm form = UpdateSellerProductFormBuilder.updateSellerProductForm()
                 .sellerProductId(sellerInfo.getProducts().get(0).getId())
                 .build();
 
         Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
         Mockito.when(productApiClient.getProduct(Mockito.anyLong())).thenThrow(RuntimeException.class);
 
-        mockMvc.perform(MockMvcRequestBuilders.patch("/seller/home/products/product/"
+        mockMvc.perform(MockMvcRequestBuilders.patch("/seller/home/products/"
                                 + sellerInfo.getProducts().get(0).getId())
                         .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -506,12 +519,12 @@ public class SellerProductsControlPanelControllerTests {
                 .products(List.of(product1, product2))
                 .build();
         sellerInfoRepository.save(sellerInfo);
-        UpdateSellerProductForm form = UpdateSellerProductForm.builder().build();
+        UpdateSellerProductForm form = UpdateSellerProductFormBuilder.updateSellerProductForm().build();
 
         Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
         Mockito.when(productApiClient.getProduct(Mockito.anyLong())).thenThrow(RuntimeException.class);
 
-        mockMvc.perform(MockMvcRequestBuilders.patch("/seller/home/products/product/1001")
+        mockMvc.perform(MockMvcRequestBuilders.patch("/seller/home/products/1001")
                         .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(form)))
@@ -526,7 +539,7 @@ public class SellerProductsControlPanelControllerTests {
 
         Mockito.when(tokensApiClient.getTokenUserInfo(Mockito.anyString())).thenReturn(ResponseEntity.ok().body(userInfo));
 
-        mockMvc.perform(MockMvcRequestBuilders.patch("/seller/home/products/product/1001")
+        mockMvc.perform(MockMvcRequestBuilders.patch("/seller/home/products/1001")
                         .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(UpdateSellerProductFormBuilder.updateSellerProductForm().build())))

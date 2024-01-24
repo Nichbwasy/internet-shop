@@ -12,7 +12,6 @@ import com.shop.product.controller.config.CommonProductControllerTestConfigurati
 import com.shop.product.controller.run.ProductControllerTestsRun;
 import com.shop.product.dao.DiscountRepository;
 import com.shop.product.dto.DiscountDto;
-import com.shop.product.dto.ProductDto;
 import com.shop.product.model.Discount;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
@@ -96,7 +95,7 @@ public class DiscountApiControllerTests {
         List<Long> ids = discounts.stream().map(Discount::getId).limit(2).collect(Collectors.toList());
         ids.add(1001L);
 
-        String body = mockMvc.perform(MockMvcRequestBuilders.get("/api/products/discounts/selected")
+        String body = mockMvc.perform(MockMvcRequestBuilders.post("/api/products/discounts/selected")
                         .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(ids)))
@@ -115,7 +114,7 @@ public class DiscountApiControllerTests {
 
     @Test
     public void getDiscountsByNotExistedIdsTest() throws Exception {
-        String body = mockMvc.perform(MockMvcRequestBuilders.get("/api/products/discounts/selected")
+        String body = mockMvc.perform(MockMvcRequestBuilders.post("/api/products/discounts/selected")
                         .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(List.of(1L, 2L))))
@@ -131,7 +130,7 @@ public class DiscountApiControllerTests {
 
     @Test
     public void getDiscountsByIdsNullDataTest() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/products/discounts/selected")
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/products/discounts/selected")
                         .header(HttpHeaders.AUTHORIZATION, TEST_ACCESS_TOKEN)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(null)))

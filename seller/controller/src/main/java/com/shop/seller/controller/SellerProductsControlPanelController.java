@@ -10,9 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -23,7 +21,7 @@ public class SellerProductsControlPanelController {
 
     private final SellerProductsControlService sellerProductsControlService;
 
-    @GetMapping("/{page}")
+    @GetMapping("/list/{page}")
     public ResponseEntity<List<SellerProductDetailsDto>> showAllSellersProductsDetails(
             @PathVariable Integer page,
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) {
@@ -32,7 +30,7 @@ public class SellerProductsControlPanelController {
         return ResponseEntity.ok().body(sellerProductsControlService.showAllSellersProducts(page, accessToken));
     }
 
-    @GetMapping("/product/{sellerProductId}")
+    @GetMapping("/{sellerProductId}")
     public ResponseEntity<SellerProductDetailsDto> showSellerProductDetails(
             @PathVariable Long sellerProductId,
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) {
@@ -51,7 +49,7 @@ public class SellerProductsControlPanelController {
         return ResponseEntity.ok().body(sellerProductsControlService.createNewProduct(form, accessToken));
     }
 
-    @PatchMapping("/product/{sellerProductId}")
+    @PatchMapping("/{sellerProductId}")
     public ResponseEntity<SellerProductDetailsDto> updateProduct(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
             @PathVariable Long sellerProductId,
@@ -63,7 +61,7 @@ public class SellerProductsControlPanelController {
         return ResponseEntity.ok().body(sellerProductsControlService.updateSellersProductInfo(accessToken, form));
     }
 
-    @DeleteMapping("/product/{sellerProductId}")
+    @DeleteMapping("/{sellerProductId}")
     public ResponseEntity<Long> removeProduct(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization,
             @PathVariable Long sellerProductId

@@ -19,8 +19,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@ExtendWith(SpringExtension.class)
 @DataJpaTest
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = ProductServiceDatabaseTestsConfiguration.class)
 public class ProductServiceDatabaseTests {
 

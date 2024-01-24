@@ -1,0 +1,103 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-base-tables-for-product-media
+      author: jvsSEN
+      changes:
+        - createTable:
+            schemaName: media
+            tableName: product_media
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  constraints:
+                    unique: 'true'
+                    nullable: 'false'
+              - column:
+                  name: product_id
+                  type: bigint
+                  constraints:
+                    nullable: 'false'
+
+        - createTable:
+            schemaName: media
+            tableName: media_element
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  constraints:
+                    unique: 'true'
+                    nullable: 'false'
+              - column:
+                  name: product_media_id
+                  type: bigint
+                  constraints:
+                    nullable: 'false'
+              - column:
+                  name: bucket_name
+                  type: varchar(128)
+                  constraints:
+                    nullable: 'false'
+              - column:
+                  name: path
+                  type: varchar(256)
+                  constraints:
+                    nullable: 'false'
+              - column:
+                  name: file_name
+                  type: varchar(32)
+                  constraints:
+                    nullable: 'false'
+              - column:
+                  name: file_size
+                  type: bigint
+                  defaultValue: '0'
+                  constraints:
+                    nullable: 'false'
+              - column:
+                  name: file_extension_id
+                  type: bigint
+                  constraints:
+                    nullable: 'false'
+              - column:
+                  name: creation_time
+                  type: timestamp
+                  constraints:
+                    nullable: 'false'
+              - column:
+                  name: last_time_update
+                  type: timestamp
+                  constraints:
+                    nullable: 'false'
+
+        - createTable:
+            schemaName: media
+            tableName: file_extension
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  constraints:
+                    unique: 'true'
+                    nullable: 'false'
+              - column:
+                  name: name
+                  type: varchar(32)
+                  constraints:
+                    unique: 'true'
+                    nullable: 'false'
+              - column:
+                  name: media_type_name
+                  type: varchar(32)
+                  constraints:
+                    nullable: 'false'
+
+        - sql:
+            dbms: 'postgresql'
+            splitStatement: 'true'
+            sql:
+              ALTER TABLE "media".media_element ADD FOREIGN KEY (product_media_id)
+              REFERENCES "media".product_media (id);
+              ALTER TABLE "media".media_element ADD FOREIGN KEY (file_extension_id)
+              REFERENCES "media".file_extension (id);

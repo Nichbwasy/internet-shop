@@ -18,7 +18,9 @@ Product microservice: [In progress]
     - Add random code generation to the code of product [Done]
     - Add client to get filtered products page [Done]
     - Add tests for Category/Discount findByIds methods [Done]
-Shop microservice: [In progress]
+    - Add products media support [Done]
+        - Add new column 'media_id' in product table [Done]
+Shop microservice: [Done]
     - Create base database model [Done]
         - Create base yml liquibase script [Done]
     - Created base architecture [Done]
@@ -37,7 +39,8 @@ Shop microservice: [In progress]
     - Adding products to user's cart [Done]
     - Removing products from user's cart [Done]
     - Show product info for a user (only approved) [Done]
-    - Known bugs to fix [Done]
+    - Change api for adding items to cart [Done]
+    - Known bugs to fix
         - Removing products from cart doesn't work [Done]
         - After adding the same product several times it adds in cart like a new item instead of increasing count [Done]
         - Fix add new product to cart (ERROR: relation \"user_cart_cart_items\" does not exist\n  Position: 13]
@@ -45,6 +48,7 @@ Shop microservice: [In progress]
         - When gets filtered shop products it can return lesser than page size.
           (It happens when product not approved in shop) (move approve field from the ShopProduct
           to the Product) [Done]
+        - Products can be added to cart even if it not approved [Testing required]
 Seller microservice: (Seller's information, seller page, adding a new products, and so on...) [In progress]
     - Create base microservice architecture [Done]
     - Created base database schema [Done]
@@ -54,14 +58,49 @@ Seller microservice: (Seller's information, seller page, adding a new products, 
         - Register user as a new seller (admin only) [Done]
         - Remove seller (admin only) [Done]
             - After removing seller all his product must be removed from system [Testing required]
-        - Product management for a seller [In progress]
+        - Product management for a seller [Done]
             - Show all products details [Done]
             - Show product details [Done]
             - Add new product [Done]
             - Remove a product (if it belong to seller) [Done]
             - Edit a product (if it belong to seller) [Done]
-Media microservice: ??? (Contains all media such imgs, videos(idk how to do this) of products (MinIO))
+            - Get all media (img) of product [Done]
+            - Add media (img) to the product [Done]
+            - Delete media from product [Done]
+            - Get all images metadata [Done]
+    - Add product's documents(certificates) uploading [Done]
+        - Add tests for it [Done]
+            - Media's services [Done]
+            - Media's controllers [Done]
+            - Seller's services [Done]
+            - Seller's controllers [Done]
+Media microservice: (Contains all media such imgs, videos(idk how to do this) of products (MinIO)) [In progress]
+    - Create base microservice structure [Done]
+    - Add MinIO to the service [Done]
+        - Add base api for the service [Done]
+        - Add client [Done]
+        - Add controller advice [Done]
+        - Add web security [Done]
+    - Add tests for base functionality [Done]
+        - Add unit tests in service [Done]
+        - Add integration tests in controllers [Done]
+        - Add tests in dao for resource storage [Canceled] /* No need */
+    - Add saving media metadata for products in database [In progress]
+        - Add postgres to the project [Done]
+        - Create tables (product_media, media_element, file_extension) [Done]
+        - Add entities/repositories [Done]
+        - Add automatic creation buckets in MinIO [Done]
+        - Add saving/removing/updating tables functionality [Done] (Except updating, cause it no need)
+    - Add saving/updating/removing file extensions [Done]
+    - Remove access token checking from media microservice (move it to seller microservice or something) [Done]
 Global:
+    - Make test share common application context (Tests should not restart spring context for each class)
+    - Add email microservice
+    - Add payment microservice
+    - Add order microservice
+    - Add spring-cache support
+    - Write deployment scripts
+    - Saving imgs for products in resource storage [Done]
     - Create common controller advice configuration with common exceptions
     - Fix tokens refreshing issue
     - Fix advice (security advice doesn't catch Jwt tokens exceptions, for some reason)

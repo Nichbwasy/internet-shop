@@ -1,7 +1,7 @@
 package com.shop.product.common.data.builder;
 
 import com.shop.common.utils.all.generator.StringGenerator;
-import com.shop.common.utils.all.test.data.builder.TestDataBuilder;
+import com.shop.common.utils.all.test.data.builder.CommonObjectBuilder;
 import com.shop.product.dto.CategoryDto;
 import com.shop.product.dto.SubCategoryDto;
 
@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class CategoryDtoBuilder extends TestDataBuilder<CategoryDto> {
+public class CategoryDtoBuilder extends CommonObjectBuilder<CategoryDto> {
 
     private Long id = random.nextLong(1, 1000);
     private String name = StringGenerator.generate(random.nextInt(8, 12));

@@ -19,8 +19,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @ImportAutoConfiguration({FeignAutoConfiguration.class})
 @ComponentScan(basePackages = {
         "com.shop.shop",
-        "com.shop.common.utils.all.config.security"
-        //"com.shop.common.utils.filter"
+        "com.shop.common.utils.all.config.security",
+        "com.shop.common.utils.filter"
 })
 @EnableTransactionManagement
 @Import(DatabaseSchemaInitConfiguration.class)

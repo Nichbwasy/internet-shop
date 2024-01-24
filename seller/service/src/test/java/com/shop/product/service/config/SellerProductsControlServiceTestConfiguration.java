@@ -1,6 +1,7 @@
 package com.shop.product.service.config;
 
 import com.shop.authorization.client.TokensApiClient;
+import com.shop.media.client.ProductMediaApiClient;
 import com.shop.product.client.ProductApiClient;
 import com.shop.product.client.ProductCategoryApiClient;
 import com.shop.product.client.ProductDiscountApiClient;
@@ -33,6 +34,8 @@ public class SellerProductsControlServiceTestConfiguration {
     public ProductCategoryApiClient productCategoryApiClient;
     @MockBean
     public ProductDiscountApiClient productDiscountApiClient;
+    @MockBean
+    public ProductMediaApiClient productMediaApiClient;
     @Bean
     public SellerProductDetailsMapper sellerProductDetailsMapper() {
         return new SellerProductDetailsMapperImpl();
@@ -51,7 +54,8 @@ public class SellerProductsControlServiceTestConfiguration {
                 productDiscountApiClient,
                 tokensApiClient,
                 sellerProductDetailsMapper(),
-                createProductFormMapper()
+                createProductFormMapper(),
+                productMediaApiClient
         );
     }
 

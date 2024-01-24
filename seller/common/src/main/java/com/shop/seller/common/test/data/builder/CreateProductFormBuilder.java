@@ -1,7 +1,7 @@
 package com.shop.seller.common.test.data.builder;
 
 import com.shop.common.utils.all.generator.StringGenerator;
-import com.shop.common.utils.all.test.data.builder.TestDataBuilder;
+import com.shop.common.utils.all.test.data.builder.CommonObjectBuilder;
 import com.shop.seller.dto.control.CreateProductForm;
 
 import java.math.BigDecimal;
@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class CreateProductFormBuilder extends TestDataBuilder<CreateProductForm> {
+public class CreateProductFormBuilder extends CommonObjectBuilder<CreateProductForm> {
 
     private String name = StringGenerator.generate(random.nextInt(8, 12));
     private String description = StringGenerator.generate(random.nextInt(24, 48));

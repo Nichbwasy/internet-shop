@@ -30,13 +30,13 @@ public class ShopProductsPageController {
         return ResponseEntity.ok().body(shopProductsPageService.showFilteredProductsPage(page, form));
     }
 
-    @GetMapping("/product/{id}")
+    @GetMapping("/products/{id}")
     public ResponseEntity<ShopPageProductInfoDto> showProductsDetails(@PathVariable Long id) {
         log.info("Trying to get info about the product with id '{}'...", id);
         return ResponseEntity.ok().body(shopProductsPageService.showProductInfo(id));
     }
 
-    @PutMapping("/product/{productId}")
+    @PutMapping("/products/{productId}")
     public ResponseEntity<UserCartDto> addProductToUserCart(@RequestHeader(HttpHeaders.AUTHORIZATION) String auth,
                                                             @RequestBody AddProductToCartForm form,
                                                             @PathVariable Long productId) {
@@ -46,7 +46,7 @@ public class ShopProductsPageController {
         return ResponseEntity.ok().body(shopProductsPageService.addProductToCart(form));
     }
 
-    @DeleteMapping("/product/{productId}")
+    @DeleteMapping("/products/{productId}")
     public ResponseEntity<UserCartDto> removeProductFromUserCart(@RequestHeader(HttpHeaders.AUTHORIZATION) String auth,
                                                                  @RequestBody RemoveProductFromCartForm form,
                                                                  @PathVariable Long productId) {

@@ -80,6 +80,7 @@ public class ProductServiceImpl implements ProductService {
             product.setCreatedTime(LocalDateTime.now());
             product.setApprovalStatus(ApprovalStatuses.CREATED);
             product.setCode(StringGenerator.generate(64));
+            product.setDescription(productForm.getDescription());
 
             product = productRepository.save(product);
             log.info("New product with id '{}' has been saved successfully.", product.getId());

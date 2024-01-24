@@ -2,7 +2,7 @@ package com.shop.product.common.data.builder;
 
 import com.shop.common.utils.all.consts.ApprovalStatuses;
 import com.shop.common.utils.all.generator.StringGenerator;
-import com.shop.common.utils.all.test.data.builder.TestDataBuilder;
+import com.shop.common.utils.all.test.data.builder.CommonObjectBuilder;
 import com.shop.product.dto.CategoryDto;
 import com.shop.product.dto.DiscountDto;
 import com.shop.product.dto.ProductDto;
@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class ProductDtoBuilder extends TestDataBuilder<ProductDto> {
+public class ProductDtoBuilder extends CommonObjectBuilder<ProductDto> {
 
     private Long id = random.nextLong(1, 1000);
     private String code = StringGenerator.generate(64);
@@ -23,6 +23,7 @@ public class ProductDtoBuilder extends TestDataBuilder<ProductDto> {
     private Integer count = random.nextInt(1, 100);
     private BigDecimal price = BigDecimal.valueOf(random.nextDouble(1, 1000));
     private String approvalStatus = ApprovalStatuses.NONE;
+    private Long mediaId = random.nextLong(1, 1000);
     private List<CategoryDto> categories = new ArrayList<>();
     private List<DiscountDto> discounts = new ArrayList<>();
 
@@ -36,6 +37,7 @@ public class ProductDtoBuilder extends TestDataBuilder<ProductDto> {
         this.count = builder.count;
         this.price = builder.price;
         this.approvalStatus = builder.approvalStatus;
+        this.mediaId = builder.mediaId;
         this.categories = builder.categories;
         this.discounts = builder.discounts;
     }
@@ -74,6 +76,10 @@ public class ProductDtoBuilder extends TestDataBuilder<ProductDto> {
 
     public ProductDtoBuilder approvalStatus(String approvalStatus) {
         return copyWith(b -> b.approvalStatus = approvalStatus);
+    }
+
+    public ProductDtoBuilder mediaId(Long mediaId) {
+        return copyWith(b -> b.mediaId = mediaId);
     }
 
     public ProductDtoBuilder categories(List<CategoryDto> categories) {

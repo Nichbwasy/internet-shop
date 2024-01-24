@@ -6,6 +6,7 @@ import com.shop.seller.dto.control.SellerDetailsDto;
 import com.shop.seller.service.AdminSellersControlService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,9 +33,10 @@ public class AdminSellersControlPageController {
     }
 
     @PostMapping("/new")
-    public ResponseEntity<SellerDetailsDto> registerUserAsSeller(@RequestBody RegisterNewSellerForm form) {
+    public ResponseEntity<SellerDetailsDto> registerUserAsSeller(@RequestHeader(HttpHeaders.AUTHORIZATION) String accessToken,
+                                                                 @RequestBody RegisterNewSellerForm form) {
         log.info("Trying to register user '{}' as a seller...", form.getUserId());
-        return ResponseEntity.ok().body(sellersService.registerNewSeller(form));
+        return ResponseEntity.ok().body(sellersService.registerNewSeller(accessToken, form));
     }
 
     @DeleteMapping("/seller/{id}")
