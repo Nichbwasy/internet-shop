@@ -95,7 +95,8 @@ Media microservice: (Contains all media such imgs, videos(idk how to do this) of
     - Remove access token checking from media microservice (move it to seller microservice or something) [Done]
 Order microservice: [In progress]
     - Create base microservice structure [Done]
-    - Add base database schema [In progress]
+    - Add base database schema [Done]
+    - Order base operations (create/remove/get) [In progress]
 Global:
     - Make test share common application context (Tests should not restart spring context for each class)
     - Add email microservice

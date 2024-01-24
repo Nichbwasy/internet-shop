@@ -13,5 +13,18 @@
     <artifactId>dao-order</artifactId>
     <packaging>jar</packaging>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>${postgres-version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.shop.order.model</groupId>
+            <artifactId>model-order</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
 
 </project>

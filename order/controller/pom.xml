@@ -13,4 +13,12 @@
     <artifactId>controller-order</artifactId>
     <packaging>jar</packaging>
 
+    <dependencies>
+        <dependency>
+            <groupId>com.shop.order.service</groupId>
+            <artifactId>service-order</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
+
 </project>

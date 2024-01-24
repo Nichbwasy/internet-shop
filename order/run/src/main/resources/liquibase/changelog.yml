@@ -1,0 +1,134 @@
+databaseChangeLog:
+  - changeSet:
+      id: create-base-tables-for-order-database
+      author: jvsSEN
+      changes:
+        - createTable:
+            schemaName: order
+            tableName: address
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  constraints:
+                    nullable: "false"
+                    unique: "true"
+              - column:
+                  name: country
+                  type: varchar(32)
+                  constraints:
+                    nullable: "false"
+              - column:
+                  name: state
+                  type: varchar(32)
+              - column:
+                  name: city
+                  type: varchar(32)
+              - column:
+                  name: street
+                  type: varchar(64)
+              - column:
+                  name: house
+                  type: varchar(16)
+              - column:
+                  name: apartment
+                  type: varchar(161)
+        - createTable:
+            schemaName: order
+            tableName: order_unit
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  constraints:
+                    nullable: "false"
+                    unique: "true"
+              - column:
+                  name: order_id
+                  type: bigint
+                  constraints:
+                    nullable: "false"
+              - column:
+                  name: product_id
+                  type: bigint
+                  constraints:
+                    nullable: "false"
+              - column:
+                  name: price
+                  type: numeric(32, 9)
+                  defaultValue: "0.0"
+                  constraints:
+                    nullable: "false"
+              - column:
+                  name: count
+                  type: int
+                  constraints:
+                    nullable: "false"
+        - createTable:
+            schemaName: order
+            tableName: order
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  constraints:
+                    nullable: "false"
+                    unique: "true"
+              - column:
+                  name: code
+                  type: varchar(20)
+                  constraints:
+                    nullable: "false"
+                    unique: "true"
+              - column:
+                  name: status
+                  type: varchar(32)
+              - column:
+                  name: user_id
+                  type: bigint
+                  constraints:
+                    nullable: "false"
+              - column:
+                  name: total_price
+                  type: numeric(32, 9)
+                  defaultValue: "0.0"
+                  constraints:
+                    nullable: "false"
+              - column:
+                  name: created_time
+                  type: timestamp
+                  constraints:
+                    nullable: "false"
+              - column:
+                  name: last_time_update
+                  type: timestamp
+                  constraints:
+                    nullable: "false"
+              - column:
+                  name: payment_time
+                  type: timestamp
+              - column:
+                  name: delivery_time
+                  type: timestamp
+        - createTable:
+            schemaName: order
+            tableName: order_address
+            columns:
+              - column:
+                  name: order_id
+                  type: bigint
+                  constraints:
+                    nullable: "false"
+              - column:
+                  name: address_id
+                  type: bigint
+                  constraints:
+                    nullable: "false"
+        - sql:
+            dbms: 'postgresql'
+            splitStatement: 'true'
+            sql:
+              ALTER TABLE "order".order_unit ADD FOREIGN KEY (order_id) REFERENCES "order".order (id);
+              ALTER TABLE "order".order_address ADD FOREIGN KEY (order_id) REFERENCES "order".order (id);
+              ALTER TABLE "order".order_address ADD FOREIGN KEY (address_id) REFERENCES "order".address (id);
+
