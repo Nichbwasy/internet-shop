@@ -15,6 +15,7 @@
         <module>shop</module>
         <module>seller</module>
         <module>media</module>
+        <module>order</module>
     </modules>
 
     <properties>
